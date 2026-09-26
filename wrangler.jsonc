@@ -18,5 +18,9 @@
     { "pattern": "decentralised.ai", "custom_domain": true },
     { "pattern": "www.decentralised.ai", "custom_domain": true }
   ],
-  "workers_dev": true
+  "workers_dev": true,
+  "vars": {
+    // Set to "true" once decentralised.si is active at the .si registry, to make it the canonical site again.
+    "CANONICAL_LIVE": "false"
+  }
 }

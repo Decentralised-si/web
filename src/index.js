@@ -14,7 +14,8 @@ const ALIASES = new Set([
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
-    if (ALIASES.has(url.hostname)) {
+    // Only redirect once the canonical domain actually resolves; until then every alias serves the site itself.
+    if (env.CANONICAL_LIVE === "true" && ALIASES.has(url.hostname)) {
       url.hostname = CANONICAL;
       url.protocol = "https:";
       url.port = "";

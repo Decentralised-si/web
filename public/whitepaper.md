@@ -25,7 +25,8 @@ This paper describes the architecture, the privacy model, the provider network, 
 5. **Capability before cost.** A cheaper model is never substituted if it cannot do what the request needs, such as tools, JSON schema, vision, context length or privacy level.
 6. **Anyone can supply intelligence.** One command turns a GPU and an open model into a paid network node. Rewards follow verified work, not capital.
 7. **Common knowledge gets cheaper; novel intelligence is earned.** Commodity answers fall in price every year. Frontier reasoning is rationed by stake, not by who you are.
-8. **Scarce by design.** PAI has a hard cap. Emission halves every two years and shrinks as the network grows, and fees and slashing burn supply. Growth makes the token scarcer, not diluted.
+8. **No provider is load-bearing.** Conversation state lives with the client, so any provider (or model family, or vendor) can fail between turns or mid-answer without interrupting the conversation.
+9. **Scarce by design.** PAI has a hard cap. Emission halves every two years and shrinks as the network grows, and fees and slashing burn supply. Growth makes the token scarcer, not diluted.
 
 ---
 
@@ -146,7 +147,7 @@ The router sees the request *envelope*: token counts, number of turns, declared 
 
    where `q̂` is normalised quality, `ĉ` normalised log-cost (cheaper is higher), `l̂` normalised expected latency (faster is higher), and `d = 1` for network or decentralised providers. The default weights are 40/30/20/10 and each account sets its own. Expected latency is `TTFT + queue + 3·distance/100 km + tokens/throughput`, so a node in Sydney wins for a user in Melbourne and a node in London wins for a user in Paris.
 5. **Session sharding.** Among candidates within a small band of the best score, the router picks the provider maximising `hash(session ‖ provider)` (rendezvous hashing). A conversation stays on one provider across turns. Different conversations spread evenly over equivalent providers, so no single operator can assemble a user's history across conversations.
-6. **Failover.** Up to three candidates are tried in order on rate limits, timeouts, overloads or bad credentials. For streams, failover happens only before the first byte reaches the client.
+6. **Failover.** Up to four attempts are made on rate limits, timeouts, overloads, refused connections or bad credentials, trying the best candidate of each *other* provider first and skipping every model of a provider that is down. If a stream fails after bytes have reached the client, the answer is continued on another provider inside the same response (§7.2).
 
 In the test suite the router reproduces this example. Suppose a user has connected three providers:
 
@@ -189,9 +190,117 @@ Network providers receive a signed request (HMAC-SHA256 over timestamp and body 
 
 ---
 
-## 7. The provider network: fire up a server, earn PAI
+## 7. When a provider fails: continuity and isolation
 
-### 7.1 Joining
+A decentralised network is only credible if a conversation survives any single participant disappearing, and if spreading work across many participants does not spread a user's conversations with it. This section explains how Decentralised.si does both, compares it with centralised LLM services, and gives the argument, with the tests that check it, that the network does not depend on any one model, provider or vendor.
+
+### 7.1 Where a conversation lives
+
+The key design decision is that **no provider holds conversation state**. A conversation's context is held in two places:
+
+| State | Held by | Lifetime |
+|---|---|---|
+| Full history (messages, tool calls and results) | The client (harness or application) | As long as the user keeps it |
+| Long-term memory and preferences | The harness, on the device | Until the user deletes it |
+| The partial answer of the turn in flight | The gateway, in memory (`StreamAccumulator`) | One turn; never persisted |
+| Affinity: which provider served the last turn | The client, echoed in `X-Decentralise-Affinity` | One conversation |
+
+Every request carries the full context the provider needs for that turn, translated into that provider's native schema by the protocol adapters. A provider is a pure function from context to next message. Losing it loses nothing that cannot be reproduced.
+
+### 7.2 What happens when a provider goes offline
+
+| When it fails | What the network does | What the client sees |
+|---|---|---|
+| **Before the first byte** of a turn | Fails over down a diversified candidate list: the best candidate of each *other* provider first, and every model of a provider that refused the connection is skipped | A normal response, a little later; `x-decentralise-failovers` counts the retries |
+| **In the middle of a streamed answer** | The gateway keeps the partial answer, sends the conversation plus the partial answer and a one-line continuation note to the next compatible provider, and splices its stream into the same response: one `message_start`, one text block, usage summed | One uninterrupted message in its own protocol. The receipt records `resumedOn` |
+| **Between turns** | The client's affinity points at a provider that is gone. The router skips it and picks the next equivalent one; the next response carries the new affinity | Nothing unusual |
+| **The original provider comes back** | The client keeps echoing the new affinity, so the conversation **stays** with its replacement instead of bouncing back | Nothing |
+| **A whole vendor or the whole network is down** | Candidates from other vendors and the other market remain; only an explicit `network_only` or `byok_only` policy can exclude them | An honest `5xx` only if *every* compatible provider is down |
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant C as Client (holds history)
+    participant G as Gateway
+    participant A as Provider A
+    participant B as Provider B
+    C->>G: turn n (full history, affinity=A)
+    G->>A: turn n, translated to A's schema
+    A-->>G: "The capital of Fra"
+    G-->>C: "The capital of Fra"
+    A--xG: connection lost
+    Note over G: partial answer kept in memory,<br/>no tool call started → resumable
+    G->>B: history + partial answer + continuation note (B's schema)
+    B-->>G: "nce is Paris."
+    G-->>C: "nce is Paris." (same message, same block)
+    G-->>C: message end, usage = A + B
+    Note over C: next turn sends affinity=B
+```
+
+Two cases are deliberately **not** papered over:
+
+- **A tool call that was already streaming.** Its arguments are half-sent, and guessing the rest could run a real action with wrong inputs. The client receives an explicit error and retries the turn.
+- **Passthrough mode.** The user asked for one specific model, so the turn is never continued on a different one.
+
+### 7.3 Isolation: who can see a conversation
+
+- **Exactly one recipient per turn.** A turn is sent to one provider. The only exception is shadow `benchmark` mode, which the customer must switch on explicitly.
+- **Few providers per conversation.** With client-held affinity, the set of providers that ever see a conversation is the first provider plus one per failure that occurs during the conversation. In the normal case, that is one.
+- **Conversations are not linkable across providers.** Session ids are random per conversation, rendezvous hashing spreads conversations over equivalent providers, and providers receive no account id, API key, end-user id or client IP. A provider cannot tell whether two conversations it served came from the same person, and it never receives conversations routed elsewhere.
+- **The router keeps nothing readable.** Receipts store SHA-256 digests of content, logs contain no prompts, the partial-answer buffer lives only as long as the turn, and BYOK keys are envelope-encrypted.
+- **On the wire.** Every hop uses TLS: client to edge, edge to vendor, and edge to node (through the node's tunnel). Router-to-node requests carry an HMAC over timestamp and body, so they cannot be injected, altered or replayed outside a five-minute window. A third party on the path sees ciphertext.
+
+### 7.4 Compared with centralised LLM services
+
+| | Centralised LLM service (one vendor, direct) | Decentralised.si |
+|---|---|---|
+| Where conversation history and memory live | On the vendor's servers, attached to your account | On your device. The network sees one turn's context, per request |
+| One model or vendor has an outage | The service is down for everyone; streams in flight error out | The turn fails over to another provider or model family; an interrupted stream is continued in place |
+| Architectural dependency | One model family, one API, one company | Any model behind any of the three vendor APIs or an OpenAI-compatible node; none is required |
+| Who can see your conversations | One company sees all of them, linked to your identity and payment | Each provider sees only the conversations routed to it, without identity, and cannot link them |
+| Retention | Under the vendor's policy | Router: hashes only. Nodes: the reference agent logs nothing. Strict mode: TEE nodes (roadmap) |
+| Switching cost | Rewrite for another SDK, re-create memory | None: same SDK, same code; memory stays on the device |
+| Who supplies intelligence | The vendor's own data centres | Commercial vendors *and* anyone with a GPU |
+
+Multi-vendor gateways that retry on another API already exist, and they solve part of the availability problem. The differences here are that context and memory are held by the client, that routing works without reading prompts, that conversations are sharded and unlinkable across providers, that interrupted streams are continued rather than restarted, and that the supply side is open to anyone.
+
+### 7.5 Why this works without relying on any one LLM
+
+The claims above follow from five invariants of the design. Each is checked by the test suite in the Smart-LLM-Router repository (`apps/gateway/test/continuity.test.ts` and the SDK compatibility suites), with real Anthropic, OpenAI, Gemini and MCP client SDKs on one side and providers speaking each vendor's wire format on the other.
+
+**I1 · Providers are stateless with respect to the conversation.** Everything a provider needs is in the request, and nothing it holds is needed later (§7.1).
+*So:* removing any provider removes no conversation state. The only thing at risk is the partial output of the turn in flight, which the gateway holds.
+*Test:* "provider goes offline between turns". Anthropic serves a tool call, then goes offline. The next turn, still asking for Anthropic, is served by another vendor. That vendor receives the complete history, including the tool call and its result, valid in its own schema, and not one byte of the turn reaches the offline provider.
+
+**I2 · Every vendor schema maps to and from one canonical form.** Each adapter is a pair of translations (vendor → canonical, canonical → vendor) that preserve messages, tool calls, tool results, structured output and system instructions. The capability gate only admits providers that support every feature the conversation uses.
+*So:* any conversation can move to any admitted provider.
+*Test:* "one conversation across four unrelated model families". A single conversation is served turn by turn by Anthropic, then OpenAI, then Gemini, then an open-weight model on the network. Each receives the full history, including the other vendors' tool calls, and each vendor's schema validator reports zero errors.
+
+**I3 · Failure handling covers every point in a turn.** Before the first byte: diversified failover. Mid-stream: continuation, when no tool call has started. Between turns: affinity miss, then re-route.
+*So:* a turn completes whenever at least one compatible provider is reachable.
+*Tests:* "provider dies in the middle of an answer" (Anthropic SDK and OpenAI SDK). The client receives one message whose text is the first provider's partial output followed by the second provider's continuation, with no error event. "Serves when every commercial vendor is down, and when the network is down" covers whole-market outages.
+
+**I4 · One recipient per turn, few per conversation, no linkage.**
+*Test:* "no sniffing". Three concurrent three-turn conversations, each carrying a secret marker. Each marker reaches exactly three provider requests (one per turn), all at a single provider. No request ever contains two conversations. No request contains the account id or key. None of the markers appears anywhere in the router's receipts, shadow records, node records, work ledger or logs.
+
+**I5 · No component is special.** Providers are chosen per turn from whatever is compatible and reachable. The router is stateless and runs on every edge location. Clients can use any of three vendor protocols, or MCP.
+*So:* there is no single model, provider or router instance whose loss ends a conversation.
+
+**Availability, illustrated.** If a turn can be served by any of *k* independent compatible providers, each available a fraction *a* of the time, a turn fails only when all *k* are down at once: availability is `1 − (1 − a)^k`. With *a* = 99%, one provider gives 99%, two give 99.99% and three give 99.9999%. A single-vendor service is capped by that one vendor's availability. (Real outages are not perfectly independent: two nodes in the same region can fail together. Geographic and vendor diversity in the candidate list is what keeps the assumption close to true.)
+
+### 7.6 Honest limits
+
+- **The provider that serves a turn reads that turn's plaintext**, as every LLM provider does today. The design limits how *much* any provider sees (one conversation, unlinkable) rather than claiming it sees nothing. `X-Decentralise-Privacy: strict` with TEE-attested nodes (roadmap) closes this gap.
+- **A failover provider sees the conversation's history**, because it must in order to answer. Affinity keeps this to one extra provider per failure.
+- **Continuations are generated by a different model.** The text continues seamlessly and the receipt records the switch, but the style can shift slightly mid-answer. Passthrough mode never switches.
+- **Hidden reasoning does not travel between vendors.** Vendor-signed reasoning (for example, Anthropic thinking signatures) is only valid on its own vendor, so it is dropped when a conversation moves. The visible conversation moves intact.
+- **The router operator could, in principle, read traffic in flight**, because TLS terminates at the edge. Oblivious HTTP relays, anonymous credit and attested edge execution are the roadmap answers. Until then, the guarantee is policy and code (nothing is logged or persisted), not cryptography.
+
+---
+
+## 8. The provider network: fire up a server, earn PAI
+
+### 8.1 Joining
 
 ```sh
 curl -fsSLO https://decentralised.si/dl/docker-compose.yml
@@ -219,7 +328,7 @@ flowchart LR
   L -->|epoch rewards| O[Operator wallet]
 ```
 
-### 7.2 Reasoning levels
+### 8.2 Reasoning levels
 
 | Level | Examples | Work multiplier | Knowledge class | Provider bond |
 |---|---|---|---|---|
@@ -228,7 +337,7 @@ flowchart LR
 | **L2 · reasoning** | 70B+ and reasoning models: multi-step analysis, agents | ×4 | novel | 100 PAI |
 | **L3 · frontier** | frontier-class or long-thinking models | ×8 | novel | 1,000 PAI |
 
-### 7.3 Work units: GPU, bandwidth and quality become rewards
+### 8.3 Work units: GPU, bandwidth and quality become rewards
 
 For each verified response a node serves:
 
@@ -236,14 +345,14 @@ For each verified response a node serves:
 
 Output tokens weigh four times input tokens because they dominate GPU time. The level multiplier prices model size and thinking time, bandwidth is paid directly, and reputation (0–1) scales rewards between ×0.5 and ×1.5. A response that fails verification earns zero. For a typical request of 1,000 input and 500 output tokens at full reputation, that is **1.13 WU at L0, 2.25 at L1, 4.50 at L2 and 9.00 at L3**.
 
-### 7.4 Keeping nodes honest
+### 8.4 Keeping nodes honest
 
 - **Probation.** New nodes start with reputation 0.5, and their advertised quality is capped at `0.6 + 0.4·reputation` until they earn more.
 - **Canaries.** Every 15 minutes the router sends each node synthetic prompts with known answers, harder for higher levels. They are generated by the network and never drawn from user data. Three passes promote a node to *active*; persistent failures suspend it.
 - **SLA and verification.** Every served response updates reputation, based on structural verification (valid tool calls, schema-valid JSON) and whether latency stayed within twice the estimate.
 - **Slashing (on-chain).** Model substitution caught by canaries: 50% of bond. False attestation by a verifier: 10%. Downtime while holding sessions: 1%. Slashed PAI is burned.
 
-### 7.5 What an operator can earn
+### 8.5 What an operator can earn
 
 Illustrative figures from the reward formula, at launch-epoch emission, with 5,000 network participants and 5M work units per day across all providers. They are not a promise: earnings depend on network demand, total work and the PAI market.
 
@@ -258,9 +367,9 @@ Consumers pay for network inference in credit or PAI. Nodes earn epoch emission 
 
 ---
 
-## 8. PAI
+## 9. PAI
 
-### 8.1 Supply and allocation
+### 9.1 Supply and allocation
 
 Hard cap: **1,000,000,000 PAI**. Only half exists at genesis; the other half can only be minted as rewards for verified work.
 
@@ -272,7 +381,7 @@ Hard cap: **1,000,000,000 PAI**. Only half exists at genesis; the other half can
 | Community | 12% | Early users and early node operators |
 | Liquidity | 8% | Market making |
 
-### 8.2 Emission falls over time and as the network grows
+### 9.2 Emission falls over time and as the network grows
 
 An epoch is one day. Epoch emission is
 
@@ -294,7 +403,7 @@ Damping values: 1.0 at N = 0, 0.71 at 10k, 0.50 at 30k, 0.30 at 100k, 0.10 at 1M
 
 Each epoch's emission is split **70% to providers, 20% to verifiers and 10% to relays**, pro rata to verified work within each role. A role that did no work in an epoch receives nothing, and that share is not minted.
 
-### 8.3 Burn and deflation
+### 9.3 Burn and deflation
 
 **30% of every fee** paid in PAI is burned, and slashed stake is burned. Emission falls with time and growth while burn rises with usage, so net issuance turns negative as the network succeeds.
 
@@ -302,7 +411,7 @@ Each epoch's emission is split **70% to providers, 20% to verifiers and 10% to r
 
 *Figure 2. One adoption scenario, not a forecast. The network grows along an S-curve to 1M participants and network fees to $250k/day, and the PAI price tracks usage as the square root of fee growth from $0.10. Supply rises from the 500M genesis allocation, peaks at ~691M around year 2.7 when burn overtakes emission, and declines to ~587M by year 10.*
 
-### 8.4 Common knowledge gets cheaper; novel intelligence requires stake
+### 9.4 Common knowledge gets cheaper; novel intelligence requires stake
 
 **Common knowledge (L0–L1).** The network price multiplier falls **35% per year** and with the fourth root of capacity growth, with a floor at 5% of the launch price. With serving capacity growing 16×, the multiplier is ×0.33 after one year and ×0.06 after five.
 
@@ -328,7 +437,7 @@ Each epoch's emission is split **70% to providers, 20% to verifiers and 10% to r
 
 Stake also sets a daily quota (for L3, 500k tokens per 10,000 PAI staked). Unstaking unbonds over 7 days. Commercial frontier models reached through a customer's own keys are not stake-gated, because the customer already pays that vendor.
 
-### 8.5 Roles and who secures the network
+### 9.5 Roles and who secures the network
 
 | Role | Requirement | Earns | Can be slashed for |
 |---|---|---|---|
@@ -338,13 +447,13 @@ Stake also sets a daily quota (for L3, 500k tokens per 10,000 PAI staked). Unsta
 | Relay / edge router (phase 2) | Run an access-layer edge | 10% pool, by relayed work | Tampering, downtime |
 | Consumer | None for common knowledge | Cheaper answers over time | n/a |
 
-### 8.6 The contract
+### 9.6 The contract
 
 `contracts/src/PAI.sol` is the reference ERC-20 in the Smart-LLM-Router repository, to be opened for public review before any deployment. It implements the capped supply, genesis allocations, epoch settlement with the emission and damping formula, the 30% fee burn, staking with 7-day unbonding, and slashing by burn. Its Foundry test suite covers allocation, halving and damping parity with the TypeScript model, pro-rata settlement, single settlement per epoch, fee burn, staking, slashing and the reward cap. Until an audited contract is deployed, the router runs the same economics on an off-chain ledger, settled daily and exposed at `/api/network`.
 
 ---
 
-## 9. Security and economic attacks
+## 10. Security and economic attacks
 
 | Attack | Defence |
 |---|---|
@@ -360,7 +469,7 @@ Stake also sets a daily quota (for L3, 500k tokens per 10,000 PAI staked). Unsta
 
 ---
 
-## 10. Scalability and efficiency
+## 11. Scalability and efficiency
 
 - **Stateless edge router.** No per-user state. Session affinity comes from hashing, not from a table, so the router scales horizontally on a global edge (Cloudflare Workers today).
 - **No buffering.** Streams are translated event by event, with failover only before the first byte.
@@ -371,7 +480,7 @@ Stake also sets a daily quota (for L3, 500k tokens per 10,000 PAI staked). Unsta
 
 ---
 
-## 11. Governance
+## 12. Governance
 
 At launch the Decentralised.si foundation holds the contract's owner role and operates the reference router. Governance is handed over in stages:
 
@@ -383,7 +492,7 @@ Emission constants and the hard cap are immutable.
 
 ---
 
-## 12. Status
+## 13. Status
 
 | Component | Status |
 |---|---|
@@ -392,6 +501,7 @@ Emission constants and the hard cap are immutable.
 | BYOK with envelope encryption; shadow routing (estimate / benchmark) | **Live** |
 | Blind routing, client hints, session sharding, geo-aware latency, identity stripping | **Implemented** in this release |
 | MCP layer (`/mcp`) | **Implemented** in this release |
+| Mid-stream continuation on another provider; client-held affinity; provider-diversified failover | **Implemented** in this release |
 | Harness `dsi`: local memory, preferences, recall, MCP server, proxy | **Implemented** in this release |
 | `dsi-node` + Docker Compose; permissionless registration, heartbeats, signed requests | **Implemented** in this release |
 | Canaries, reputation, probation, suspension | **Implemented** in this release |
@@ -403,7 +513,7 @@ Emission constants and the hard cap are immutable.
 
 ---
 
-## 13. Get started
+## 14. Get started
 
 **Use it.** Create a key at [decentralised.si/dashboard](/dashboard) and change one base URL:
 
@@ -422,7 +532,7 @@ dsi chat
 claude mcp add dsi -- dsi mcp     # the same memory in Claude Code
 ```
 
-**Supply intelligence.** See §7.1. Then run `dsi-node earnings`.
+**Supply intelligence.** See §8.1. Then run `dsi-node earnings`.
 
 ---
 

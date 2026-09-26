@@ -30,7 +30,7 @@ label{display:block;font-size:13px;color:var(--muted);margin:10px 0 4px}
 .note{font-size:13px;color:var(--muted)}.err{color:var(--bad);font-size:13px}
 .snippets .tabs{margin:8px 0 0}
 </style></head><body><main>
-<header class="top"><div class="brand">Decentralised<span>.si</span></div><nav><a href="#migrate">Migrate</a><a href="#modes">Routing modes</a><a href="/dashboard">Dashboard</a></nav></header>
+<header class="top"><div class="brand">Decentralised<span>.si</span></div><nav><a href="/whitepaper">Whitepaper</a><a href="#migrate">Migrate</a><a href="#modes">Routing modes</a><a href="/dashboard">Dashboard</a></nav></header>
 <p class="pill">Drop-in for Anthropic · OpenAI · Gemini SDKs</p>
 <h1>Change one base URL.<br>Keep your prompts, SDK, tools and response schema.</h1>
 <p class="lead">Decentralised.si is a compatibility gateway and intelligence router. Your application keeps speaking the protocol it already speaks. Behind it we route each request to the lowest expected-cost provider that is capable enough, fast enough and private enough — your own provider accounts (BYOK) or the Decentralised.si network.</p>
@@ -104,6 +104,17 @@ x-decentralise-requested-model / -actual-model / -actual-provider / -market / -r
 <div class="card"><h3>2 · Observe</h3><p class="muted">Shadow <code>estimate</code> mode records what the router would have chosen, with no extra inference.</p></div>
 <div class="card"><h3>3 · Recommend</h3><p class="muted">"We could have answered this for 72% lower estimated cost." Opt into <code>benchmark</code> to verify with real runs.</p></div>
 <div class="card"><h3>4 · Optimise</h3><p class="muted">Let the router pick per request, based on difficulty, capability, cost, latency and privacy.</p></div>
+</div>
+<h2 id="network">Decentralised super intelligence</h2>
+<div class="grid">
+<div class="card"><h3>Your memory stays on your device</h3><p class="muted">The <code>dsi</code> harness keeps your preferences and memory locally (encrypted), sends only what a request needs, and classifies difficulty on-device, so the router never has to read your prompt. Every new conversation goes to a different provider.</p><pre><code>mkdir -p ~/.local/bin && curl -fsSL https://decentralised.si/dl/dsi.mjs -o ~/.local/bin/dsi
+chmod +x ~/.local/bin/dsi && dsi login ds_live_...
+dsi chat
+claude mcp add dsi -- dsi mcp</code></pre></div>
+<div class="card"><h3>Run a node, earn PAI</h3><p class="muted">Turn a GPU and an open-weight model into a paid provider. <code>dsi-node</code> wraps Ollama, vLLM or llama.cpp, gets a public URL through Cloudflare Tunnel, and serves only router-signed traffic.</p><pre><code>curl -fsSLO https://decentralised.si/dl/docker-compose.yml
+DSI_API_KEY=ds_live_... docker compose up -d
+docker compose exec ollama ollama pull llama3.1:8b</code></pre></div>
+<div class="card"><h3>PAI</h3><p class="muted">Capped at 1B. Emission halves every two years and shrinks as the network grows; 30% of fees are burned. Rewards follow verified GPU and bandwidth work, scaled by reasoning level. Common knowledge gets cheaper every year; novel intelligence is unlocked by staking.</p><p><a href="/whitepaper">Read the whitepaper →</a></p></div>
 </div>
 <h2 id="modes">Routing modes</h2>
 <div class="tbl"><table><tr><th>Mode</th><th>Behaviour</th></tr>

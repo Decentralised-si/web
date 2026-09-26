@@ -1,0 +1,41 @@
+# Join the Decentralised.si network with an open-source model.
+#
+#   curl -fsSLO https://decentralised.si/dl/docker-compose.yml
+#   DSI_API_KEY=ds_live_... docker compose up -d
+#   docker compose exec ollama ollama pull llama3.1:8b     # any model your GPU fits
+#
+# ollama serves the model, cloudflared gives the node a public https URL (no
+# port forwarding, no static IP), and dsi-node registers it, only serves
+# requests signed by the router, and heartbeats so it receives traffic.
+services:
+  ollama:
+    image: ollama/ollama:latest
+    volumes: [ollama:/root/.ollama]
+    # NVIDIA GPUs: uncomment
+    # deploy: { resources: { reservations: { devices: [{ driver: nvidia, count: all, capabilities: [gpu] }] } } }
+    restart: unless-stopped
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    command: tunnel --no-autoupdate --metrics 0.0.0.0:2000 --url http://dsi-node:8787
+    restart: unless-stopped
+
+  dsi-node:
+    image: node:22-alpine
+    command: sh -c "wget -qO /app/dsi-node.mjs https://decentralised.si/dl/dsi-node.mjs && node /app/dsi-node.mjs up"
+    working_dir: /app
+    environment:
+      DSI_API_KEY: ${DSI_API_KEY:?set DSI_API_KEY to your ds_ key from https://decentralised.si/dashboard}
+      DSI_ROUTER: ${DSI_ROUTER:-https://api.decentralised.si}
+      LLM_BASE_URL: http://ollama:11434/v1
+      CLOUDFLARED_METRICS: http://cloudflared:2000
+      NODE_NAME: ${NODE_NAME:-my-dsi-node}
+      MAX_CONCURRENCY: ${MAX_CONCURRENCY:-4}
+      DSI_NODE_STATE: /data/state.json
+    volumes: [dsi-node:/data]
+    depends_on: [ollama, cloudflared]
+    restart: unless-stopped
+
+volumes:
+  ollama: {}
+  dsi-node: {}

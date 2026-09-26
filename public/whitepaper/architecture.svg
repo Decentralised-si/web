@@ -1,0 +1,138 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 800" role="img" aria-labelledby="title desc">
+<title id="title">Decentralised.si architecture</title>
+<desc id="desc">Applications and the harness run on the user's device, which keeps memory and preferences. Only one conversation, a reasoning hint and a random session id cross the privacy boundary to the access layer (vendor-compatible APIs and MCP). The blind router picks a provider by capability, cost, speed, intelligence and location, shards sessions across providers, and never reads prompts. Providers are BYOK commercial APIs, community GPU nodes and specialist models. Work is metered into PAI settlement; canaries and verifiers keep nodes honest.</desc>
+<defs>
+  <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="ah"/></marker>
+</defs>
+<style>
+  text{font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;fill:#16181d}
+  .h{font-size:13px;font-weight:700;letter-spacing:.06em}
+  .b{font-size:13px;font-weight:600}
+  .s{font-size:11.5px;fill:#5d6370}
+  .zone{fill:#f3f3ef;stroke:#d9d9d2;stroke-width:1}
+  .dev{fill:#eaf4f0;stroke:#1f6f5c;stroke-width:1.5}
+  .box{fill:#ffffff;stroke:#c9c9c2;stroke-width:1}
+  .key{fill:#ffffff;stroke:#1f6f5c;stroke-width:1.6}
+  .tok{fill:#fbf1e6;stroke:#b0651d;stroke-width:1.4}
+  .edge{stroke:#5d6370;stroke-width:1.6;fill:none}
+  .pay{stroke:#b0651d;stroke-width:1.4;fill:none;stroke-dasharray:5 4}
+  .priv{stroke:#1f6f5c;stroke-width:2;stroke-dasharray:8 5}
+  .ah{fill:#5d6370}
+  .accent{fill:#1f6f5c}
+  .bg{fill:#fbfbf9}
+  @media (prefers-color-scheme:dark){
+    text{fill:#e8e9ec} .s{fill:#9aa1ad}
+    .zone{fill:#161a1f;stroke:#2a2f37} .dev{fill:#12251f;stroke:#4cc3a0}
+    .box{fill:#1b1f25;stroke:#343a44} .key{fill:#1b1f25;stroke:#4cc3a0}
+    .tok{fill:#2a2016;stroke:#e0a060} .edge{stroke:#9aa1ad} .pay{stroke:#e0a060}
+    .priv{stroke:#4cc3a0} .ah{fill:#9aa1ad} .accent{fill:#4cc3a0} .bg{fill:#111316}
+  }
+</style>
+
+<rect width="1000" height="800" class="bg"/>
+<!-- USER DEVICE -->
+<rect x="20" y="16" width="960" height="176" rx="14" class="dev"/>
+<text x="40" y="42" class="h">USER DEVICE · private</text>
+<rect x="40" y="58" width="300" height="118" rx="10" class="box"/>
+<text x="56" y="82" class="b">Applications &amp; agents</text>
+<text x="56" y="104" class="s">Anthropic · OpenAI · Gemini SDKs</text>
+<text x="56" y="122" class="s">Claude Code / Desktop, IDE agents (MCP)</text>
+<text x="56" y="140" class="s">any app via the local proxy</text>
+<text x="56" y="162" class="s">change one base URL, nothing else</text>
+<rect x="370" y="58" width="590" height="118" rx="10" class="key"/>
+<text x="386" y="82" class="b">Harness (dsi) — the only component that knows the user</text>
+<text x="386" y="104" class="s">• long-term memory &amp; preferences, encrypted at rest, never uploaded</text>
+<text x="386" y="122" class="s">• local recall: injects only memories relevant to this prompt</text>
+<text x="386" y="140" class="s">• local difficulty classifier → reasoning-level hint (L0–L3)</text>
+<text x="386" y="158" class="s">• random session id per conversation · MCP server · local proxy</text>
+<line x1="340" y1="117" x2="366" y2="117" class="edge" marker-end="url(#arrow)"/>
+
+<!-- PRIVACY BOUNDARY -->
+<line x1="20" y1="212" x2="980" y2="212" class="priv"/>
+<text x="428" y="232" class="s" text-anchor="middle">privacy boundary · what leaves the device: one conversation, a reasoning</text>
+<text x="428" y="248" class="s" text-anchor="middle">hint, a random session id and a ds_ key — no name, no memory store</text>
+<line x1="665" y1="176" x2="665" y2="256" class="edge" marker-end="url(#arrow)"/>
+<line x1="190" y1="176" x2="190" y2="256" class="edge" marker-end="url(#arrow)"/>
+
+<!-- ACCESS LAYER -->
+<rect x="20" y="258" width="960" height="86" rx="14" class="zone"/>
+<text x="40" y="282" class="h">ACCESS LAYER · api.decentralised.si</text>
+<rect x="40" y="292" width="560" height="42" rx="8" class="box"/>
+<text x="56" y="318" class="b">API</text>
+<text x="92" y="318" class="s">/anthropic/v1/messages · /openai/v1/{chat,responses,embeddings} · /gemini/v1beta/…</text>
+<rect x="620" y="292" width="340" height="42" rx="8" class="box"/>
+<text x="636" y="318" class="b">MCP</text>
+<text x="674" y="318" class="s">/mcp · ask · explain_route · network_status</text>
+<line x1="500" y1="344" x2="500" y2="378" class="edge" marker-end="url(#arrow)"/>
+
+<!-- ROUTER -->
+<rect x="20" y="380" width="700" height="196" rx="14" class="zone"/>
+<text x="40" y="404" class="h">BLIND ROUTER · stateless, at the edge</text>
+<rect x="40" y="416" width="210" height="70" rx="8" class="box"/>
+<text x="54" y="438" class="b">Canonical request</text>
+<text x="54" y="458" class="s">one internal format;</text>
+<text x="54" y="474" class="s">adapters in, adapters out</text>
+<rect x="266" y="416" width="210" height="70" rx="8" class="box"/>
+<text x="280" y="438" class="b">Capability gate</text>
+<text x="280" y="458" class="s">tools, JSON, vision, context,</text>
+<text x="280" y="474" class="s">privacy, stake — never optional</text>
+<rect x="492" y="416" width="210" height="70" rx="8" class="box"/>
+<text x="506" y="438" class="b">Score &amp; choose</text>
+<text x="506" y="458" class="s">cost · speed · intelligence ·</text>
+<text x="506" y="474" class="s">location · decentralisation</text>
+<rect x="40" y="498" width="210" height="64" rx="8" class="box"/>
+<text x="54" y="520" class="b">Session sharding</text>
+<text x="54" y="540" class="s">rendezvous hash: sessions stick,</text>
+<text x="54" y="554" class="s">new sessions spread out</text>
+<rect x="266" y="498" width="210" height="64" rx="8" class="box"/>
+<text x="280" y="520" class="b">Stream translation</text>
+<text x="280" y="540" class="s">event by event, no buffering;</text>
+<text x="280" y="554" class="s">failover before first byte</text>
+<rect x="492" y="498" width="210" height="64" rx="8" class="box"/>
+<text x="506" y="520" class="b">Identity stripping</text>
+<text x="506" y="540" class="s">no account, user id, IP or key</text>
+<text x="506" y="554" class="s">reaches a provider</text>
+<line x1="250" y1="451" x2="262" y2="451" class="edge" marker-end="url(#arrow)"/>
+<line x1="476" y1="451" x2="488" y2="451" class="edge" marker-end="url(#arrow)"/>
+
+<!-- PAI -->
+<rect x="740" y="380" width="240" height="196" rx="14" class="tok"/>
+<text x="758" y="404" class="h">PAI SETTLEMENT</text>
+<text x="758" y="428" class="s">work units per node per epoch</text>
+<text x="758" y="446" class="s">(tokens × reasoning level +</text>
+<text x="758" y="464" class="s">bandwidth, × reputation)</text>
+<text x="758" y="490" class="b">Epoch emission ↓ over time</text>
+<text x="758" y="508" class="s">halves every 2 years, damped</text>
+<text x="758" y="524" class="s">as the network grows</text>
+<text x="758" y="548" class="b">30% of fees burned</text>
+<text x="758" y="566" class="s">stake unlocks novel intelligence</text>
+<line x1="720" y1="478" x2="736" y2="478" class="pay" marker-end="url(#arrow)"/>
+
+<!-- PROVIDERS -->
+<line x1="200" y1="576" x2="200" y2="614" class="edge" marker-end="url(#arrow)"/>
+<line x1="500" y1="576" x2="500" y2="614" class="edge" marker-end="url(#arrow)"/>
+<line x1="690" y1="576" x2="780" y2="614" class="edge" marker-end="url(#arrow)"/>
+<rect x="20" y="616" width="960" height="168" rx="14" class="zone"/>
+<text x="40" y="640" class="h">INTELLIGENCE PROVIDERS</text>
+<rect x="40" y="652" width="300" height="118" rx="10" class="box"/>
+<text x="56" y="676" class="b">Commercial (BYOK)</text>
+<text x="56" y="698" class="s">Anthropic · OpenAI · Gemini</text>
+<text x="56" y="716" class="s">customer's own keys, envelope-encrypted;</text>
+<text x="56" y="734" class="s">customer pays the vendor directly</text>
+<text x="56" y="756" class="s">market A · user-funded</text>
+<rect x="350" y="652" width="300" height="118" rx="10" class="key"/>
+<text x="366" y="676" class="b">Community nodes</text>
+<text x="366" y="698" class="s">home GPUs, clusters, open-weight models</text>
+<text x="366" y="716" class="s">dsi-node + Ollama / vLLM / llama.cpp</text>
+<text x="366" y="734" class="s">signed requests · canary-verified</text>
+<text x="366" y="756" class="s accent">market B · paid in PAI</text>
+<rect x="660" y="652" width="300" height="118" rx="10" class="box"/>
+<text x="676" y="676" class="b">Specialist intelligence</text>
+<text x="676" y="698" class="s">coding · science · finance · search</text>
+<text x="676" y="716" class="s">L2–L3 reasoning nodes (bonded)</text>
+<text x="676" y="734" class="s">stake-gated for novel intelligence</text>
+<text x="676" y="756" class="s">market B · paid in PAI</text>
+<line x1="900" y1="578" x2="900" y2="648" class="pay" marker-end="url(#arrow)"/>
+<text x="908" y="606" class="s">PAI</text>
+<text x="908" y="620" class="s">rewards</text>
+</svg>

@@ -6,8 +6,19 @@ Static site served by Cloudflare Workers static assets on `decentralised.si`. Th
 
 | Path | Content |
 |---|---|
+| `/app` | **Main app** (React + Privy, built from `app/`): Claude-style chat with local conversation history, Console (usage & cost, API keys, rate/spend limits, logs, members & roles, providers, routing, settings), Wallet & billing (Privy embedded EVM + Solana wallets, pay for AI with crypto, any-coin top-up), Agent terminal (Hermes Agent as the default harness) |
 | `/` | Product overview, one-line migration snippets (Anthropic, OpenAI, Gemini SDKs), routing modes |
 | `/dashboard` | Sign up / sign in with a `ds_` API key; Providers (BYOK add/test/disable/rotate/delete), routing policy, shadow savings, request receipts, API keys |
+
+## App
+
+```sh
+npm install
+npm run build        # builds app/ into public/app (git-ignored)
+npm run dev          # Vite dev server for the app
+```
+
+The app reads `/api/config` at runtime: set `PRIVY_APP_ID` on the router Worker to enable sign-in (and allow `https://decentralised.si` in the Privy dashboard). Local visual preview without Privy: `npx vite --config app/preview/vite.preview.config.ts`, then open `/preview/index.html?api=<router>&key=<ds_ key>`.
 
 ## Develop
 

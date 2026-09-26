@@ -145,7 +145,10 @@ x-decentralise-requested-model / -actual-model / -actual-provider / -market / -r
 const qs=(s,r=document)=>r.querySelector(s);const qsa=(s,r=document)=>[...r.querySelectorAll(s)];
 function tabs(root){qsa('[data-tabs]',root).forEach(g=>{const btns=qsa(':scope > .tabs button',g);btns.forEach(b=>b.onclick=()=>{btns.forEach(x=>x.classList.toggle('on',x===b));qsa(':scope > [data-pane]',g).forEach(p=>p.hidden=p.dataset.pane!==b.dataset.tab)});btns[0]&&btns[0].click()})}
 
-const API=(['localhost','127.0.0.1'].includes(location.hostname)&&new URLSearchParams(location.search).get('api'))||'https://api.decentralise.si';
+// Every brand domain is served by the same router Worker and database; use the API on the domain the dashboard was loaded from.
+const DOMAINS=['decentralise.si','decentralise.ai','decentralised.ai'];
+const HOST=location.hostname.replace(/^www\./,'');
+const API=(['localhost','127.0.0.1'].includes(location.hostname)&&new URLSearchParams(location.search).get('api'))||(DOMAINS.includes(HOST)?'https://api.'+HOST:'https://api.decentralise.si');
 const store={get(){try{return localStorage.getItem('dsi_key')}catch{return null}},set(v){try{v?localStorage.setItem('dsi_key',v):localStorage.removeItem('dsi_key')}catch{}}};
 let KEY=store.get();
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));

@@ -1,0 +1,124 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Decentralised.si — the routing layer between applications and intelligence</title><style>
+:root{--bg:#f7f7f4;--panel:#fff;--ink:#16181d;--muted:#5d6370;--line:#e3e3dd;--accent:#1f6f5c;--accent-ink:#fff;--warn:#a2521b;--ok:#1f6f5c;--bad:#b42318;--code:#f0f0ea;--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+@media (prefers-color-scheme:dark){:root{--bg:#111316;--panel:#181b20;--ink:#e8e9ec;--muted:#9aa1ad;--line:#2a2f37;--accent:#4cc3a0;--accent-ink:#0b1a15;--code:#1f232a;--warn:#e0a060;--ok:#4cc3a0;--bad:#f07167}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+a{color:var(--accent)}main{max-width:1080px;margin:0 auto;padding:32px 20px 80px}
+header.top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:28px}
+.brand{font-weight:700;letter-spacing:-.01em;font-size:18px}.brand span{color:var(--accent)}
+nav a{margin-left:18px;text-decoration:none;color:var(--muted)}nav a:hover{color:var(--ink)}
+h1{font-size:clamp(28px,4.5vw,44px);line-height:1.1;letter-spacing:-.02em;margin:8px 0 14px}
+h2{font-size:22px;letter-spacing:-.01em;margin:40px 0 12px}h3{font-size:16px;margin:0 0 8px}
+p.lead{font-size:18px;color:var(--muted);max-width:720px}
+.grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px}
+pre,code{font-family:var(--mono);font-size:13px}pre{background:var(--code);border-radius:10px;padding:14px;overflow-x:auto;margin:8px 0}
+.diagram{white-space:pre;font-family:var(--mono);font-size:13px;line-height:1.35;background:var(--code);border-radius:10px;padding:16px;overflow-x:auto}
+.pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:600;border:1px solid var(--line)}
+.pill.ok{color:var(--ok);border-color:currentColor}.pill.bad{color:var(--bad);border-color:currentColor}.pill.warn{color:var(--warn);border-color:currentColor}
+.targets{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}.targets span{font-family:var(--mono);font-size:12px;font-weight:700;padding:6px 10px;border-radius:8px;background:var(--code)}
+button,.btn{font:inherit;font-weight:600;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:7px 13px;cursor:pointer}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}button.danger{color:var(--bad)}
+button:disabled{opacity:.5;cursor:default}
+input,select{font:inherit;padding:7px 10px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink);min-width:0}
+label{display:block;font-size:13px;color:var(--muted);margin:10px 0 4px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.tabs{display:flex;gap:4px;flex-wrap:wrap;border-bottom:1px solid var(--line);margin:18px 0}
+.tabs button{border:none;background:none;border-bottom:2px solid transparent;border-radius:0;color:var(--muted)}.tabs button.on{color:var(--ink);border-bottom-color:var(--accent)}
+.tbl{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:13px}th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);white-space:nowrap}th{color:var(--muted);font-weight:600}
+.muted{color:var(--muted)}.big{font-size:28px;font-weight:700;letter-spacing:-.02em}
+.note{font-size:13px;color:var(--muted)}.err{color:var(--bad);font-size:13px}
+.snippets .tabs{margin:8px 0 0}
+</style></head><body><main>
+<header class="top"><div class="brand">Decentralised<span>.si</span></div><nav><a href="#migrate">Migrate</a><a href="#modes">Routing modes</a><a href="/dashboard">Dashboard</a></nav></header>
+<p class="pill">Drop-in for Anthropic · OpenAI · Gemini SDKs</p>
+<h1>Change one base URL.<br>Keep your prompts, SDK, tools and response schema.</h1>
+<p class="lead">Decentralised.si is a compatibility gateway and intelligence router. Your application keeps speaking the protocol it already speaks. Behind it we route each request to the lowest expected-cost provider that is capable enough, fast enough and private enough — your own provider accounts (BYOK) or the Decentralised.si network.</p>
+<div class="targets"><span>NO PROMPT REWRITE</span><span>NO RESPONSE REWRITE</span><span>NO SDK REWRITE</span><span>NO TOOL REWRITE</span></div>
+<div class="grid">
+<div class="card"><h3>Before</h3><div class="diagram">Application
+   |
+   v
+Anthropic API</div></div>
+<div class="card"><h3>After</h3><div class="diagram">Application   (same SDK, same code)
+   |
+   v
+Decentralised.si  ── protocol adapter ── router
+   |
+   +──── Anthropic      (your key)
+   +──── OpenAI         (your key)
+   +──── Gemini         (your key)
+   +──── Network        (settled by us)</div></div>
+</div>
+<h2 id="migrate">Migrate in one line</h2>
+<div data-tabs class="snippets"><div class="tabs"><button data-tab="anthropic-py">Anthropic · Python</button><button data-tab="anthropic-ts">Anthropic · TypeScript</button><button data-tab="openai">OpenAI · Python</button><button data-tab="gemini">Gemini · Python</button><button data-tab="env">Env vars only</button><button data-tab="headers">Optional routing headers</button></div><div data-pane="anthropic-py"><pre><code>from anthropic import Anthropic
+
+client = Anthropic(
+    api_key="ds_live_...",                     # your Decentralised.si key
+    base_url="https://api.decentralise.si/anthropic",              # ← the only change
+)
+
+message = client.messages.create(
+    model="claude-sonnet-5",
+    max_tokens=1024,
+    messages=[{"role": "user", "content": "Explain this code..."}],
+)</code></pre></div><div data-pane="anthropic-ts"><pre><code>import Anthropic from "@anthropic-ai/sdk";
+
+const client = new Anthropic({
+  apiKey: process.env.DECENTRALISE_API_KEY,
+  baseURL: "https://api.decentralise.si/anthropic",              // ← the only change
+});</code></pre></div><div data-pane="openai"><pre><code>from openai import OpenAI
+
+client = OpenAI(
+    api_key="ds_live_...",
+    base_url="https://api.decentralise.si/openai/v1",              # ← the only change
+)
+client.chat.completions.create(model="gpt-5-mini", messages=[...])
+client.responses.create(model="gpt-5", input="...")
+client.embeddings.create(model="text-embedding-3-small", input="...")</code></pre></div><div data-pane="gemini"><pre><code>from google import genai
+
+client = genai.Client(
+    api_key="ds_live_...",
+    http_options={"base_url": "https://api.decentralise.si/gemini"},  # ← the only change
+)
+client.models.generate_content(model="gemini-2.5-flash", contents="...")</code></pre></div><div data-pane="env"><pre><code># No code change at all for SDKs that read base URLs from the environment
+ANTHROPIC_BASE_URL=https://api.decentralise.si/anthropic
+ANTHROPIC_API_KEY=ds_live_...
+OPENAI_BASE_URL=https://api.decentralise.si/openai/v1
+OPENAI_API_KEY=ds_live_...</code></pre></div><div data-pane="headers"><pre><code># Per-request control without touching the request body.
+# Omit them and your account-level policy applies.
+X-Decentralise-Mode: optimise          # passthrough|optimise|cheapest|fastest|quality|private|
+                                       # decentralised_only|byok_only|network_only
+X-Decentralise-Max-Cost: 0.01          # USD per request
+X-Decentralise-Max-Latency-Ms: 2000
+X-Decentralise-Min-Quality: 0.90
+X-Decentralise-Privacy: strict
+X-Decentralise-Verification: standard
+X-Decentralise-Shadow: estimate        # off|estimate|benchmark
+
+# Every response carries provenance headers:
+x-decentralise-requested-model / -actual-model / -actual-provider / -market / -receipt</code></pre></div></div>
+<h2>An adoption path, not a leap</h2>
+<div class="grid">
+<div class="card"><h3>1 · Passthrough</h3><p class="muted">Exactly the provider and model you asked for. Proves compatibility; nothing is substituted.</p></div>
+<div class="card"><h3>2 · Observe</h3><p class="muted">Shadow <code>estimate</code> mode records what the router would have chosen, with no extra inference.</p></div>
+<div class="card"><h3>3 · Recommend</h3><p class="muted">"We could have answered this for 72% lower estimated cost." Opt into <code>benchmark</code> to verify with real runs.</p></div>
+<div class="card"><h3>4 · Optimise</h3><p class="muted">Let the router pick per request, based on difficulty, capability, cost, latency and privacy.</p></div>
+</div>
+<h2 id="modes">Routing modes</h2>
+<div class="tbl"><table><tr><th>Mode</th><th>Behaviour</th></tr>
+<tr><td><code>passthrough</code></td><td>Always the provider/model the application requested (default)</td></tr>
+<tr><td><code>optimise</code></td><td>Weighted quality · cost · latency · decentralisation, above a difficulty-aware quality target</td></tr>
+<tr><td><code>cheapest</code></td><td>Minimise expected cost subject to the quality threshold</td></tr>
+<tr><td><code>fastest</code></td><td>Minimise latency subject to the quality threshold</td></tr>
+<tr><td><code>quality</code></td><td>Maximise expected quality subject to budget</td></tr>
+<tr><td><code>private</code></td><td>Only providers meeting strict privacy</td></tr>
+<tr><td><code>decentralised_only</code></td><td>Never centralised commercial providers</td></tr>
+<tr><td><code>byok_only</code></td><td>Only providers you supplied credentials for</td></tr>
+<tr><td><code>network_only</code></td><td>Only Decentralised.si marketplace providers</td></tr></table></div>
+<p class="note">Capability compatibility is mandatory: a model is never substituted unless it supports every feature the request uses — tools, JSON schema, vision, reasoning, stop sequences, context size, output limits, privacy and vendor-only features. Provenance (requested vs. actual model and provider) is always recorded and returned in headers; responses never claim a model that did not produce them.</p>
+<p><a class="btn" href="/dashboard">Open the dashboard →</a></p>
+</main><script>
+const qs=(s,r=document)=>r.querySelector(s);const qsa=(s,r=document)=>[...r.querySelectorAll(s)];
+function tabs(root){qsa('[data-tabs]',root).forEach(g=>{const btns=qsa(':scope > .tabs button',g);btns.forEach(b=>b.onclick=()=>{btns.forEach(x=>x.classList.toggle('on',x===b));qsa(':scope > [data-pane]',g).forEach(p=>p.hidden=p.dataset.pane!==b.dataset.tab)});btns[0]&&btns[0].click()})}
+tabs(document)</script></body></html>

@@ -1,0 +1,196 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Decentralised.si · Dashboard</title><style>
+:root{--bg:#f7f7f4;--panel:#fff;--ink:#16181d;--muted:#5d6370;--line:#e3e3dd;--accent:#1f6f5c;--accent-ink:#fff;--warn:#a2521b;--ok:#1f6f5c;--bad:#b42318;--code:#f0f0ea;--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+@media (prefers-color-scheme:dark){:root{--bg:#111316;--panel:#181b20;--ink:#e8e9ec;--muted:#9aa1ad;--line:#2a2f37;--accent:#4cc3a0;--accent-ink:#0b1a15;--code:#1f232a;--warn:#e0a060;--ok:#4cc3a0;--bad:#f07167}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+a{color:var(--accent)}main{max-width:1080px;margin:0 auto;padding:32px 20px 80px}
+header.top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:28px}
+.brand{font-weight:700;letter-spacing:-.01em;font-size:18px}.brand span{color:var(--accent)}
+nav a{margin-left:18px;text-decoration:none;color:var(--muted)}nav a:hover{color:var(--ink)}
+h1{font-size:clamp(28px,4.5vw,44px);line-height:1.1;letter-spacing:-.02em;margin:8px 0 14px}
+h2{font-size:22px;letter-spacing:-.01em;margin:40px 0 12px}h3{font-size:16px;margin:0 0 8px}
+p.lead{font-size:18px;color:var(--muted);max-width:720px}
+.grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px}
+pre,code{font-family:var(--mono);font-size:13px}pre{background:var(--code);border-radius:10px;padding:14px;overflow-x:auto;margin:8px 0}
+.diagram{white-space:pre;font-family:var(--mono);font-size:13px;line-height:1.35;background:var(--code);border-radius:10px;padding:16px;overflow-x:auto}
+.pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:600;border:1px solid var(--line)}
+.pill.ok{color:var(--ok);border-color:currentColor}.pill.bad{color:var(--bad);border-color:currentColor}.pill.warn{color:var(--warn);border-color:currentColor}
+.targets{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}.targets span{font-family:var(--mono);font-size:12px;font-weight:700;padding:6px 10px;border-radius:8px;background:var(--code)}
+button,.btn{font:inherit;font-weight:600;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:7px 13px;cursor:pointer}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}button.danger{color:var(--bad)}
+button:disabled{opacity:.5;cursor:default}
+input,select{font:inherit;padding:7px 10px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink);min-width:0}
+label{display:block;font-size:13px;color:var(--muted);margin:10px 0 4px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.tabs{display:flex;gap:4px;flex-wrap:wrap;border-bottom:1px solid var(--line);margin:18px 0}
+.tabs button{border:none;background:none;border-bottom:2px solid transparent;border-radius:0;color:var(--muted)}.tabs button.on{color:var(--ink);border-bottom-color:var(--accent)}
+.tbl{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:13px}th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);white-space:nowrap}th{color:var(--muted);font-weight:600}
+.muted{color:var(--muted)}.big{font-size:28px;font-weight:700;letter-spacing:-.02em}
+.note{font-size:13px;color:var(--muted)}.err{color:var(--bad);font-size:13px}
+.snippets .tabs{margin:8px 0 0}
+</style></head><body><main>
+<header class="top"><div class="brand"><a href="/" style="text-decoration:none;color:inherit">Decentralised<span>.si</span></a></div><nav><a href="/">Docs</a><a href="#" id="logout" hidden>Sign out</a></nav></header>
+
+<section id="auth" hidden>
+<h1>Dashboard</h1>
+<div class="grid">
+<div class="card"><h3>Sign in</h3><label for="k">Decentralised.si API key</label><div class="row"><input id="k" type="password" placeholder="ds_live_..." style="flex:1" autocomplete="off"><button class="primary" id="login">Sign in</button></div><p class="err" id="loginErr"></p></div>
+<div class="card"><h3>Create an account</h3><label for="email">Email (optional)</label><div class="row"><input id="email" type="email" placeholder="you@example.com" style="flex:1"><button id="signup">Create</button></div><p class="note" id="signupOut"></p></div>
+</div></section>
+
+<section id="app" hidden>
+<div class="grid">
+<div class="card"><div class="muted">Network credit</div><div class="big" id="credit">–</div><div class="note">Settles Decentralised.si network inference. BYOK usage is billed by your provider.</div></div>
+<div class="card"><div class="muted">Default routing mode</div><div class="big" id="modeBig">–</div><div class="note">Overridable per request with <code>X-Decentralise-Mode</code>.</div></div>
+<div class="card"><div class="muted">Shadow estimate</div><div class="big" id="savingsBig">–</div><div class="note" id="savingsNote"></div></div>
+</div>
+
+<div data-tabs>
+<div class="tabs"><button data-tab="providers">Providers</button><button data-tab="policy">Routing policy</button><button data-tab="shadow">Shadow savings</button><button data-tab="requests">Requests</button><button data-tab="migrate">Migrate</button><button data-tab="keys">API keys</button></div>
+
+<div data-pane="providers">
+<p class="muted">Settings › Providers. Keys are envelope-encrypted at rest, decrypted only for the outbound call, never logged or returned, and never sent to network nodes. After you submit a key, only its last four characters are ever shown.</p>
+<div class="grid" id="provGrid"></div>
+</div>
+
+<div data-pane="policy">
+<form id="policyForm" class="card">
+<div class="grid">
+<div><label>Default mode</label><select name="defaultMode"><option>passthrough</option><option>optimise</option><option>cheapest</option><option>fastest</option><option>quality</option><option>private</option><option>decentralised_only</option><option>byok_only</option><option>network_only</option></select></div>
+<div><label>Shadow mode</label><select name="shadowMode"><option value="off">off</option><option value="estimate">estimate (no extra inference)</option><option value="benchmark">benchmark (runs alternatives — costs money)</option></select></div>
+<div><label>Privacy</label><select name="privacy"><option>standard</option><option>strict</option></select></div>
+<div><label>Verification</label><select name="verification"><option>none</option><option>standard</option><option>strict</option></select></div>
+<div><label>Max cost / request (USD)</label><input name="maxCostUsd" type="number" step="0.001" min="0" placeholder="no limit"></div>
+<div><label>Min quality (0–1)</label><input name="minQuality" type="number" step="0.01" min="0" max="1" placeholder="difficulty-based"></div>
+<div><label>Max latency (ms)</label><input name="maxLatencyMs" type="number" step="100" min="1" placeholder="no limit"></div>
+</div>
+<h3 style="margin-top:18px">Priority weights</h3>
+<div class="grid"><div><label>quality <span class="muted" data-wv="quality"></span></label><input name="w_quality" type="range" min="0" max="100" step="5" style="width:100%"></div><div><label>cost <span class="muted" data-wv="cost"></span></label><input name="w_cost" type="range" min="0" max="100" step="5" style="width:100%"></div><div><label>latency <span class="muted" data-wv="latency"></span></label><input name="w_latency" type="range" min="0" max="100" step="5" style="width:100%"></div><div><label>decentralisation <span class="muted" data-wv="decentralisation"></span></label><input name="w_decentralisation" type="range" min="0" max="100" step="5" style="width:100%"></div></div>
+<h3 style="margin-top:18px">Allowed providers</h3>
+<div class="row"><label style="margin:0 14px 0 0;color:var(--ink)"><input type="checkbox" name="ap_anthropic"> anthropic</label><label style="margin:0 14px 0 0;color:var(--ink)"><input type="checkbox" name="ap_openai"> openai</label><label style="margin:0 14px 0 0;color:var(--ink)"><input type="checkbox" name="ap_gemini"> gemini</label><label style="margin:0 14px 0 0;color:var(--ink)"><input type="checkbox" name="ap_network"> network</label><label style="margin:0;color:var(--ink)"><input type="checkbox" name="allowCrossVendor"> allow cross-vendor substitution</label></div>
+<div class="row" style="margin-top:16px"><button class="primary">Save policy</button><span class="note" id="policyOut"></span></div>
+</form>
+</div>
+
+<div data-pane="shadow"><p class="muted" id="shadowRec"></p><div class="tbl"><table id="shadowTbl"></table></div></div>
+<div data-pane="requests"><div class="tbl"><table id="reqTbl"></table></div></div>
+<div data-pane="migrate">
+<div class="grid"><div class="card"><h3>Before</h3><div class="diagram">Application
+   |
+   v
+Anthropic API</div></div><div class="card"><h3>After</h3><div class="diagram">Application
+   |
+   v
+Decentralised.si
+   |
+   +---- Anthropic
+   +---- OpenAI
+   +---- Gemini
+   +---- Decentralised Network</div></div></div>
+<div class="targets"><span>NO PROMPT REWRITE</span><span>NO RESPONSE REWRITE</span><span>NO SDK REWRITE</span><span>NO TOOL REWRITE</span></div>
+<div data-tabs class="snippets"><div class="tabs"><button data-tab="anthropic-py">Anthropic · Python</button><button data-tab="anthropic-ts">Anthropic · TypeScript</button><button data-tab="openai">OpenAI · Python</button><button data-tab="gemini">Gemini · Python</button><button data-tab="env">Env vars only</button><button data-tab="headers">Optional routing headers</button></div><div data-pane="anthropic-py"><pre><code>from anthropic import Anthropic
+
+client = Anthropic(
+    api_key="ds_live_...",                     # your Decentralised.si key
+    base_url="https://api.decentralise.si/anthropic",              # ← the only change
+)
+
+message = client.messages.create(
+    model="claude-sonnet-5",
+    max_tokens=1024,
+    messages=[{"role": "user", "content": "Explain this code..."}],
+)</code></pre></div><div data-pane="anthropic-ts"><pre><code>import Anthropic from "@anthropic-ai/sdk";
+
+const client = new Anthropic({
+  apiKey: process.env.DECENTRALISE_API_KEY,
+  baseURL: "https://api.decentralise.si/anthropic",              // ← the only change
+});</code></pre></div><div data-pane="openai"><pre><code>from openai import OpenAI
+
+client = OpenAI(
+    api_key="ds_live_...",
+    base_url="https://api.decentralise.si/openai/v1",              # ← the only change
+)
+client.chat.completions.create(model="gpt-5-mini", messages=[...])
+client.responses.create(model="gpt-5", input="...")
+client.embeddings.create(model="text-embedding-3-small", input="...")</code></pre></div><div data-pane="gemini"><pre><code>from google import genai
+
+client = genai.Client(
+    api_key="ds_live_...",
+    http_options={"base_url": "https://api.decentralise.si/gemini"},  # ← the only change
+)
+client.models.generate_content(model="gemini-2.5-flash", contents="...")</code></pre></div><div data-pane="env"><pre><code># No code change at all for SDKs that read base URLs from the environment
+ANTHROPIC_BASE_URL=https://api.decentralise.si/anthropic
+ANTHROPIC_API_KEY=ds_live_...
+OPENAI_BASE_URL=https://api.decentralise.si/openai/v1
+OPENAI_API_KEY=ds_live_...</code></pre></div><div data-pane="headers"><pre><code># Per-request control without touching the request body.
+# Omit them and your account-level policy applies.
+X-Decentralise-Mode: optimise          # passthrough|optimise|cheapest|fastest|quality|private|
+                                       # decentralised_only|byok_only|network_only
+X-Decentralise-Max-Cost: 0.01          # USD per request
+X-Decentralise-Max-Latency-Ms: 2000
+X-Decentralise-Min-Quality: 0.90
+X-Decentralise-Privacy: strict
+X-Decentralise-Verification: standard
+X-Decentralise-Shadow: estimate        # off|estimate|benchmark
+
+# Every response carries provenance headers:
+x-decentralise-requested-model / -actual-model / -actual-provider / -market / -receipt</code></pre></div></div>
+</div>
+<div data-pane="keys"><div class="row"><button id="newKey">Create API key</button><span class="note" id="newKeyOut"></span></div><div class="tbl"><table id="keyTbl"></table></div></div>
+</div>
+</section>
+</main>
+<script>
+const qs=(s,r=document)=>r.querySelector(s);const qsa=(s,r=document)=>[...r.querySelectorAll(s)];
+function tabs(root){qsa('[data-tabs]',root).forEach(g=>{const btns=qsa(':scope > .tabs button',g);btns.forEach(b=>b.onclick=()=>{btns.forEach(x=>x.classList.toggle('on',x===b));qsa(':scope > [data-pane]',g).forEach(p=>p.hidden=p.dataset.pane!==b.dataset.tab)});btns[0]&&btns[0].click()})}
+
+const API=(['localhost','127.0.0.1'].includes(location.hostname)&&new URLSearchParams(location.search).get('api'))||'https://api.decentralise.si';
+const store={get(){try{return localStorage.getItem('dsi_key')}catch{return null}},set(v){try{v?localStorage.setItem('dsi_key',v):localStorage.removeItem('dsi_key')}catch{}}};
+let KEY=store.get();
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+async function api(path,opts={}){const r=await fetch(API+'/api'+path,{...opts,headers:{'content-type':'application/json',authorization:'Bearer '+KEY,...(opts.headers||{})}});const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j?.error?.message||('HTTP '+r.status));return j}
+const usd=n=>'$'+(n<0.01&&n>0?n.toFixed(5):n.toFixed(2));
+function show(authed){qs('#auth').hidden=authed;qs('#app').hidden=!authed;qs('#logout').hidden=!authed}
+qs('#logout').onclick=e=>{e.preventDefault();store.set(null);KEY=null;show(false)};
+qs('#login').onclick=async()=>{KEY=qs('#k').value.trim();try{await api('/me');store.set(KEY);boot()}catch(e){qs('#loginErr').textContent=e.message}};
+qs('#signup').onclick=async()=>{try{const r=await fetch(API+'/api/signup',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({email:qs('#email').value||undefined})});const j=await r.json();if(!r.ok)throw new Error(j.error?.message);qs('#signupOut').innerHTML='Your API key (shown once — copy it now):<pre>'+esc(j.api_key)+'</pre>';KEY=j.api_key;store.set(KEY);setTimeout(boot,50)}catch(e){qs('#signupOut').textContent=e.message}};
+
+function provCard(p){
+  const st=p.status==='CONNECTED'?'ok':p.status==='DISABLED'?'warn':'bad';
+  const creds=p.credentials.map(c=>'<div class="row" style="justify-content:space-between;margin:8px 0"><span><code>'+esc(c.hint)+'</code> '+(c.label?esc(c.label):'')+' '+(c.enabled?'<span class="pill ok">active</span>':'<span class="pill">disabled</span>')+(c.lastTestStatus?' <span class="pill '+(c.lastTestStatus==='ok'?'ok':'bad')+'">test '+c.lastTestStatus+'</span>':'')+(c.baseUrl?'<div class="note">'+esc(c.baseUrl)+'</div>':'')+'</span><span class="row"><button data-act="test" data-id="'+c.id+'">Test</button><button data-act="toggle" data-id="'+c.id+'" data-en="'+c.enabled+'">'+(c.enabled?'Disable':'Enable')+'</button><button data-act="rotate" data-id="'+c.id+'">Rotate</button><button class="danger" data-act="del" data-id="'+c.id+'">Delete</button></span></div>').join('');
+  return '<div class="card"><div class="row" style="justify-content:space-between"><h3 style="text-transform:capitalize;margin:0">'+p.provider+'</h3><span class="pill '+st+'">'+p.status+'</span></div>'+(p.allowed_by_policy?'':'<p class="note">Blocked by routing policy.</p>')+creds+
+  '<div class="row" style="margin-top:10px"><input type="password" placeholder="Add '+p.provider+' API key" data-new="'+p.provider+'" style="flex:1" autocomplete="off">'+(p.provider==='openai'?'<input placeholder="base URL (optional, OpenAI-compatible)" data-base="openai" style="flex:1">':'')+'<button class="primary" data-act="add" data-p="'+p.provider+'">Add</button></div><p class="err" data-err="'+p.provider+'"></p></div>'}
+function netCard(n){const st=n.status==='ENABLED'?'ok':n.status==='DISABLED'?'warn':'bad';return '<div class="card"><div class="row" style="justify-content:space-between"><h3 style="margin:0">Network</h3><span class="pill '+st+'">'+n.status+'</span></div><p class="note">Decentralised.si-settled providers. Credit: '+usd(n.credit_usd)+'</p>'+n.models.map(m=>'<div class="note"><code>'+esc(m.id)+'</code> · '+esc(m.operator||'')+(m.decentralised?' · decentralised':'')+'</div>').join('')+'</div>'}
+
+async function loadProviders(){const j=await api('/providers');qs('#provGrid').innerHTML=j.providers.map(provCard).join('')+netCard(j.network);
+  qsa('#provGrid [data-act]').forEach(b=>b.onclick=async()=>{const id=b.dataset.id;try{b.disabled=true;
+    if(b.dataset.act==='add'){const p=b.dataset.p;const k=qs('[data-new="'+p+'"]').value.trim();const base=qs('[data-base="'+p+'"]')?.value.trim();await api('/credentials',{method:'POST',body:JSON.stringify({provider:p,api_key:k,base_url:base||undefined})});}
+    if(b.dataset.act==='test'){const r=await api('/credentials/'+id+'/test',{method:'POST'});if(!r.ok)alertErr(b,r.error)}
+    if(b.dataset.act==='toggle')await api('/credentials/'+id,{method:'PATCH',body:JSON.stringify({enabled:b.dataset.en!=='true'})});
+    if(b.dataset.act==='rotate'){const row=b.closest('.row');if(!row.querySelector('input')){row.insertAdjacentHTML('beforeend','<input type="password" placeholder="new key" autocomplete="off"><button class="primary">Save</button>');const btn=row.lastElementChild;btn.onclick=async()=>{await api('/credentials/'+id+'/rotate',{method:'POST',body:JSON.stringify({api_key:btn.previousElementSibling.value.trim()})});loadProviders()};b.disabled=false;return}}
+    if(b.dataset.act==='del'){if(b.dataset.confirm!=='1'){b.dataset.confirm='1';b.textContent='Confirm delete';b.disabled=false;return}await api('/credentials/'+id,{method:'DELETE'})}
+    await loadProviders();await loadMe()}catch(e){alertErr(b,e.message);b.disabled=false}})}
+function alertErr(el,msg){const p=el.closest('.card').querySelector('.err');if(p)p.textContent=msg}
+
+let ME;
+async function loadMe(){ME=await api('/me');qs('#credit').textContent=usd(ME.credit_usd);qs('#modeBig').textContent=ME.policy.defaultMode.toUpperCase();
+  const f=qs('#policyForm');const p=ME.policy;f.defaultMode.value=p.defaultMode;f.shadowMode.value=p.shadowMode;f.privacy.value=p.privacy;f.verification.value=p.verification;
+  f.maxCostUsd.value=p.maxCostUsd??'';f.minQuality.value=p.minQuality??'';f.maxLatencyMs.value=p.maxLatencyMs??'';
+  for(const w of ['quality','cost','latency','decentralisation']){f['w_'+w].value=Math.round(p.weights[w]*100);}
+  for(const a of ['anthropic','openai','gemini','network'])f['ap_'+a].checked=!!p.allowedProviders[a];f.allowCrossVendor.checked=!!p.allowCrossVendor;weightLabels()}
+function weightLabels(){const f=qs('#policyForm');const ws=['quality','cost','latency','decentralisation'];const t=ws.reduce((s,w)=>s+Number(f['w_'+w].value),0)||1;ws.forEach(w=>qs('[data-wv="'+w+'"]').textContent=Math.round(Number(f['w_'+w].value)/t*100)+'%')}
+qsa('#policyForm input[type=range]').forEach(i=>i.oninput=weightLabels);
+qs('#policyForm').onsubmit=async e=>{e.preventDefault();const f=e.target;const num=v=>v===''?null:Number(v);
+  const body={defaultMode:f.defaultMode.value,shadowMode:f.shadowMode.value,privacy:f.privacy.value,verification:f.verification.value,maxCostUsd:num(f.maxCostUsd.value),minQuality:num(f.minQuality.value),maxLatencyMs:num(f.maxLatencyMs.value),
+    weights:{quality:+f.w_quality.value,cost:+f.w_cost.value,latency:+f.w_latency.value,decentralisation:+f.w_decentralisation.value},allowedProviders:{anthropic:f.ap_anthropic.checked,openai:f.ap_openai.checked,gemini:f.ap_gemini.checked,network:f.ap_network.checked},allowCrossVendor:f.allowCrossVendor.checked};
+  try{await api('/policy',{method:'PUT',body:JSON.stringify(body)});qs('#policyOut').textContent='Saved. Existing API calls now inherit this policy.';loadMe()}catch(err){qs('#policyOut').textContent=err.message}};
+
+async function loadShadow(){const j=await api('/shadow');const s=j.summary;qs('#savingsBig').textContent=s.requests?(s.estimated_savings_pct+'%'):'–';qs('#savingsNote').textContent=s.requests?('over '+s.requests+' requests'+(s.top_alternative?' · best alternative '+s.top_alternative:'')):'no shadow data yet';qs('#shadowRec').textContent=s.recommendation;
+  qs('#shadowTbl').innerHTML='<tr><th>Time</th><th>Actual</th><th>Actual cost</th><th>Alternative</th><th>Alt. est. cost</th><th>Saving</th><th>Benchmark</th></tr>'+j.events.map(e=>'<tr><td>'+esc(e.createdAt.slice(0,19).replace('T',' '))+'</td><td>'+esc(e.actualProvider+'/'+e.actualModel)+'</td><td>'+usd(e.actualCostUsd)+'</td><td>'+esc(e.altProvider+'/'+e.altModel)+'</td><td>'+usd(e.altEstimatedCostUsd)+'</td><td>'+e.savingsPct+'%</td><td>'+(e.benchmark?(e.benchmark.ok?e.benchmark.latencyMs+'ms · '+usd(e.benchmark.costUsd):'failed'):'')+'</td></tr>').join('')}
+async function loadReqs(){const j=await api('/receipts?limit=100');qs('#reqTbl').innerHTML='<tr><th>Time</th><th>Protocol</th><th>Mode</th><th>Difficulty</th><th>Requested</th><th>Actual</th><th>Market</th><th>Tokens in/out</th><th>Cost</th><th>Latency</th><th>Status</th><th>Verification</th></tr>'+j.receipts.map(r=>'<tr><td>'+esc(r.createdAt.slice(0,19).replace('T',' '))+'</td><td>'+esc(r.protocol)+'</td><td>'+esc(r.mode)+'</td><td>'+esc(r.difficulty)+'</td><td>'+esc(r.requestedModel)+'</td><td>'+esc(r.actualProvider+'/'+r.actualModel)+'</td><td>'+esc(r.market)+'</td><td>'+r.usage.inputTokens+' / '+r.usage.outputTokens+'</td><td>'+usd(r.costUsd)+'</td><td>'+r.latencyMs+'ms</td><td>'+(r.status==='ok'?'<span class="pill ok">ok</span>':'<span class="pill bad" title="'+esc(r.error)+'">'+esc(r.status)+'</span>')+'</td><td>'+(r.verification?.passed?'passed':'<span title="'+esc((r.verification?.checks||[]).join('; '))+'">failed</span>')+'</td></tr>').join('')}
+async function loadKeys(){const j=await api('/keys');qs('#keyTbl').innerHTML='<tr><th>Prefix</th><th>Created</th><th>Status</th><th></th></tr>'+j.keys.map(k=>'<tr><td><code>'+esc(k.prefix)+'…</code></td><td>'+esc(k.createdAt.slice(0,10))+'</td><td>'+(k.revoked?'revoked':'active')+'</td><td>'+(k.revoked?'':'<button class="danger" data-rev="'+esc(k.prefix)+'">Revoke</button>')+'</td></tr>').join('');qsa('[data-rev]').forEach(b=>b.onclick=async()=>{if(b.dataset.c!=='1'){b.dataset.c='1';b.textContent='Confirm revoke';return}await api('/keys/'+b.dataset.rev,{method:'DELETE'});loadKeys()})}
+qs('#newKey').onclick=async()=>{const j=await api('/keys',{method:'POST'});qs('#newKeyOut').innerHTML='New key (shown once): <code>'+esc(j.api_key)+'</code>';loadKeys()};
+async function boot(){if(!KEY){show(false);return}try{await loadMe();show(true);tabs(document);await Promise.all([loadProviders(),loadShadow(),loadReqs(),loadKeys()])}catch(e){show(false);qs('#loginErr').textContent=e.message}}
+boot();
+</script></body></html>

@@ -3,9 +3,7 @@ import { usePrivy, useIdentityToken } from "@privy-io/react-auth";
 import { api, setAccount, setTokenSource, type Config } from "./api";
 import { listConversations, setNamespace, type Conversation } from "./localdb";
 import { Chat } from "./Chat";
-import { Console } from "./Console";
-import { Wallet } from "./Wallet";
-import { Agent } from "./Agent";
+import { ConsoleShell } from "./console/Shell";
 
 export interface Session {
   user: { id: string; email?: string; wallets: Array<{ address: string; chain: string; type: string }> };
@@ -13,14 +11,15 @@ export interface Session {
   defaultOrganization: string;
 }
 
-type Route = { view: "chat"; id?: string } | { view: "console"; tab: string } | { view: "wallet" } | { view: "agent" };
+type Route = { view: "chat"; id?: string } | { view: "console"; page: string; arg?: string };
 
 function parseRoute(): Route {
-  const [view, arg] = location.hash.replace(/^#\/?/, "").split("/");
-  if (view === "console") return { view: "console", tab: arg || "overview" };
-  if (view === "wallet" || view === "billing") return { view: "wallet" };
-  if (view === "agent") return { view: "agent" };
-  return { view: "chat", id: arg || undefined };
+  const [view, page, arg] = location.hash.replace(/^#\/?/, "").split("/");
+  if (view === "console") return { view: "console", page: page || "dashboard", arg: arg || undefined };
+  // Older links: the wallet and agent pages now live inside the console.
+  if (view === "wallet" || view === "billing") return { view: "console", page: "credits" };
+  if (view === "agent") return { view: "console", page: "terminal" };
+  return { view: "chat", id: page || undefined };
 }
 
 export function App({ config }: { config: Config }) {
@@ -44,24 +43,27 @@ export function App({ config }: { config: Config }) {
   tokenRef.current = getAccessToken;
 
   // Exchange the Privy session for a Decentralised.si session (creates the org on first login).
+  const loadSession = useCallback(async () => {
+    const s = await api<Session>("/session", { method: "POST", headers: identityToken ? { "privy-id-token": identityToken } : {} });
+    setSession(s);
+    let saved: string | null = null;
+    try {
+      saved = localStorage.getItem("dsi_org");
+    } catch {
+      /* private mode */
+    }
+    const chosen = s.organizations.find((o) => o.id === saved)?.id ?? s.defaultOrganization;
+    setOrg(chosen);
+    setAccount(chosen);
+    setNamespace(s.user.id);
+    setConversations(await listConversations());
+  }, [identityToken]);
+
   useEffect(() => {
     if (!ready || !authenticated) return;
     setTokenSource(() => tokenRef.current());
-    (async () => {
-      try {
-        const s = await api<Session>("/session", { method: "POST", headers: identityToken ? { "privy-id-token": identityToken } : {} });
-        setSession(s);
-        const saved = localStorage.getItem("dsi_org");
-        const chosen = s.organizations.find((o) => o.id === saved)?.id ?? s.defaultOrganization;
-        setOrg(chosen);
-        setAccount(chosen);
-        setNamespace(s.user.id);
-        setConversations(await listConversations());
-      } catch (e) {
-        setError(String((e as Error).message));
-      }
-    })();
-  }, [ready, authenticated, identityToken]);
+    loadSession().catch((e) => setError(String((e as Error).message)));
+  }, [ready, authenticated, loadSession]);
 
   const refreshConversations = useCallback(async () => setConversations(await listConversations()), []);
 
@@ -106,6 +108,21 @@ export function App({ config }: { config: Config }) {
   if (!session || !org) return <div className="center muted">Setting up your workspace…</div>;
 
   const role = session.organizations.find((o) => o.id === org)?.role ?? "developer";
+  if (route.view === "console")
+    return (
+      <ConsoleShell
+        key={org}
+        page={route.page}
+        arg={route.arg}
+        role={role}
+        session={session}
+        org={org}
+        config={config}
+        switchOrg={switchOrg}
+        onOrgsChanged={() => loadSession().catch((e) => setError(String((e as Error).message)))}
+      />
+    );
+
   const nav = (hash: string) => {
     location.hash = hash;
     setMenu(false);
@@ -134,15 +151,9 @@ export function App({ config }: { config: Config }) {
           ))}
         </div>
         <nav className="side-nav">
-          <a href="#/console/overview" className={route.view === "console" ? "on" : ""} onClick={() => setMenu(false)}>
-            Console
-          </a>
-          <a href="#/wallet" className={route.view === "wallet" ? "on" : ""} onClick={() => setMenu(false)}>
-            Wallet &amp; billing
-          </a>
-          <a href="#/agent" className={route.view === "agent" ? "on" : ""} onClick={() => setMenu(false)}>
-            Agent terminal
-          </a>
+          <a href="#/console/dashboard">Console</a>
+          <a href="#/console/credits">Credits &amp; wallet</a>
+          <a href="#/console/terminal">Agent terminal</a>
         </nav>
         <div className="side-foot">
           {session.organizations.length > 1 ? (
@@ -170,10 +181,7 @@ export function App({ config }: { config: Config }) {
         <button className="icon menu-btn only-mobile" aria-label="Open menu" onClick={() => setMenu(true)}>
           ☰
         </button>
-        {route.view === "chat" && <Chat key={`${org}:${route.id ?? "new"}`} id={route.id} onSaved={refreshConversations} config={config} />}
-        {route.view === "console" && <Console key={org} tab={route.tab} role={role} session={session} />}
-        {route.view === "wallet" && <Wallet key={org} role={role} config={config} session={session} />}
-        {route.view === "agent" && <Agent />}
+        <Chat key={`${org}:${route.id ?? "new"}`} id={route.id} onSaved={refreshConversations} config={config} />
       </main>
     </div>
   );

@@ -14,13 +14,13 @@ const TABS = [
   ["settings", "Settings"],
 ] as const;
 
-const usd = (n: number) => (n === 0 ? "$0.00" : n < 0.01 ? `$${n.toFixed(5)}` : `$${n.toFixed(2)}`);
-const int = (n: number) => n.toLocaleString();
-const when = (s?: string) => (s ? new Date(s).toLocaleString() : "—");
+export const usd = (n: number) => (n === 0 ? "$0.00" : n < 0.01 ? `$${n.toFixed(5)}` : `$${n.toFixed(2)}`);
+export const int = (n: number) => n.toLocaleString();
+export const when = (s?: string) => (s ? new Date(s).toLocaleString() : "—");
 
-type Limits = { rpm?: number; tpm?: number; dailySpendUsd?: number; monthlySpendUsd?: number };
+export type Limits = { rpm?: number; tpm?: number; dailySpendUsd?: number; monthlySpendUsd?: number };
 
-function useLoad<T>(fn: () => Promise<T>, deps: unknown[] = []) {
+export function useLoad<T>(fn: () => Promise<T>, deps: unknown[] = []) {
   const [data, setData] = useState<T>();
   const [error, setError] = useState<string>();
   const [n, setN] = useState(0);
@@ -37,7 +37,7 @@ function useLoad<T>(fn: () => Promise<T>, deps: unknown[] = []) {
   return { data, error, reload: () => setN((x) => x + 1) };
 }
 
-function Section({ title, children, actions }: { title: string; children: ReactNode; actions?: ReactNode }) {
+export function Section({ title, children, actions }: { title: string; children: ReactNode; actions?: ReactNode }) {
   return (
     <section className="card">
       <div className="row between">
@@ -49,7 +49,7 @@ function Section({ title, children, actions }: { title: string; children: ReactN
   );
 }
 
-function Stat({ label, value, sub }: { label: string; value: string; sub?: string }) {
+export function Stat({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
     <div className="stat">
       <div className="muted small">{label}</div>
@@ -59,7 +59,7 @@ function Stat({ label, value, sub }: { label: string; value: string; sub?: strin
   );
 }
 
-function LimitFields({ value, onChange }: { value: Limits; onChange: (l: Limits) => void }) {
+export function LimitFields({ value, onChange }: { value: Limits; onChange: (l: Limits) => void }) {
   const f = (k: keyof Limits, label: string, step: string, placeholder: string) => (
     <label>
       {label}
@@ -84,7 +84,7 @@ function LimitFields({ value, onChange }: { value: Limits; onChange: (l: Limits)
 }
 
 /** Minimal accessible bar chart. */
-function Bars({ rows, value, format }: { rows: Array<{ day: string } & Record<string, number | string>>; value: string; format: (n: number) => string }) {
+export function Bars({ rows, value, format }: { rows: Array<{ day: string } & Record<string, number | string>>; value: string; format: (n: number) => string }) {
   const max = Math.max(1e-12, ...rows.map((r) => Number(r[value])));
   if (!rows.length) return <p className="muted">No usage in this period.</p>;
   return (
@@ -126,7 +126,7 @@ export function Console({ tab, role, session }: { tab: string; role: string; ses
   );
 }
 
-function Overview() {
+export function Overview() {
   const org = useLoad(() => api("/org"));
   const usage = useLoad(() => api("/usage?days=30"));
   const net = useLoad(() => api("/network"));
@@ -165,7 +165,7 @@ function Overview() {
   );
 }
 
-function dailyTotals(rows: any[]) {
+export function dailyTotals(rows: any[]) {
   const m = new Map<string, any>();
   for (const r of rows) {
     const d = m.get(r.day) ?? { day: r.day, costUsd: 0, requests: 0, tokens: 0 };
@@ -177,7 +177,7 @@ function dailyTotals(rows: any[]) {
   return [...m.values()];
 }
 
-function Usage() {
+export function Usage() {
   const [days, setDays] = useState(30);
   const [group, setGroup] = useState<"model" | "apiKeyId" | "market">("model");
   const u = useLoad(() => api(`/usage?days=${days}`), [days]);
@@ -270,10 +270,11 @@ function Usage() {
   );
 }
 
-function Keys({ canLimit }: { canLimit: boolean }) {
+export function Keys({ canLimit }: { canLimit: boolean }) {
   const keys = useLoad(() => api("/keys"));
   const [name, setName] = useState("");
   const [limits, setLimits] = useState<Limits>({});
+  const [scope, setScope] = useState<"inference" | "admin">("inference");
   const [created, setCreated] = useState<string>();
   const [err, setErr] = useState<string>();
   const [editing, setEditing] = useState<string>();
@@ -281,7 +282,7 @@ function Keys({ canLimit }: { canLimit: boolean }) {
   const [confirm, setConfirm] = useState<string>();
   const create = async () => {
     try {
-      const r = await api("/keys", { body: { name: name || "Untitled key", ...(canLimit && Object.keys(limits).length ? { limits } : {}) } });
+      const r = await api("/keys", { body: { name: name || "Untitled key", scope, ...(canLimit && Object.keys(limits).length ? { limits } : {}) } });
       setCreated(r.api_key);
       setName("");
       setLimits({});
@@ -297,6 +298,10 @@ function Keys({ canLimit }: { canLimit: boolean }) {
       <Section title="Create a key">
         <div className="row wrap">
           <input placeholder="Key name, e.g. production-backend" value={name} onChange={(e) => setName(e.target.value)} style={{ flex: 1, minWidth: 220 }} />
+          <select value={scope} onChange={(e) => setScope(e.target.value as never)} aria-label="Key type" title="Inference keys call models; admin keys manage the organization">
+            <option value="inference">Inference key</option>
+            {canLimit && <option value="admin">Admin key</option>}
+          </select>
           <button className="primary" onClick={create}>
             Create key
           </button>
@@ -328,6 +333,8 @@ function Keys({ canLimit }: { canLimit: boolean }) {
               <tr>
                 <th>Name</th>
                 <th>Key</th>
+                <th>Type</th>
+                <th>Workspace</th>
                 <th>Created</th>
                 <th>Last used</th>
                 <th>Limits</th>
@@ -341,6 +348,8 @@ function Keys({ canLimit }: { canLimit: boolean }) {
                   <td>
                     <code>{k.id}…</code>
                   </td>
+                  <td>{k.scope ?? "full"}</td>
+                  <td>{k.workspaceId ?? "default"}</td>
                   <td>{when(k.createdAt)}</td>
                   <td>{when(k.lastUsedAt)}</td>
                   <td className="small">{fmtLimits(k.limits)}</td>
@@ -402,12 +411,12 @@ function Keys({ canLimit }: { canLimit: boolean }) {
   );
 }
 
-function fmtLimits(l?: Limits) {
+export function fmtLimits(l?: Limits) {
   if (!l || !Object.keys(l).length) return "org limits";
   return [l.rpm !== undefined && `${l.rpm} RPM`, l.tpm !== undefined && `${int(l.tpm)} TPM`, l.dailySpendUsd !== undefined && `${usd(l.dailySpendUsd)}/day`, l.monthlySpendUsd !== undefined && `${usd(l.monthlySpendUsd)}/mo`].filter(Boolean).join(" · ");
 }
 
-function LimitsTab({ admin }: { admin: boolean }) {
+export function LimitsTab({ admin }: { admin: boolean }) {
   const l = useLoad(() => api("/limits"));
   const [org, setOrg] = useState<Limits>();
   const [saved, setSaved] = useState<string>();
@@ -471,7 +480,7 @@ function LimitsTab({ admin }: { admin: boolean }) {
   );
 }
 
-function Logs() {
+export function Logs() {
   const r = useLoad(() => api("/receipts?limit=100"));
   const [open, setOpen] = useState<string>();
   return (
@@ -532,7 +541,7 @@ function Logs() {
   );
 }
 
-function Members({ admin, me }: { admin: boolean; me: string }) {
+export function Members({ admin, me }: { admin: boolean; me: string }) {
   const m = useLoad(() => api("/members"));
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("developer");
@@ -623,7 +632,7 @@ function Members({ admin, me }: { admin: boolean; me: string }) {
   );
 }
 
-function Providers({ admin }: { admin: boolean }) {
+export function Providers({ admin }: { admin: boolean }) {
   const p = useLoad(() => api("/providers"));
   const [keys, setKeys] = useState<Record<string, string>>({});
   const [msg, setMsg] = useState<Record<string, string>>({});
@@ -691,7 +700,7 @@ function Providers({ admin }: { admin: boolean }) {
   );
 }
 
-function Routing({ admin }: { admin: boolean }) {
+export function Routing({ admin }: { admin: boolean }) {
   const me = useLoad(() => api("/me"));
   const [p, setP] = useState<any>();
   const [msg, setMsg] = useState<string>();
@@ -755,7 +764,7 @@ function Routing({ admin }: { admin: boolean }) {
   );
 }
 
-function Settings({ admin, role }: { admin: boolean; role: string }) {
+export function Settings({ admin, role }: { admin: boolean; role: string }) {
   const org = useLoad(() => api("/org"));
   const [name, setName] = useState("");
   const [msg, setMsg] = useState<string>();

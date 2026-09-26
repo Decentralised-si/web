@@ -25,6 +25,16 @@ export async function loadConfig(): Promise<Config> {
 
 let tokenSource: () => Promise<string | null> = async () => null;
 let accountId: string | undefined;
+let workspaceId = "default";
+export function setWorkspace(id: string) {
+  workspaceId = id;
+}
+export function currentWorkspace() {
+  return workspaceId;
+}
+export async function authHeaders(): Promise<Record<string, string>> {
+  return headers();
+}
 export function setTokenSource(fn: () => Promise<string | null>) {
   tokenSource = fn;
 }
@@ -37,7 +47,13 @@ export function currentAccount() {
 
 async function headers(extra: Record<string, string> = {}) {
   const t = await tokenSource();
-  return { "content-type": "application/json", ...(t ? { authorization: `Bearer ${t}` } : {}), ...(accountId ? { "x-decentralise-account": accountId } : {}), ...extra };
+  return {
+    "content-type": "application/json",
+    ...(t ? { authorization: `Bearer ${t}` } : {}),
+    ...(accountId ? { "x-decentralise-account": accountId } : {}),
+    ...(workspaceId !== "default" ? { "x-decentralise-workspace": workspaceId } : {}),
+    ...extra,
+  };
 }
 
 export async function api<T = any>(path: string, init: { method?: string; body?: unknown; headers?: Record<string, string> } = {}): Promise<T> {

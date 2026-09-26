@@ -8,7 +8,9 @@
   },
   "routes": [
     { "pattern": "decentralise.si", "custom_domain": true },
-    { "pattern": "www.decentralise.si", "custom_domain": true }
+    { "pattern": "www.decentralise.si", "custom_domain": true },
+    { "pattern": "decentralised.ai", "custom_domain": true },
+    { "pattern": "www.decentralised.ai", "custom_domain": true }
   ],
   "workers_dev": true
 }

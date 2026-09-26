@@ -55,7 +55,7 @@ Decentralised.si  ── protocol adapter ── router
 
 client = Anthropic(
     api_key="ds_live_...",                     # your Decentralised.si key
-    base_url="https://api.decentralise.si/anthropic",              # ← the only change
+    base_url="https://api.decentralised.si/anthropic",              # ← the only change
 )
 
 message = client.messages.create(
@@ -66,12 +66,12 @@ message = client.messages.create(
 
 const client = new Anthropic({
   apiKey: process.env.DECENTRALISE_API_KEY,
-  baseURL: "https://api.decentralise.si/anthropic",              // ← the only change
+  baseURL: "https://api.decentralised.si/anthropic",              // ← the only change
 });</code></pre></div><div data-pane="openai"><pre><code>from openai import OpenAI
 
 client = OpenAI(
     api_key="ds_live_...",
-    base_url="https://api.decentralise.si/openai/v1",              # ← the only change
+    base_url="https://api.decentralised.si/openai/v1",              # ← the only change
 )
 client.chat.completions.create(model="gpt-5-mini", messages=[...])
 client.responses.create(model="gpt-5", input="...")
@@ -79,12 +79,12 @@ client.embeddings.create(model="text-embedding-3-small", input="...")</code></pr
 
 client = genai.Client(
     api_key="ds_live_...",
-    http_options={"base_url": "https://api.decentralise.si/gemini"},  # ← the only change
+    http_options={"base_url": "https://api.decentralised.si/gemini"},  # ← the only change
 )
 client.models.generate_content(model="gemini-2.5-flash", contents="...")</code></pre></div><div data-pane="env"><pre><code># No code change at all for SDKs that read base URLs from the environment
-ANTHROPIC_BASE_URL=https://api.decentralise.si/anthropic
+ANTHROPIC_BASE_URL=https://api.decentralised.si/anthropic
 ANTHROPIC_API_KEY=ds_live_...
-OPENAI_BASE_URL=https://api.decentralise.si/openai/v1
+OPENAI_BASE_URL=https://api.decentralised.si/openai/v1
 OPENAI_API_KEY=ds_live_...</code></pre></div><div data-pane="headers"><pre><code># Per-request control without touching the request body.
 # Omit them and your account-level policy applies.
 X-Decentralise-Mode: optimise          # passthrough|optimise|cheapest|fastest|quality|private|

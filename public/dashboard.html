@@ -93,7 +93,7 @@ Decentralised.si
 
 client = Anthropic(
     api_key="ds_live_...",                     # your Decentralised.si key
-    base_url="https://api.decentralise.si/anthropic",              # ← the only change
+    base_url="https://api.decentralised.si/anthropic",              # ← the only change
 )
 
 message = client.messages.create(
@@ -104,12 +104,12 @@ message = client.messages.create(
 
 const client = new Anthropic({
   apiKey: process.env.DECENTRALISE_API_KEY,
-  baseURL: "https://api.decentralise.si/anthropic",              // ← the only change
+  baseURL: "https://api.decentralised.si/anthropic",              // ← the only change
 });</code></pre></div><div data-pane="openai"><pre><code>from openai import OpenAI
 
 client = OpenAI(
     api_key="ds_live_...",
-    base_url="https://api.decentralise.si/openai/v1",              # ← the only change
+    base_url="https://api.decentralised.si/openai/v1",              # ← the only change
 )
 client.chat.completions.create(model="gpt-5-mini", messages=[...])
 client.responses.create(model="gpt-5", input="...")
@@ -117,12 +117,12 @@ client.embeddings.create(model="text-embedding-3-small", input="...")</code></pr
 
 client = genai.Client(
     api_key="ds_live_...",
-    http_options={"base_url": "https://api.decentralise.si/gemini"},  # ← the only change
+    http_options={"base_url": "https://api.decentralised.si/gemini"},  # ← the only change
 )
 client.models.generate_content(model="gemini-2.5-flash", contents="...")</code></pre></div><div data-pane="env"><pre><code># No code change at all for SDKs that read base URLs from the environment
-ANTHROPIC_BASE_URL=https://api.decentralise.si/anthropic
+ANTHROPIC_BASE_URL=https://api.decentralised.si/anthropic
 ANTHROPIC_API_KEY=ds_live_...
-OPENAI_BASE_URL=https://api.decentralise.si/openai/v1
+OPENAI_BASE_URL=https://api.decentralised.si/openai/v1
 OPENAI_API_KEY=ds_live_...</code></pre></div><div data-pane="headers"><pre><code># Per-request control without touching the request body.
 # Omit them and your account-level policy applies.
 X-Decentralise-Mode: optimise          # passthrough|optimise|cheapest|fastest|quality|private|
@@ -146,9 +146,9 @@ const qs=(s,r=document)=>r.querySelector(s);const qsa=(s,r=document)=>[...r.quer
 function tabs(root){qsa('[data-tabs]',root).forEach(g=>{const btns=qsa(':scope > .tabs button',g);btns.forEach(b=>b.onclick=()=>{btns.forEach(x=>x.classList.toggle('on',x===b));qsa(':scope > [data-pane]',g).forEach(p=>p.hidden=p.dataset.pane!==b.dataset.tab)});btns[0]&&btns[0].click()})}
 
 // Every brand domain is served by the same router Worker and database; use the API on the domain the dashboard was loaded from.
-const DOMAINS=['decentralise.si','decentralise.ai','decentralised.ai'];
+const DOMAINS=['decentralised.si','decentralise.si','decentralise.ai','decentralised.ai'];
 const HOST=location.hostname.replace(/^www\./,'');
-const API=(['localhost','127.0.0.1'].includes(location.hostname)&&new URLSearchParams(location.search).get('api'))||(DOMAINS.includes(HOST)?'https://api.'+HOST:'https://api.decentralise.si');
+const API=(['localhost','127.0.0.1'].includes(location.hostname)&&new URLSearchParams(location.search).get('api'))||(DOMAINS.includes(HOST)?'https://api.'+HOST:'https://api.decentralised.si');
 const store={get(){try{return localStorage.getItem('dsi_key')}catch{return null}},set(v){try{v?localStorage.setItem('dsi_key',v):localStorage.removeItem('dsi_key')}catch{}}};
 let KEY=store.get();
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));

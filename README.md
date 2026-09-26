@@ -1,8 +1,8 @@
 # Decentralised.si — web
 
-Landing page, migration guide and customer dashboard for [Decentralised.si](https://decentralise.si), the routing layer between applications and intelligence.
+Landing page, migration guide and customer dashboard for [Decentralised.si](https://decentralised.si), the routing layer between applications and intelligence.
 
-Static site served by Cloudflare Workers static assets on `decentralise.si`. The dashboard talks to the Smart LLM Router API at `https://api.decentralise.si` (see the `Decentralised-si/Smart-LLM-Router` repo).
+Static site served by Cloudflare Workers static assets on `decentralised.si`. The dashboard talks to the Smart LLM Router API at `https://api.decentralised.si` (see the `Decentralised-si/Smart-LLM-Router` repo).
 
 | Path | Content |
 |---|---|
@@ -25,15 +25,12 @@ The `?api=` override is honoured only on `localhost`, so a crafted link cannot r
 npx wrangler deploy
 ```
 
-The dashboard stores the customer's `ds_` key in `localStorage` for this origin only and sends it solely to `api.decentralise.si`. Provider (BYOK) keys are submitted once to the API, envelope-encrypted server-side, and never displayed again beyond their last four characters.
+The dashboard stores the customer's `ds_` key in `localStorage` for this origin only and sends it solely to the Decentralised.si API. Provider (BYOK) keys are submitted once to the API, envelope-encrypted server-side, and never displayed again beyond their last four characters.
 
 ## Domains
 
-`decentralise.si`, `decentralise.ai` and `decentralised.ai` all serve the same site from this Worker, and their `api.` subdomains serve the same router Worker and D1 database. The dashboard calls `api.<the domain it was loaded from>`.
+**`decentralised.si` is the canonical website.** The same Worker also answers on `www.decentralised.si`, `decentralise.si`, `www.decentralise.si`, `decentralised.ai`, `www.decentralised.ai` (and `decentralise.ai` once its zone is added). Each of those returns a 301 to `https://decentralised.si` with the same path (`src/index.js`), so there is one origin and one dashboard session.
 
-Each zone has to be active in the Cloudflare account before its routes can be attached. Once it is, add these routes and redeploy both Workers:
+The API is `https://api.decentralised.si`. `api.decentralise.si` and `api.decentralised.ai` serve the same router Worker and D1 database, so existing integrations keep working.
 
-| Worker | Routes |
-|---|---|
-| `decentralised-si-web` (this repo, `wrangler.jsonc`) | `decentralise.ai`, `www.decentralise.ai`, `decentralised.ai`, `www.decentralised.ai` |
-| `decentralised-si-router` (Smart-LLM-Router, `apps/gateway/wrangler.toml`) | `api.decentralise.ai`, `api.decentralised.ai` |
+A new domain has to be an active zone in the Cloudflare account before its route can be attached: add it to `ALIASES` in `src/index.js` and to `routes` in `wrangler.jsonc` (and `api.<domain>` in the router's `apps/gateway/wrangler.toml`), then redeploy.

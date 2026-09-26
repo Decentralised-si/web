@@ -1,12 +1,18 @@
 {
   "name": "decentralised-si-web",
+  "main": "src/index.js",
   "compatibility_date": "2026-09-01",
   "assets": {
     "directory": "./public",
+    "binding": "ASSETS",
     "html_handling": "drop-trailing-slash",
-    "not_found_handling": "404-page"
+    "not_found_handling": "404-page",
+    // Alias domains must hit the Worker so it can redirect them to decentralised.si.
+    "run_worker_first": true
   },
   "routes": [
+    { "pattern": "decentralised.si", "custom_domain": true },
+    { "pattern": "www.decentralised.si", "custom_domain": true },
     { "pattern": "decentralise.si", "custom_domain": true },
     { "pattern": "www.decentralise.si", "custom_domain": true },
     { "pattern": "decentralised.ai", "custom_domain": true },

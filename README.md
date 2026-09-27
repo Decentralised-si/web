@@ -40,7 +40,7 @@ The dashboard stores the customer's `ds_` key in `localStorage` for this origin 
 
 ## Domains
 
-**`decentralised.si` is the canonical website.** The same Worker also answers on `www.decentralised.si`, `decentralise.si`, `www.decentralise.si`, `decentralised.ai`, `www.decentralised.ai` (and `decentralise.ai` once its zone is added). Each of those returns a 301 to `https://decentralised.si` with the same path (`src/index.js`), so there is one origin and one dashboard session.
+**`decentralised.si` is the canonical website.** The same Worker also answers on `www.decentralised.si`, `decentralise.si`, `www.decentralise.si`, `decentralised.ai`, `www.decentralised.ai` (and `decentralise.ai` once its zone is added). The `.si` domains serve the product landing page (`public/index.html`); the `.ai` domains serve the network landing page (`public/ai/index.html`) at `/`. When the `CANONICAL_LIVE` var is `"true"`, every other path on an alias domain returns a 301 to `https://decentralised.si` with the same path (`src/index.js`), so there is one origin and one app session.
 
 The API is `https://api.decentralised.si`. `api.decentralise.si` and `api.decentralised.ai` serve the same router Worker and D1 database, so existing integrations keep working.
 

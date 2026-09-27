@@ -4,10 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Decentralised.si — Decentralised Super Intelligence</title>
-<meta name="description" content="Keep your Anthropic, OpenAI or Gemini code and change one base URL. Decentralised.si routes each request to the cheapest provider that is capable, fast and private enough, with chat, a full console and crypto payments.">
+<meta name="description" content="Open-source AI routing that runs on your device: oifd picks the cheapest expert that is good enough for each request, strips what identifies you, backs up slow providers and escalates only when unsure. Plus drop-in Anthropic, OpenAI and Gemini APIs.">
 <meta property="og:title" content="Decentralised.si — Decentralised Super Intelligence">
 <meta property="og:image" content="/brand/logo.png">
-<meta property="og:description" content="A drop-in gateway and intelligence router for Anthropic, OpenAI and Gemini SDKs. Chat, console, and pay with crypto.">
+<meta property="og:description" content="Open-source AI routing that runs on your device, plus drop-in Anthropic, OpenAI and Gemini APIs.">
 <meta name="theme-color" content="#000211">
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/png" sizes="32x32" href="/brand/favicon-32.png">
@@ -80,6 +80,32 @@ h3{font-size:18px;margin:0 0 8px;letter-spacing:-.01em}
 .flow figcaption p{margin:6px 0 8px;font-size:15px;line-height:1.45}
 .flow figcaption p b{color:var(--accent)}
 .flow figcaption code{display:block;font-size:11.5px;color:var(--muted);white-space:pre;overflow-x:auto}
+.flow .outer{fill:none;stroke:var(--accent);stroke-dasharray:4 4}
+.flow .link{stroke:var(--accent);stroke-width:2;fill:none}
+.flow .od .frame{fill:var(--accent-soft);stroke:var(--accent);stroke-width:1.4}
+.flow .st rect{fill:var(--panel);stroke:var(--line)}
+.flow .st text{text-anchor:start;font-size:12px}
+.flow .st .s{text-anchor:end}
+.flow .st.on rect{stroke:url(#g);stroke-width:2}
+.flow .st.on .n{fill:var(--accent)}
+.flow .p.done{stroke:var(--muted);stroke-dasharray:none;animation:none;opacity:.55;stroke-width:2}
+.flow .mem rect{fill:var(--bg);stroke:var(--accent);stroke-dasharray:3 3}
+.flow figcaption .prompt{font:13px/1.45 var(--mono);color:var(--muted);margin:8px 0 2px}
+.hero-list{padding-left:20px;margin:-14px 0 14px}
+.hero-list li{margin:2px 0}
+.gh{width:16px;height:16px;fill:currentColor;display:block}
+.howsteps{display:grid;gap:14px;grid-template-columns:repeat(5,minmax(0,1fr))}
+.howsteps .card{padding:20px}
+.howsteps .n{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--grad);color:#fff;font:700 13px var(--mono);margin-bottom:12px}
+.howsteps p{font-size:14.5px}
+@media (max-width:1000px){.howsteps{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}}
+.repos{display:grid;gap:10px}
+.repo{display:block;text-decoration:none;color:var(--ink);padding:14px 16px}
+.repo:hover{border-color:var(--accent)}
+.repo b{display:block;font-size:15px}
+.repo span{color:var(--muted);font-size:13.5px}
+.oss-list{padding-left:20px;margin:-24px 0 16px}
+.oss-list li{margin:2px 0}
 .steps-dots{display:flex;gap:6px}
 .steps-dots i{width:22px;height:4px;border-radius:2px;background:var(--line)}
 .steps-dots i.on{background:var(--grad)}
@@ -142,7 +168,7 @@ tr:last-child td{border-bottom:0}
 footer{border-top:1px solid var(--line);padding:36px 0 calc(36px + env(safe-area-inset-bottom,0px));color:var(--muted);font-size:14px}
 footer .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
 footer a{color:var(--muted)}
-@media (max-width:640px){.links a:not(.btn){display:none}.hero{padding-top:44px}section{padding:64px 0}}
+@media (max-width:640px){.links a:not(.btn):not(.ghl){display:none}.hero{padding-top:44px}section{padding:64px 0}}
 </style>
 </head>
 <body>
@@ -154,12 +180,13 @@ footer a{color:var(--muted)}
       <span>Decentralised<b>.si</b></span>
     </a>
     <nav class="links" aria-label="Main">
-      <a href="#migrate">Migrate</a>
-      <a href="#router">Router</a>
+      <a href="/architecture">Architecture</a>
+      <a href="#how">How it works</a>
+      <a href="#migrate">API</a>
       <a href="#console">Console</a>
-      <a href="#modes">Modes</a>
       <a href="/ai">Network</a>
       <a href="/whitepaper">Whitepaper</a>
+      <a href="https://github.com/Decentralised-si" aria-label="GitHub" class="ghl"><svg class="gh" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a>
       <a class="btn small primary" href="/app/">Open app</a>
     </nav>
   </div>
@@ -169,35 +196,46 @@ footer a{color:var(--muted)}
 <div class="hero">
   <div class="wrap">
     <div>
-      <div class="eyebrow">Decentralised Super Intelligence</div>
-      <h1>Every AI model.<br><em>One URL.</em><br>No single point of failure.</h1>
-      <p class="lead">Keep your SDK, prompts and tools and change one base URL. Any of many stateless routers sends each request to the cheapest provider that can handle it: your own vendor keys, or an open network of GPU operators. Your context stays on your device, so if a router or a provider goes down, the next one picks up where it stopped.</p>
+      <div class="eyebrow">Decentralised Super Intelligence · open source</div>
+      <h1>Every AI model.<br><em>Routed on your device.</em></h1>
+      <p class="lead"><b>oifd</b> is an open-source router that runs on your machine. For each request it:</p>
+      <ul class="lead hero-list">
+        <li>works out what kind of expertise is needed;</li>
+        <li>removes what identifies you;</li>
+        <li>sends it to the cheapest expert that is good enough: a local model, your own API keys, or the open network.</li>
+      </ul>
+      <p class="lead">A slow expert gets a backup, a failed one is replaced mid-answer, and a stronger expert is asked only when the answer looks uncertain.</p>
       <div class="ctas">
-        <a class="btn primary" href="/app/">Start chatting →</a>
-        <a class="btn" href="/app/#/console/keys">Get an API key</a>
-        <a class="btn" href="#migrate">See the one-line change</a>
+        <a class="btn primary" href="/architecture">How it works →</a>
+        <a class="btn" href="https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/oif-router"><svg class="gh" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg> View on GitHub</a>
+        <a class="btn" href="/app/">Start chatting</a>
       </div>
-      <div class="chips" aria-label="Guarantees"><span>No prompt rewrite</span><span>No response rewrite</span><span>No SDK rewrite</span><span>No tool rewrite</span></div>
+      <div class="chips" aria-label="Properties"><span>Runs locally</span><span>Open source</span><span>Quality floor, not a gamble</span><span>Explains every route</span></div>
     </div>
 
     <figure class="flow" aria-labelledby="flow-cap">
-      <svg viewBox="0 0 560 340" role="img" aria-label="Your device holds the app and your context. Several interchangeable routers each connect to every provider: vendor APIs and independent GPU nodes. Any router or provider can fail without stopping the conversation.">
+      <svg viewBox="0 0 560 384" role="img" aria-label="Your app sends requests to oifd on your device, which understands, protects, chooses, streams and escalates, keeping memory locally, and sends each request to one of several expert providers: local specialists, a local general model, a strong model on your own API key, a network GPU node or the hosted gateway.">
         <defs>
           <linearGradient id="g" x1="0" x2="1"><stop offset="0" stop-color="#16b5ff"/><stop offset=".5" stop-color="#2257e6"/><stop offset="1" stop-color="#8a3ffc"/></linearGradient>
         </defs>
-        <g class="hd"><text x="70" y="18">YOUR DEVICE</text><text x="259" y="18">ANY ROUTER</text><text x="482" y="18">ANY PROVIDER</text></g>
+        <g class="hd"><text x="124" y="16">YOUR DEVICE</text><text x="442" y="16">EXPERT PROVIDERS</text></g>
+        <rect class="outer" x="6" y="26" width="236" height="352" rx="16"/>
         <g id="mesh"></g>
         <g id="live"></g>
-        <g class="dev">
-          <rect class="outer" x="6" y="112" width="128" height="150" rx="14"/>
-          <rect x="16" y="124" width="108" height="46" rx="9"/><text x="70" y="143">Your app</text><text class="s" x="70" y="159">same SDK</text>
-          <rect class="mem" x="16" y="178" width="108" height="72" rx="9"/><text x="70" y="198">Harness</text><text class="s" x="70" y="214">memory</text><text class="s" x="70" y="228">context</text><text class="s" x="70" y="242">keys</text>
+        <g class="nd"><rect x="18" y="38" width="212" height="44" rx="10"/><text x="124" y="57">Your app</text><text class="s" x="124" y="73">POST 127.0.0.1:7766/v1/ask</text></g>
+        <path class="link" d="M124 82 V98"/>
+        <g class="od">
+          <rect class="frame" x="18" y="98" width="212" height="216" rx="12"/>
+          <text x="124" y="120">oifd · local router</text>
+          <g id="steps"></g>
         </g>
-        <g id="routers"></g>
+        <path class="link" d="M124 314 V326"/>
+        <g class="nd mem"><rect x="18" y="326" width="212" height="42" rx="10"/><text x="124" y="344">memory · outcomes · mapping</text><text class="s" x="124" y="359">never leaves this device</text></g>
         <g id="providers"></g>
       </svg>
       <figcaption id="flow-cap">
-        <div class="steps-dots" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+        <div class="steps-dots" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+        <p class="prompt" id="cap-q"></p>
         <p id="cap-t"></p>
         <code id="cap-h"></code>
       </figcaption>
@@ -206,14 +244,30 @@ footer a{color:var(--muted)}
   </div>
 </div>
 
+<section id="how">
+  <div class="wrap">
+    <div class="eyebrow">How it works</div>
+    <h2>A scheduler for intelligence, running where your data lives.</h2>
+    <p class="sub">Before any model sees a request, oifd decides what kind of intelligence it needs, how much, who should supply it, and how much of your context may leave the device. The first three steps typically take under a millisecond and never touch the network.</p>
+    <div class="howsteps">
+      <div class="card"><span class="n">1</span><h3>Understand</h3><p>Classifies the domain on a taxonomy (<code>finance.quant.derivatives</code> → <code>finance</code> → <code>general</code>) and estimates difficulty, freshness and tool needs from the request's structure.</p></div>
+      <div class="card"><span class="n">2</span><h3>Protect</h3><p>Replaces emails, phone numbers, wallets, accounts, IPs and tagged names with placeholders. It also trims context to what this expert needs. The mapping never leaves the device.</p></div>
+      <div class="card"><span class="n">3</span><h3>Choose</h3><p>Scores every expert on domain fit, predicted quality, latency, price, reliability, tools, cache affinity and privacy. Anything below the quality floor is out, however cheap.</p></div>
+      <div class="card"><span class="n">4</span><h3>Stream &amp; guard</h3><p>Streams the answer. It starts a backup if the first token is late, and continues on another expert if one fails mid-answer. Cancelling stops all paid work.</p></div>
+      <div class="card"><span class="n">5</span><h3>Escalate &amp; learn</h3><p>Asks a stronger or independent expert only when the answer looks uncertain. Every outcome, and your feedback, updates the next decision.</p></div>
+    </div>
+    <div class="ctas" style="margin-top:28px"><a class="btn primary" href="/architecture">Read the architecture →</a><a class="btn" href="#oss">Run it yourself</a></div>
+  </div>
+</section>
+
 <section id="what" class="alt">
   <div class="wrap">
     <div class="eyebrow">What you get</div>
-    <h2>A gateway, a chat app and a console, in one account.</h2>
+    <h2>A local router, a hosted gateway, a chat app and a console.</h2>
     <p class="sub">Sign in with email, Google, GitHub or a wallet. You get a chat interface, a console with everything a model provider's dashboard gives you, and a wallet to pay with crypto.</p>
     <div class="grid">
       <div class="card"><div class="ic" aria-hidden="true">⇄</div><h3>Drop-in APIs</h3><p>Anthropic Messages, OpenAI Chat Completions, Responses and Embeddings, Gemini generateContent, and MCP. Streaming, tools, vision, JSON schema, files and batches all work.</p></div>
-      <div class="card"><div class="ic" aria-hidden="true">◎</div><h3>Intelligent routing</h3><p>Nine routing modes, from exact passthrough to cheapest or most private. A model is only substituted if it supports every feature your request uses.</p></div>
+      <div class="card"><div class="ic" aria-hidden="true">◎</div><h3>Local router</h3><p><code>oifd</code> runs on your machine and routes across local models, your own keys and the network, with a quality floor and an explanation for every choice.</p></div>
       <div class="card"><div class="ic" aria-hidden="true">✦</div><h3>Chat</h3><p>A clean chat interface across every model, with <code>auto</code> to let the router pick. Conversations are stored in your browser, not on our servers.</p></div>
       <div class="card"><div class="ic" aria-hidden="true">▤</div><h3>Console</h3><p>API keys, workspaces, rate and spend limits, usage, cost, logs, members, playground, files, batches, saved agents and alerts.</p></div>
       <div class="card"><div class="ic" aria-hidden="true">◈</div><h3>Pay with crypto</h3><p>Every account gets a self-custodial wallet. Top up in USDC, ETH, SOL and more, or by card through a crypto on-ramp.</p></div>
@@ -226,8 +280,8 @@ footer a{color:var(--muted)}
   <div class="wrap">
     <div class="split">
       <div>
-        <div class="eyebrow">Migrate in one line</div>
-        <h2>Change the base URL. Nothing else.</h2>
+        <div class="eyebrow">Hosted API</div>
+        <h2>No daemon? Change one base URL.</h2>
         <p class="sub">Your Decentralised.si key replaces the vendor key. Request bodies, response shapes, streaming events and tool calls stay byte-for-byte what your SDK expects.</p>
         <div class="steps" aria-label="Adoption path">
           <div><b>1 · PASSTHROUGH</b><p>The exact model you asked for. Proves compatibility; nothing is substituted.</p></div>
@@ -302,16 +356,16 @@ x-decentralise-actual-provider / -market / -receipt</pre>
 
 <section id="router" class="alt">
   <div class="wrap">
-    <div class="eyebrow">The router</div>
-    <h2>Capability first. Then cost, speed and privacy.</h2>
-    <p class="sub">Most gateways retry the same request somewhere else. Ours decides where it should go in the first place, and never trades away a feature your app depends on.</p>
+    <div class="eyebrow">Routing you can audit</div>
+    <h2>The cheapest expert that is good enough. Never just the cheapest.</h2>
+    <p class="sub">Most AI stacks send everything to one large model, or retry the same request somewhere else when it fails. oifd decides per request where it should go in the first place, and it can tell you exactly why.</p>
     <div class="grid">
-      <div class="card"><h3>Never a silent downgrade</h3><p>If your request uses tools, JSON schema, vision, reasoning or a long context, only models that support all of it are candidates. Vendor-only features pin the request to that vendor.</p></div>
-      <div class="card"><h3>Honest provenance</h3><p>Response headers always name the requested and the actual model and provider, with a receipt. A response never claims a model that didn't produce it.</p></div>
-      <div class="card"><h3>No interruption</h3><p>If a provider fails mid-stream, the answer continues on another provider from the exact point it stopped. Failover spreads across different vendors, not three copies of the same one.</p></div>
-      <div class="card"><h3>Blind by design</h3><p>Routing uses the request's structure and your optional hints, not its meaning. Identity is stripped before a provider sees anything, and each conversation goes to a different provider.</p></div>
-      <div class="card"><h3>Bring your own keys</h3><p>Connect Anthropic, OpenAI or Gemini accounts. Keys are envelope-encrypted, and you pay those vendors directly at their prices.</p></div>
-      <div class="card"><h3>Limits that hold</h3><p>Requests per minute, tokens per minute, and daily and monthly spend caps per key, per workspace and per organization, enforced at the edge with standard rate-limit headers.</p></div>
+      <div class="card"><h3>A floor, not a gamble</h3><p>Every task gets a quality floor and target from its difficulty and your mode. An expert predicted below the floor is excluded, however cheap. If nothing qualifies, the answer is marked <em>degraded</em>, never passed off.</p></div>
+      <div class="card"><h3>Every route explained</h3><p>Eight normalised components per candidate, plus plain reasons: "exact domain match, quality above target, within budget". <code>POST /v1/route</code> shows the whole decision without running a model.</p></div>
+      <div class="card"><h3>Backups that race</h3><p>If the first token is late, a backup starts; whichever answers first wins and the other is cancelled. In our demo the backup began at 303 ms and answered at 394 ms, where the slow expert would have taken 800.</p></div>
+      <div class="card"><h3>No interruption</h3><p>If an expert fails before answering, the next one takes over. If it fails mid-answer, another continues from the exact point it stopped, and you see one reply.</p></div>
+      <div class="card"><h3>Escalates only when unsure</h3><p>Uncertainty comes from confidence, completeness and domain fit. Above the mode's threshold, a stronger expert is asked, or an independent one from a different model family, within budget and deadline.</p></div>
+      <div class="card"><h3>Learns on your device</h3><p>Time to first token, latency, cost, success and your ratings update each expert's statistics per domain in a local SQLite file. No central server is in the loop.</p></div>
     </div>
   </div>
 </section>
@@ -374,25 +428,65 @@ x-decentralise-actual-provider / -market / -receipt</pre>
 
 <section id="modes">
   <div class="wrap">
-    <div class="eyebrow">Routing modes</div>
-    <h2>Set a policy once, or per request.</h2>
-    <div class="tbl" style="margin-top:28px">
+    <div class="eyebrow">Modes</div>
+    <h2>Say what matters for this request.</h2>
+    <p class="sub">A mode sets how quality, speed, cost and privacy are weighed. The quality floor applies in every mode.</p>
+    <div class="tbl" style="margin-top:8px">
       <table>
-        <thead><tr><th>Mode</th><th>Behaviour</th></tr></thead>
+        <thead><tr><th>Mode</th><th>Quality</th><th>Speed</th><th>Cost</th><th>Privacy</th><th>Behaviour</th></tr></thead>
         <tbody>
-          <tr><td><code>passthrough</code></td><td>Always the provider and model the application requested</td></tr>
-          <tr><td><code>optimise</code></td><td>Weighs quality, cost, latency and decentralisation, above a quality target set by the request's difficulty</td></tr>
-          <tr><td><code>cheapest</code></td><td>Lowest expected cost that meets the quality threshold</td></tr>
-          <tr><td><code>fastest</code></td><td>Lowest latency that meets the quality threshold</td></tr>
-          <tr><td><code>quality</code></td><td>Highest expected quality within budget</td></tr>
-          <tr><td><code>private</code></td><td>Only providers that meet strict privacy</td></tr>
-          <tr><td><code>decentralised_only</code></td><td>Never centralised commercial providers</td></tr>
-          <tr><td><code>byok_only</code></td><td>Only providers you've connected your own keys for</td></tr>
-          <tr><td><code>network_only</code></td><td>Only providers on the open Decentralised.si network</td></tr>
+          <tr><td><code>fast</code></td><td>0.30</td><td>0.50</td><td>0.15</td><td>0.05</td><td>Lowest latency above the floor; tolerates more uncertainty</td></tr>
+          <tr><td><code>balanced</code></td><td>0.40</td><td>0.30</td><td>0.20</td><td>0.10</td><td>The default</td></tr>
+          <tr><td><code>deep</code></td><td>0.65</td><td>0.10</td><td>0.10</td><td>0.15</td><td>Raises the floor and escalates sooner</td></tr>
+          <tr><td><code>cheap</code></td><td>0.30</td><td>0.10</td><td>0.55</td><td>0.05</td><td>Cheapest expert that still clears the floor</td></tr>
+          <tr><td><code>maximum</code></td><td>0.80</td><td>0.05</td><td>0.05</td><td>0.10</td><td>Strongest expert, plus an independent second opinion and synthesis</td></tr>
         </tbody>
       </table>
     </div>
-    <p class="note">In chat and the playground, choose <code>auto</code> to let the router decide, or pick a model to use exactly that model.</p>
+    <p class="note">Privacy is separate from mode. <code>public</code> sends text as written; <code>pseudonymised</code> (the default) replaces identifiers; <code>confidential</code> also restricts to local or trusted experts; <code>local_only</code> never uses a remote expert. The hosted API accepts its own policies (<code>passthrough</code>, <code>optimise</code>, <code>cheapest</code>, <code>private</code>, <code>byok_only</code> and more) through the <code>X-Decentralise-Mode</code> header.</p>
+  </div>
+</section>
+
+<section id="oss" class="alt">
+  <div class="wrap">
+    <div class="split">
+      <div>
+        <div class="eyebrow">Open source</div>
+        <h2>Read it, run it, change it.</h2>
+        <p class="sub">Every part is public on GitHub:</p>
+        <ul class="sub oss-list">
+          <li>the Rust router daemon;</li>
+          <li>the hosted gateway;</li>
+          <li>the provider node and the local memory harness;</li>
+          <li>the token ledger;</li>
+          <li>this site and app.</li>
+        </ul>
+        <p class="sub">The default config uses simulated experts, so you can watch routing, fallback, hedging and escalation work without a GPU or an API key.</p>
+        <div class="repos">
+          <a class="card repo" href="https://github.com/Decentralised-si/Smart-LLM-Router"><b>Decentralised-si/Smart-LLM-Router</b><span>oifd (Rust) · gateway &amp; router (TypeScript) · dsi-node · dsi harness · PAI</span></a>
+          <a class="card repo" href="https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/oif-router"><b>oif-router/</b><span>the local router daemon: 36 tests, benchmark harness, Dockerfile</span></a>
+          <a class="card repo" href="https://github.com/Decentralised-si/web"><b>Decentralised-si/web</b><span>this website, chat app, console and wallet</span></a>
+        </div>
+      </div>
+<pre><span class="c"># run the local router (Rust toolchain)</span>
+git clone https://github.com/Decentralised-si/Smart-LLM-Router
+cd Smart-LLM-Router/oif-router
+cargo run --release
+
+<span class="c"># ask; watch it route, stream and explain</span>
+curl -N localhost:7766/v1/ask \
+  -H 'Content-Type: application/json' \
+  -d '{"prompt": "Explain Black-Scholes implied volatility."}'
+
+<span class="c"># the decision only, no inference</span>
+curl localhost:7766/v1/route \
+  -H 'Content-Type: application/json' \
+  -d '{"prompt": "Write a Rust async TCP server."}'
+
+<span class="c"># tests and benchmark</span>
+cargo test
+cargo run --release --bin benchmark</pre>
+    </div>
   </div>
 </section>
 
@@ -417,12 +511,12 @@ x-decentralise-actual-provider / -market / -receipt</pre>
 
 <section class="cta-end">
   <div class="wrap">
-    <h2>Keep your code. Change one URL.</h2>
-    <p class="sub" style="margin-inline:auto">Start in passthrough, watch what the router would save you, and switch on optimisation when you're ready.</p>
+    <h2>Intelligence routed on your terms.</h2>
+    <p class="sub" style="margin-inline:auto">Run the router locally, call the hosted API with one changed URL, or just start chatting.</p>
     <div class="ctas">
-      <a class="btn primary" href="/app/">Open the app</a>
-      <a class="btn" href="/app/#/console/keys">Get an API key</a>
-      <a class="btn" href="/app/#/console/docs">Read the docs</a>
+      <a class="btn primary" href="/architecture">How it works</a>
+      <a class="btn" href="https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/oif-router">oifd on GitHub</a>
+      <a class="btn" href="/app/">Open the app</a>
     </div>
   </div>
 </section>
@@ -430,13 +524,14 @@ x-decentralise-actual-provider / -market / -receipt</pre>
 
 <footer>
   <div class="wrap">
-    <div><b style="color:var(--ink)">Decentralised<span style="color:var(--accent)">.si</span></b> · the routing layer between applications and intelligence</div>
+    <div><b style="color:var(--ink)">Decentralised<span style="color:var(--accent)">.si</span></b> · Decentralised Super Intelligence · open source</div>
     <div class="links">
+      <a href="/architecture">Architecture</a>
       <a href="/ai">Network</a>
       <a href="/whitepaper">Whitepaper</a>
-      <a href="/app/#/console/docs">Docs</a>
-      <a href="/app/#/console/terminal">Agent terminal</a>
-      <a href="https://github.com/Decentralised-si/web">GitHub</a>
+      <a href="/app/#/console/docs">API docs</a>
+      <a href="https://github.com/Decentralised-si/Smart-LLM-Router">GitHub · router</a>
+      <a href="https://github.com/Decentralised-si/web">GitHub · web</a>
     </div>
   </div>
 </footer>
@@ -454,51 +549,67 @@ x-decentralise-actual-provider / -market / -receipt</pre>
     document.querySelectorAll("[data-p]").forEach((p) => (p.hidden = p.dataset.p !== b.dataset.t));
   }));
 
-  // Hero: a mesh with no single point of failure. Any router reaches any provider;
-  // context lives on the device, so failures are routed around mid-conversation.
+  // Hero: routing happens on the device. Five scenes, each a behaviour oifd's tests and demos prove.
   const NS = "http://www.w3.org/2000/svg";
-  const R = [{ y: 74, city: "edge · Frankfurt" }, { y: 164, city: "edge · Singapore" }, { y: 254, city: "edge · Virginia" }];
-  const P = [["Anthropic", "your key"], ["OpenAI", "your key"], ["Gemini", "your key"], ["GPU node", "Lagos"], ["GPU node", "Berlin"], ["GPU node", "São Paulo"]].map((t, i) => ({ t, y: 36 + i * 50 }));
   const el = (tag, attrs, parent) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); parent && parent.appendChild(e); return e; };
   const txt = (parent, x, y, t, cls) => { const e = el("text", { x, y, class: cls || "" }, parent); e.textContent = t; return e; };
-  const devOut = [134, 187];
-  const rc = (i) => R[i].y + 23, pc = (j) => P[j].y + 19;
-  const dR = (i) => `M${devOut[0]} ${devOut[1]} C 167 ${devOut[1]}, 167 ${rc(i)}, 200 ${rc(i)}`;
-  const dP = (i, j) => `M318 ${rc(i)} C 364 ${rc(i)}, 364 ${pc(j)}, 410 ${pc(j)}`;
+  const STEPS = [["1", "understand", "domain, difficulty"], ["2", "protect", "scrub, trim"], ["3", "choose", "score, floor"], ["4", "stream & guard", "hedge, fail over"], ["5", "escalate & learn", "only if unsure"]];
+  const sg = document.getElementById("steps");
+  const stepEls = STEPS.map((st, i) => {
+    const y = 132 + i * 35;
+    const g = el("g", { class: "st" }, sg);
+    el("rect", { x: 30, y, width: 188, height: 28, rx: 7 }, g);
+    txt(g, 40, y + 18, st[0], "n");
+    txt(g, 54, y + 18, st[1]);
+    return g;
+  });
+  const P = [["Quant specialist", "local GPU"], ["Coder specialist", "local GPU"], ["General model", "Ollama · local"], ["Strong model", "your API key"], ["Network GPU node", "dsi-node"], ["Hosted gateway", "api.decentralised.si"]]
+    .map((t, i) => ({ t, y: 38 + i * 56 }));
+  const pc = (j) => P[j].y + 21;
+  const path = (j) => `M230 206 C 280 206, 280 ${pc(j)}, 330 ${pc(j)}`;
   const mesh = document.getElementById("mesh"), live = document.getElementById("live");
-  R.forEach((_, i) => { el("path", { d: dR(i), class: "m" }, mesh); P.forEach((_, j) => el("path", { d: dP(i, j), class: "m" }, mesh)); });
-  const rg = document.getElementById("routers"), pg = document.getElementById("providers");
-  const rn = R.map((r, i) => { const g = el("g", { class: "nd" }, rg); el("rect", { x: 200, y: r.y, width: 118, height: 46, rx: 10 }, g); txt(g, 259, r.y + 20, "Router"); txt(g, 259, r.y + 36, r.city, "s"); const x = txt(g, 309, r.y + 14, "✕", "x"); return g; });
-  const pn = P.map((p, j) => { const g = el("g", { class: "nd" }, pg); el("rect", { x: 410, y: p.y, width: 144, height: 38, rx: 9 }, g); if (j > 2) el("circle", { cx: 422, cy: p.y + 19, r: 3.5, class: "dot" }, g); txt(g, 484, p.y + 16, p.t[0]); txt(g, 484, p.y + 30, p.t[1], "s"); txt(g, 545, p.y + 13, "✕", "x"); return g; });
+  P.forEach((_, j) => el("path", { d: path(j), class: "m" }, mesh));
+  const pg = document.getElementById("providers");
+  const pn = P.map((p, j) => {
+    const g = el("g", { class: "nd" }, pg);
+    el("rect", { x: 330, y: p.y, width: 224, height: 42, rx: 10 }, g);
+    txt(g, 442, p.y + 18, p.t[0]);
+    txt(g, 442, p.y + 33, p.t[1], "s");
+    txt(g, 544, p.y + 14, "✕", "x");
+    return g;
+  });
 
   const scenes = [
-    { r: 1, p: 4, down: [], dr: [], t: "<b>New conversation.</b> Any healthy router takes it and picks the cheapest provider that supports every feature it uses.",
-      h: "x-decentralise-actual-provider: network   # GPU node, Berlin\nx-decentralise-market: network" },
-    { r: 1, p: 1, from: 4, down: [4], dr: [], t: "<b>A provider drops mid-answer.</b> The stream continues on another provider from the exact point it stopped. Your app sees one reply.",
-      h: "x-decentralise-failovers: 1\nx-decentralise-providers: network,openai" },
-    { r: 0, p: 1, down: [4], dr: [1], t: "<b>A router goes down.</b> Routers hold no conversation state, so the next request simply lands on another edge. Your context is on your device.",
-      h: "# edge Singapore offline → edge Frankfurt\nx-decentralise-actual-provider: openai" },
-    { r: 2, p: 5, down: [], dr: [], t: "<b>Next conversation, different provider.</b> Sessions are spread across providers, so none of them sees your whole history.",
-      h: "x-decentralise-actual-provider: network   # GPU node, São Paulo\nx-decentralise-market: network" },
+    { q: "Explain Black-Scholes implied volatility.", steps: [0, 2], to: 0, t: "<b>Routed to the specialist.</b> Classified as finance.quant.derivatives; the quant specialist wins on exact domain match, above the quality target and within budget.",
+      h: "route  quant-local  score 0.90  ·  exact domain match  ·  ~150 ms  ·  ~$0.0002" },
+    { q: "Email me at yousef@example.com and analyse this option position.", steps: [1], to: 0, t: "<b>Pseudonymised before it leaves.</b> The provider gets a placeholder; the mapping stays on your device and the reply you see is restored.",
+      h: 'provider received: "Email me at <EMAIL_1> and analyse this option position."' },
+    { q: "Explain implied volatility.", steps: [2], to: 2, down: [0], t: "<b>Specialist offline, answer still arrives.</b> The next-best expert takes over, and the route says so.",
+      h: "fallback: quant-local is offline; falling back to general-local" },
+    { q: "Summarise the history of the printing press.", steps: [3], to: 4, cut: 2, t: "<b>Slow expert, backup launched.</b> No first token after 300 ms, so a backup starts; it answers first and the slow request is cancelled.",
+      h: "hedge at 303 ms  →  backup first token 394 ms  ·  primary cancelled" },
+    { q: "Compare three tokenisation structures under Australian securities law.", steps: [4], to: 3, done: 2, t: "<b>Unsure answer, stronger expert.</b> Uncertainty is above the threshold, so the ladder climbs one rung, within budget. Confident answers stop at one.",
+      h: "status: deepening  ·  rung R2  ·  uncertainty 0.41  →  strong model" },
   ];
   const dots = document.querySelectorAll(".steps-dots i");
-  const capT = document.getElementById("cap-t"), capH = document.getElementById("cap-h");
+  const capQ = document.getElementById("cap-q"), capT = document.getElementById("cap-t"), capH = document.getElementById("cap-h");
   let k = 0;
   const show = () => {
     const sc = scenes[k % scenes.length];
     live.replaceChildren();
-    if (sc.from !== undefined) el("path", { d: dP(sc.r, sc.from), class: "p cut" }, live);
-    el("path", { d: dR(sc.r), class: "p" }, live);
-    el("path", { d: dP(sc.r, sc.p), class: "p" }, live);
-    rn.forEach((g, i) => { g.classList.toggle("on", i === sc.r); g.classList.toggle("down", sc.dr.includes(i)); });
-    pn.forEach((g, j) => { g.classList.toggle("on", j === sc.p); g.classList.toggle("down", sc.down.includes(j)); });
+    if (sc.cut !== undefined) el("path", { d: path(sc.cut), class: "p cut" }, live);
+    if (sc.done !== undefined) el("path", { d: path(sc.done), class: "p done" }, live);
+    el("path", { d: path(sc.to), class: "p" }, live);
+    stepEls.forEach((g, i) => g.classList.toggle("on", sc.steps.includes(i)));
+    pn.forEach((g, j) => { g.classList.toggle("on", j === sc.to); g.classList.toggle("down", (sc.down || []).includes(j)); });
     dots.forEach((d, i) => d.classList.toggle("on", i === k % scenes.length));
+    capQ.textContent = "› " + sc.q;
     capT.innerHTML = sc.t;
     capH.textContent = sc.h;
     k++;
   };
   show();
-  if (!matchMedia("(prefers-reduced-motion: reduce)").matches) setInterval(show, 4200);
+  if (!matchMedia("(prefers-reduced-motion: reduce)").matches) setInterval(show, 4600);
 })();
 </script>
 </body>

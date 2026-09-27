@@ -1,0 +1,635 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Architecture — Decentralised.si</title>
+<meta name="description" content="How Decentralised.si works: an open-source local router that decides which expert answers each request, what context leaves your device, when to start a backup, when to escalate and when to stop.">
+<meta property="og:title" content="Decentralised.si architecture">
+<meta property="og:description" content="How the local router, the hosted gateway and the open provider network fit together.">
+<meta property="og:image" content="/brand/logo.png">
+<meta name="theme-color" content="#000211">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="/brand/favicon-32.png">
+<link rel="apple-touch-icon" href="/brand/apple-touch-icon.png">
+<style>
+:root{
+  --bg:#f6f5f1;--bg2:#efede6;--panel:#fff;--ink:#15171b;--muted:#5b616c;--line:#e1ded6;
+  --accent:#2257e6;--accent-soft:#e3eafe;--a2:#7a3fe0;--ok:#1f7a55;--ok-soft:#dcf1e7;--bad:#d4380d;--bad-soft:#fde6dd;--warn:#9a6a00;--warn-soft:#fbf0d4;
+  --grad:linear-gradient(120deg,#16b5ff,#2257e6 45%,#8a3ffc);--code:#f0eee8;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#0f1114;--bg2:#14171b;--panel:#1a1e24;--ink:#eceef1;--muted:#9aa1ad;--line:#282e37;
+  --accent:#4da3ff;--accent-soft:#12203d;--a2:#b18cff;--ok:#4cc38a;--ok-soft:#10291e;--bad:#ff6b5a;--bad-soft:#35170f;--warn:#e2b04a;--warn-soft:#2d2410;
+  --code:#14171c;color-scheme:dark}}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:var(--accent)}
+img{max-width:100%}
+.wrap{max-width:1140px;margin:0 auto;padding-inline:20px}
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;background:color-mix(in srgb,var(--bg) 85%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:60px;flex-wrap:wrap}
+.brand{font-weight:700;font-size:18px;letter-spacing:-.01em;text-decoration:none;color:var(--ink);display:flex;align-items:center;gap:9px}
+.brand b{color:var(--accent)}
+.logo{border-radius:8px;display:block}
+.links{display:flex;gap:20px;align-items:center;flex-wrap:wrap}
+.links a{color:var(--muted);text-decoration:none;font-size:14px}
+.links a:hover,.links a[aria-current]{color:var(--ink)}
+.btn{display:inline-flex;align-items:center;gap:8px;font:inherit;font-weight:600;font-size:15px;border-radius:10px;padding:10px 16px;text-decoration:none;border:1px solid var(--line);color:var(--ink);background:var(--panel)}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--grad);border-color:transparent;color:#fff}
+.btn.small{padding:7px 13px;font-size:14px}
+.gh{width:16px;height:16px;fill:currentColor}
+.eyebrow{font:600 12px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+h1{font-family:var(--serif);font-weight:500;font-size:clamp(38px,5.6vw,66px);line-height:1.04;letter-spacing:-.025em;margin:16px 0 18px;max-width:900px}
+h1 em{font-style:italic;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+h2{font-family:var(--serif);font-weight:500;font-size:clamp(28px,3.6vw,40px);line-height:1.1;letter-spacing:-.02em;margin:8px 0 14px}
+h3{font-size:18px;margin:28px 0 8px;letter-spacing:-.01em}
+p{margin:0 0 14px}
+.lead{font-size:clamp(17px,1.9vw,20px);color:var(--muted);max-width:760px}
+.muted{color:var(--muted)}
+.ctas{display:flex;gap:12px;flex-wrap:wrap;margin-top:22px}
+header.hero{padding:64px 0 36px}
+/* layout: sticky table of contents + content */
+.layout{display:grid;grid-template-columns:230px minmax(0,1fr);gap:48px;padding-bottom:40px}
+.layout>*{min-width:0}
+.toc{position:sticky;top:84px;align-self:start;font-size:14px}
+.toc ol{list-style:none;margin:0;padding:0;border-left:1px solid var(--line)}
+.toc a{display:block;padding:5px 0 5px 14px;color:var(--muted);text-decoration:none;margin-left:-1px;border-left:2px solid transparent}
+.toc a:hover{color:var(--ink)}
+.toc a.on{color:var(--ink);border-left-color:var(--accent)}
+.toc .t{font:600 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 10px}
+@media (max-width:980px){.layout{grid-template-columns:1fr}.toc{position:static}.toc ol{columns:2;column-gap:24px}}
+@media (max-width:560px){.toc ol{columns:1}}
+article section{padding:34px 0 30px;border-top:1px solid var(--line);scroll-margin-top:70px}
+article section:first-child{border-top:0;padding-top:0}
+.num{font:600 12px var(--mono);color:var(--accent);letter-spacing:.1em}
+/* generic blocks */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px}
+.grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(230px,1fr))}
+.grid>*{min-width:0}
+pre{font:13px/1.6 var(--mono);background:var(--code);border:1px solid var(--line);border-radius:12px;padding:16px;overflow-x:auto;margin:12px 0 18px}
+pre .c{color:var(--muted)}
+pre mark{background:var(--accent-soft);color:var(--accent);border-radius:3px;padding:0 2px}
+code{font-family:var(--mono);font-size:.9em}
+:not(pre)>code{background:var(--code);border:1px solid var(--line);border-radius:5px;padding:1px 5px}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:12px;margin:14px 0 20px}
+table{border-collapse:collapse;width:100%;min-width:560px;background:var(--panel);font-size:14.5px}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:11.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600}
+tr:last-child td{border-bottom:0}
+td:first-child{white-space:nowrap}
+.note{border-left:3px solid var(--accent);padding:2px 0 2px 16px;color:var(--muted);margin:16px 0}
+.src{font:12.5px var(--mono);color:var(--muted)}
+.src a{color:var(--muted)}
+.pill{display:inline-block;font:600 11px/1 var(--mono);padding:5px 8px;border-radius:6px;white-space:nowrap}
+.live{background:var(--ok-soft);color:var(--ok)}
+.impl{background:var(--accent-soft);color:var(--accent)}
+.iface{background:var(--warn-soft);color:var(--warn)}
+.road{background:var(--code);color:var(--muted);border:1px solid var(--line)}
+/* system diagram */
+.sys{display:grid;gap:12px;margin:18px 0 8px}
+.layer{border:1px solid var(--line);border-radius:16px;padding:16px;background:var(--panel)}
+.layer.device{border:1.5px dashed var(--accent)}
+.layer.future{border-style:dashed;opacity:.9}
+.layer h4{margin:0 0 12px;font:600 11.5px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.row{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.box{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--bg);font-size:14px;line-height:1.4}
+.box b{display:block;font-size:14.5px}
+.box span{color:var(--muted);font-size:12.5px}
+.box.hot{border:1.5px solid var(--accent);background:var(--accent-soft)}
+.box.hot b{color:var(--accent)}
+.arrow{text-align:center;font:600 12px var(--mono);color:var(--muted);letter-spacing:.06em}
+.arrow::before{content:"";display:block;width:2px;height:16px;margin:0 auto 4px;background:var(--line)}
+.oifd-steps{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:10px}
+.oifd-steps div{font:600 11.5px/1.3 var(--mono);text-align:center;padding:8px 4px;border-radius:8px;background:var(--panel);border:1px solid var(--line)}
+@media (max-width:640px){.oifd-steps{grid-template-columns:repeat(2,1fr)}}
+/* lifecycle */
+.life{list-style:none;padding:0;margin:18px 0;counter-reset:s}
+.life li{position:relative;padding:0 0 18px 46px;border-left:2px solid var(--line);margin-left:14px}
+.life li:last-child{border-left-color:transparent;padding-bottom:0}
+.life li::before{counter-increment:s;content:counter(s);position:absolute;left:-15px;top:-2px;width:28px;height:28px;border-radius:50%;background:var(--grad);color:#fff;font:700 13px/28px var(--mono);text-align:center}
+.life .state{font:600 11.5px var(--mono);letter-spacing:.08em;color:var(--accent)}
+.life h5{margin:2px 0 4px;font-size:16px}
+.life p{color:var(--muted);margin:0}
+/* taxonomy */
+.tree{font:13.5px/1.7 var(--mono);background:var(--code);border:1px solid var(--line);border-radius:12px;padding:14px 18px;overflow-x:auto;white-space:pre}
+.tree b{color:var(--accent);font-weight:600}
+/* timeline */
+.timeline{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;margin:16px 0}
+.timeline svg{display:block;width:100%;height:auto}
+.timeline text{font:12px var(--mono);fill:var(--muted)}
+.timeline .lbl{font:600 12.5px ui-sans-serif,system-ui;fill:var(--ink)}
+.ladder{display:grid;gap:8px;margin:14px 0}
+.rung{display:grid;grid-template-columns:56px 1fr auto;gap:12px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:10px 14px;background:var(--panel)}
+.rung b{font:700 15px var(--mono);color:var(--accent)}
+.rung.off b{color:var(--muted)}
+.flowline{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:12px 0;font:600 12px var(--mono)}
+.flowline span{padding:6px 9px;border-radius:7px;background:var(--code);border:1px solid var(--line)}
+.flowline i{font-style:normal;color:var(--muted)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin:16px 0}
+.stat{border:1px solid var(--line);border-radius:12px;padding:14px;background:var(--panel)}
+.stat b{display:block;font:500 28px/1.1 var(--serif)}
+.stat span{color:var(--muted);font-size:13px}
+.repos{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));margin:16px 0}
+.repo{display:block;text-decoration:none;color:var(--ink)}
+.repo:hover{border-color:var(--accent)}
+.repo h4{margin:0 0 6px;display:flex;gap:8px;align-items:center;font-size:16px}
+.repo p{color:var(--muted);font-size:14.5px;margin:0 0 10px}
+.repo code{font-size:12px}
+footer{border-top:1px solid var(--line);padding:32px 0 calc(32px + env(safe-area-inset-bottom,0px));color:var(--muted);font-size:14px}
+footer .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
+footer a{color:var(--muted)}
+@media (max-width:640px){.links a.hide-sm{display:none}header.hero{padding-top:40px}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="gh" viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></symbol></svg>
+
+<div class="top">
+  <div class="wrap">
+    <a class="brand" href="/" aria-label="Decentralised.si home">
+      <img src="/brand/logo-96.png" width="30" height="30" alt="" class="logo">
+      <span>Decentralised<b>.si</b></span>
+    </a>
+    <nav class="links" aria-label="Main">
+      <a href="/architecture" aria-current="page">Architecture</a>
+      <a class="hide-sm" href="/ai">Network</a>
+      <a class="hide-sm" href="/whitepaper">Whitepaper</a>
+      <a href="https://github.com/Decentralised-si" aria-label="GitHub"><svg class="gh"><use href="#gh"/></svg></a>
+      <a class="btn small primary" href="/app/">Open app</a>
+    </nav>
+  </div>
+</div>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="eyebrow">Architecture · open source</div>
+    <h1>How a request finds <em>the right intelligence</em>.</h1>
+    <p class="lead">Decentralised.si is a set of open-source components. At the centre is <b>oifd</b>, a router that runs on your own device and acts as a scheduler for intelligence. For every request it decides:</p>
+    <ul class="lead">
+      <li>what kind of expertise is needed, and how much;</li>
+      <li>which provider should supply it;</li>
+      <li>how much of your context may leave the device;</li>
+      <li>how much cost is justified;</li>
+      <li>when to start a backup, when to escalate, and when to stop.</li>
+    </ul>
+    <p class="lead">This page explains each of those decisions and links to the code that makes it.</p>
+    <div class="ctas">
+      <a class="btn primary" href="https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/oif-router"><svg class="gh"><use href="#gh"/></svg> oifd on GitHub</a>
+      <a class="btn" href="https://github.com/Decentralised-si/Smart-LLM-Router"><svg class="gh"><use href="#gh"/></svg> Smart-LLM-Router</a>
+      <a class="btn" href="#run">Run it locally</a>
+    </div>
+  </div>
+</header>
+
+<div class="wrap layout">
+  <nav class="toc" aria-label="On this page">
+    <p class="t">On this page</p>
+    <ol>
+      <li><a href="#principle">The principle</a></li>
+      <li><a href="#system">The system at a glance</a></li>
+      <li><a href="#lifecycle">Life of a request</a></li>
+      <li><a href="#understand">Understanding the request</a></li>
+      <li><a href="#choose">Choosing an expert</a></li>
+      <li><a href="#privacy">What leaves your device</a></li>
+      <li><a href="#reliability">Streaming without interruption</a></li>
+      <li><a href="#escalation">More intelligence, only when needed</a></li>
+      <li><a href="#learning">Learning from outcomes</a></li>
+      <li><a href="#gateway">The hosted gateway and the network</a></li>
+      <li><a href="#performance">Measured performance</a></li>
+      <li><a href="#status">What is built</a></li>
+      <li><a href="#run">Run it yourself</a></li>
+    </ol>
+  </nav>
+
+  <article>
+
+<section id="principle">
+  <div class="num">01</div>
+  <h2>The principle</h2>
+  <p class="lead" style="font-family:var(--serif);font-size:24px;line-height:1.35;color:var(--ink)">Find the cheapest and fastest provider that still meets the required quality floor. Then escalate only if more intelligence is actually needed.</p>
+  <p>Most AI products send every request to one large model at one company. That is simple, but it is also:</p>
+  <ul>
+    <li><b>Expensive:</b> a frontier model answers even simple questions.</li>
+    <li><b>Fragile:</b> when that company has an outage, you have one too.</li>
+    <li><b>Invasive:</b> that company sees your entire history.</li>
+  </ul>
+  <p>Decentralised.si makes each decision per request, on your side. Three rules follow from the principle and appear throughout the code:</p>
+  <div class="grid">
+    <div class="card"><h3 style="margin-top:0">Quality is a floor, not a slider</h3><p class="muted">A provider predicted to fall below the task's quality floor is excluded, however cheap it is. If nobody qualifies, the best available provider answers and the result is marked <em>degraded</em>, never passed off as meeting the target.</p></div>
+    <div class="card"><h3 style="margin-top:0">Every decision is explained</h3><p class="muted">Each candidate gets a score broken into eight normalised components, and the selection comes with plain-language reasons. You can ask for the full decision without running any model.</p></div>
+    <div class="card"><h3 style="margin-top:0">The device is the source of truth</h3><p class="muted">Conversation memory, the privacy mapping and learned provider statistics live on your machine. Providers receive single, pseudonymised requests. There is no central server in the decision loop.</p></div>
+  </div>
+</section>
+
+<section id="system">
+  <div class="num">02</div>
+  <h2>The system at a glance</h2>
+  <p>There are three layers. Only the first is required. Everything below it is a <em>provider</em>, and oifd treats them all the same way: an endpoint with a price, an expected latency and quality, and a map of the domains it is good at.</p>
+
+  <div class="sys" role="img" aria-label="Layer 1: your device, running your apps, the oifd router and local memory. Layer 2: expert providers — local models, your own vendor keys, the Decentralised.si gateway and independent GPU nodes. Layer 3: future fabric services — discovery, reputation, settlement and verification.">
+    <div class="layer device">
+      <h4><span>① Your device</span><span>required · runs locally</span></h4>
+      <div class="row">
+        <div class="box"><b>Your apps</b><span>scripts, chat, agents: anything that can call a local HTTP API</span></div>
+        <div class="box hot" style="grid-column:span 2"><b>oifd — local router daemon</b><span>127.0.0.1:7766 · Rust · one binary</span>
+          <div class="oifd-steps"><div>understand</div><div>protect</div><div>choose</div><div>stream &amp; guard</div><div>escalate &amp; learn</div></div>
+        </div>
+        <div class="box"><b>Local state</b><span>conversation memory, privacy mapping, provider statistics (SQLite)</span></div>
+      </div>
+    </div>
+    <div class="arrow">pseudonymised requests · minimal context · one expert at a time</div>
+    <div class="layer">
+      <h4><span>② Expert providers</span><span>any mix · configured in YAML</span></h4>
+      <div class="row">
+        <div class="box"><b>Local models</b><span>Ollama, vLLM, llama.cpp, LM Studio on this machine or LAN</span></div>
+        <div class="box"><b>Your vendor keys</b><span>any OpenAI-compatible API, billed to you directly</span></div>
+        <div class="box"><b>Decentralised.si gateway</b><span>drop-in Anthropic / OpenAI / Gemini APIs, blind router, limits, billing</span></div>
+        <div class="box"><b>Network GPU nodes</b><span>independent operators running <code>dsi-node</code>, paid in PAI</span></div>
+      </div>
+    </div>
+    <div class="arrow">interfaces today · network later</div>
+    <div class="layer future">
+      <h4><span>③ Fabric services</span><span>roadmap · interfaces in code</span></h4>
+      <div class="row">
+        <div class="box"><b>Discovery</b><span>find experts for a domain</span></div>
+        <div class="box"><b>Reputation</b><span>shared, verifiable track records</span></div>
+        <div class="box"><b>Settlement</b><span>pay providers for verified work</span></div>
+        <div class="box"><b>Verification</b><span>independent checks of answers</span></div>
+      </div>
+    </div>
+  </div>
+  <p class="src">Code: <a href="https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/oif-router">oif-router/</a> (layer 1) · <a href="https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/apps/gateway">apps/gateway</a> and <a href="https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/packages/node">packages/node</a> (layer 2) · <a href="https://github.com/Decentralised-si/Smart-LLM-Router/blob/main/oif-router/src/future.rs">oif-router/src/future.rs</a> (layer 3 interfaces)</p>
+
+  <h3>Inside oifd</h3>
+  <div class="tbl"><table>
+    <thead><tr><th>Module</th><th>Responsibility</th></tr></thead>
+    <tbody>
+      <tr><td><a href="https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/oif-router/src/router"><code>router/</code></a></td><td>Classification, difficulty, planning, scoring, escalation ladder, stop rules, synthesis</td></tr>
+      <tr><td><a href="https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/oif-router/src/context"><code>context/</code></a></td><td>Pseudonymisation, per-provider context compilation, local memory, context deltas</td></tr>
+      <tr><td><a href="https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/oif-router/src/providers"><code>providers/</code></a></td><td>Adapter trait; OpenAI-compatible, Ollama and simulated adapters; registry; health probes</td></tr>
+      <tr><td><a href="https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/oif-router/src/streams"><code>streams/</code></a></td><td>Execution: streaming, hedging, fallback, mid-stream continuation, cancellation</td></tr>
+      <tr><td><a href="https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/oif-router/src/storage"><code>storage/</code></a></td><td>In-memory route cache, SQLite writer thread, outcomes and feedback</td></tr>
+      <tr><td><a href="https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/oif-router/src/api"><code>api/</code></a></td><td>Local HTTP API with server-sent events</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="lifecycle">
+  <div class="num">03</div>
+  <h2>Life of a request</h2>
+  <p>Every request passes through the same state machine, and each transition is recorded in the task's event log. The first four steps are the <b>fast path</b>. They are pure in-memory work, with no network calls, no database reads and no discovery.</p>
+  <ol class="life">
+    <li><span class="state">RECEIVED</span><h5>Recall and protect</h5><p>Local conversation history is attached. Identifiers in the prompt and every context item are replaced with placeholders before anything else happens.</p></li>
+    <li><span class="state">CLASSIFYING</span><h5>Understand</h5><p>Domain, difficulty, reasoning profile, freshness and tool needs are derived from the pseudonymised text. The result is cached by a hash of the prompt.</p></li>
+    <li><span class="state">PLANNING</span><h5>Set the bar</h5><p>Mode, difficulty and your limits become a quality floor and target, a latency target, a budget, a deadline and an output-token estimate.</p></li>
+    <li><span class="state">ROUTING</span><h5>Choose</h5><p>Every provider is scored with the latest statistics from the route cache. Constraints are applied, one provider is selected and the rest are ranked as backups.</p></li>
+    <li><span class="state">STREAMING</span><h5>Answer, guarded</h5><p>Context is compiled for the chosen provider and the answer streams to you. If it is slow a backup is started; if it fails the next provider takes over.</p></li>
+    <li><span class="state">OPTIONAL_ESCALATION</span><h5>Deepen only if unsure</h5><p>Uncertainty is measured. Only if it exceeds the mode's threshold is a stronger or independent expert asked, within budget and deadline.</p></li>
+    <li><span class="state">SYNTHESIZING</span><h5>Combine</h5><p>With two answers, the most credible is kept or they are merged.</p></li>
+    <li><span class="state">COMPLETED · DEGRADED · CANCELLED · FAILED</span><h5>Record and learn</h5><p>Time to first token, latency, cost, success and escalation are written to SQLite and update the provider's statistics for that domain.</p></li>
+  </ol>
+  <p>The client sees it as server-sent events:</p>
+<pre><span class="c">$ curl -N localhost:7766/v1/ask -H 'Content-Type: application/json' \
+    -d '{"prompt": "Explain Black-Scholes implied volatility.", "mode": "balanced"}'</span>
+event: route    {"domain": "finance.quant.derivatives", "difficulty": "easy", "provider": "quant-local", "score": 0.9,
+                 "reasons": ["exact domain match (finance.quant.derivatives)", "quality above target (0.96 ≥ 0.88)",
+                             "low expected latency (~150 ms to first token)", "within budget (~$0.00019)", "runs locally"], ...}
+event: token    "Implied"
+event: token    " volatility"
+<span class="c">   …</span>
+event: final    {"state": "COMPLETED", "provider": "quant-local", "ttfi_ms": 163, "cost": 0.000058, "escalated": false,
+                 "stop_reason": "confident", "hedged": false, "fallbacks": 0, ...}</pre>
+  <p class="src">Code: <a href="https://github.com/Decentralised-si/Smart-LLM-Router/blob/main/oif-router/src/router/mod.rs">router/mod.rs</a> (fast path) · <a href="https://github.com/Decentralised-si/Smart-LLM-Router/blob/main/oif-router/src/streams/manager.rs">streams/manager.rs</a> (execution) · <a href="https://github.com/Decentralised-si/Smart-LLM-Router/blob/main/oif-router/src/models/outcome.rs">models/outcome.rs</a> (states)</p>
+</section>
+
+<section id="understand">
+  <div class="num">04</div>
+  <h2>Understanding the request</h2>
+  <h3>Domain: a taxonomy with fallback</h3>
+  <p>Expertise is organised as a tree. A provider that is excellent at <code>finance.quant.derivatives</code> is a perfect match for an options question. A <code>finance.quant</code> generalist is a good match, and a generalist is an acceptable last resort.</p>
+<div class="tree">general
+├── <b>finance</b>          banking · quant → <b>derivatives</b> · risk
+├── <b>technology</b>       software → rust · python · ai → inference
+├── <b>science</b>          physics · biology · chemistry
+├── <b>law</b>              corporate · tax · securities
+└── <b>medicine</b>         general · cardiology · oncology
+
+finance.quant.derivatives → finance.quant → finance → general</div>
+  <p>Classification is layered:</p>
+  <ul>
+    <li><b>Layer 1: auditable keyword rules.</b> They take microseconds and always run. A specific domain with evidence of its own inherits its ancestors' evidence, so "Rust" plus generic software words ranks <code>technology.software.rust</code> above <code>technology.software</code>. Up to three weighted domains are kept.</li>
+    <li><b>Layer 2: a small model classifier, used only when rule evidence is weak.</b> It sits behind the <code>DomainClassifier</code> trait, so a local model can replace it. It only ever sees the pseudonymised prompt, and never sees <code>local_only</code> requests unless it runs locally.</li>
+  </ul>
+  <h3>Difficulty: from structure, not meaning</h3>
+  <p>A deterministic estimator adds up signals, and every signal is reported so the decision can be audited:</p>
+  <ul>
+    <li><b>Raise difficulty:</b> length, number of domains, high-stakes domains (law, medicine), explicit constraints, need for live data or calculation, multi-step and research-grade language, multi-item comparisons, jurisdiction-specific questions.</li>
+    <li><b>Lower difficulty:</b> short definitional questions.</li>
+  </ul>
+  <div class="tbl"><table>
+    <thead><tr><th>Prompt</th><th>Difficulty</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td>What is EBITDA?</td><td><span class="pill live">easy</span></td><td>short definitional question</td></tr>
+      <tr><td>Write a Rust async TCP server.</td><td><span class="pill impl">medium</span></td><td>code generation</td></tr>
+      <tr><td>Compare three tokenisation structures under Australian securities law.</td><td><span class="pill iface">hard</span></td><td>high-stakes domain, multi-item comparison, jurisdiction, constraint</td></tr>
+      <tr><td>Design a new distributed consensus mechanism and formally reason about failure modes.</td><td><span class="pill" style="background:var(--bad-soft);color:var(--bad)">extreme</span></td><td>two research-grade cues, three multi-step cues</td></tr>
+    </tbody>
+  </table></div>
+  <p>Difficulty moves the bar. Harder tasks raise the quality target, and the gap between strong and weak models widens: a provider's predicted quality is pulled down more on hard and extreme tasks.</p>
+  <p class="src">Code: <a href="https://github.com/Decentralised-si/Smart-LLM-Router/blob/main/oif-router/src/router/taxonomy.rs">taxonomy.rs</a> · <a href="https://github.com/Decentralised-si/Smart-LLM-Router/blob/main/oif-router/src/router/classify.rs">classify.rs</a> · <a href="https://github.com/Decentralised-si/Smart-LLM-Router/blob/main/oif-router/src/router/difficulty.rs">difficulty.rs</a> · <a href="https://github.com/Decentralised-si/Smart-LLM-Router/blob/main/oif-router/src/router/planner.rs">planner.rs</a></p>
+</section>
+
+<section id="choose">
+  <div class="num">05</div>
+  <h2>Choosing an expert</h2>
+  <p>Each provider gets eight component scores, each normalised to 0–1, so raw milliseconds and dollars are never added together. The mode decides how much each component counts.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Component</th><th>How it is normalised</th></tr></thead>
+    <tbody>
+      <tr><td>domain match</td><td>competence × taxonomy factor: exact 1.0 · parent 0.85 · broader 0.65 · general 0.40 · narrower 0.70 (configurable)</td></tr>
+      <tr><td>predicted quality</td><td><code>(q − floor) / (1 − floor)</code>, with q adjusted for domain fit and difficulty, blended with observed quality</td></tr>
+      <tr><td>latency</td><td><code>1 / (1 + ttfi / target)</code>; the target comes from the mode, and slow providers count double</td></tr>
+      <tr><td>price</td><td><code>1 / (1 + cost / (5% of budget))</code>, from estimated input and output tokens</td></tr>
+      <tr><td>reliability</td><td>completion reliability blended with the observed success rate, × current health</td></tr>
+      <tr><td>tool match</td><td>required tools or JSON output supported</td></tr>
+      <tr><td>context affinity</td><td>higher if this provider served the conversation last (its prompt cache is warm)</td></tr>
+      <tr><td>privacy match</td><td>local providers score highest; remote ones lower as the privacy class tightens</td></tr>
+    </tbody>
+  </table></div>
+  <h3>Modes</h3>
+  <p>80% of the weight follows the mode. The quality share is split 60/40 between domain match and predicted quality. The other 20% is fixed: reliability 10%, tool match 5% and context affinity 5%.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Mode</th><th>Quality</th><th>Speed</th><th>Cost</th><th>Privacy</th><th>Also</th></tr></thead>
+    <tbody>
+      <tr><td><code>fast</code></td><td>0.30</td><td>0.50</td><td>0.15</td><td>0.05</td><td>300 ms first-token target</td></tr>
+      <tr><td><code>balanced</code></td><td>0.40</td><td>0.30</td><td>0.20</td><td>0.10</td><td>default</td></tr>
+      <tr><td><code>deep</code></td><td>0.65</td><td>0.10</td><td>0.10</td><td>0.15</td><td>floor +0.05, lower escalation threshold</td></tr>
+      <tr><td><code>cheap</code></td><td>0.30</td><td>0.10</td><td>0.55</td><td>0.05</td><td>still never below the floor</td></tr>
+      <tr><td><code>maximum</code></td><td>0.80</td><td>0.05</td><td>0.05</td><td>0.10</td><td>always asks a second, independent expert</td></tr>
+    </tbody>
+  </table></div>
+  <h3>Constraints before scores</h3>
+  <p><b>Hard constraints</b> exclude a provider outright: disabled, offline, or not allowed to see this privacy class.</p>
+  <p><b>Soft constraints</b> exclude it unless nothing else qualifies: predicted quality below the floor, over budget, or too slow for the deadline. If every provider fails a soft constraint, the best reachable one answers and the task is marked <code>DEGRADED</code>, with the reason.</p>
+  <p>When the ideal provider is unavailable, the explanation says so. For example: <code>quant-local is offline (best match for finance.quant.derivatives); falling back to general-local</code>.</p>
+  <p><code>POST /v1/route</code> returns the whole decision without running a model: the task vector, every candidate's components and reasons, the weights, and the timings.</p>
+  <p class="src">Code: <a href="https://github.com/Decentralised-si/Smart-LLM-Router/blob/main/oif-router/src/router/scorer.rs">scorer.rs</a> · <a href="https://github.com/Decentralised-si/Smart-LLM-Router/blob/main/oif-router/src/api/inspect.rs">api/inspect.rs</a></p>
+</section>
+
+<section id="privacy">
+  <div class="num">06</div>
+  <h2>What leaves your device</h2>
+  <p>Before anything is transmitted, the prompt and every context item are scrubbed. The scrubber finds:</p>
+  <ul>
+    <li>email addresses and phone numbers;</li>
+    <li>crypto wallets (EVM, Bitcoin, base58);</li>
+    <li>IBANs, card numbers (Luhn-checked) and account numbers;</li>
+    <li>IP addresses, and URLs that carry tokens or credentials;</li>
+    <li>names and other terms you tag as sensitive.</li>
+  </ul>
+  <p>Each is replaced with a stable placeholder. The mapping stays in the daemon's memory: it cannot be serialised, and it is never logged, stored or returned by the API. Answers shown to you are rehydrated as they stream, even when a placeholder is split across chunks.</p>
+<pre><span class="c"># You type (privacy: pseudonymised)</span>
+Email me at yousef@example.com and analyse this option position.
+
+<span class="c"># The provider's server receives — captured on the wire</span>
+[{"role":"user","content":"Email me at <mark>&lt;EMAIL_1&gt;</mark> and analyse this option position."}]
+
+<span class="c"># You see</span>
+… reply to yousef@example.com …</pre>
+  <div class="tbl"><table>
+    <thead><tr><th>Privacy class</th><th>Behaviour</th></tr></thead>
+    <tbody>
+      <tr><td><code>public</code></td><td>sent as written</td></tr>
+      <tr><td><code>pseudonymised</code></td><td>default; identifiers replaced before transmission</td></tr>
+      <tr><td><code>confidential</code></td><td>pseudonymised, and only local or explicitly <code>trusted</code> providers may receive it</td></tr>
+      <tr><td><code>local_only</code></td><td>remote providers are never used; if none is local, the request fails rather than leak</td></tr>
+    </tbody>
+  </table></div>
+  <h3>Minimal context, per provider</h3>
+  <p>The context compiler builds a separate context for each provider:</p>
+  <ol>
+    <li>Removes duplicates.</li>
+    <li>Scores each item's relevance, using its domain tag or its word overlap with the question.</li>
+    <li>Drops what is unrelated, but keeps the most recent turns of the conversation.</li>
+    <li>Fits the rest into that provider's context window, truncating long items head-and-tail.</li>
+  </ol>
+  <p>A cardiology note does not travel with an options question.</p>
+  <p class="src">Code: <a href="https://github.com/Decentralised-si/Smart-LLM-Router/blob/main/oif-router/src/context/privacy.rs">privacy.rs</a> · <a href="https://github.com/Decentralised-si/Smart-LLM-Router/blob/main/oif-router/src/context/compiler.rs">compiler.rs</a> · <a href="https://github.com/Decentralised-si/Smart-LLM-Router/blob/main/oif-router/src/context/memory.rs">memory.rs</a></p>
+</section>
+
+<section id="reliability">
+  <div class="num">07</div>
+  <h2>Streaming without interruption</h2>
+  <h3>Hedged requests</h3>
+  <p>A provider that promises a first token in 100 ms but takes 800 ms is detected while it happens. If no token has arrived after the hedge delay, the next-best provider is started. The first provider to produce a token wins, and the other request is cancelled, which closes its connection. The loser's elapsed time is recorded, so a provider that is consistently slower than it claims gets demoted.</p>
+  <div class="timeline" role="img" aria-label="Timeline: primary starts at 0 ms; no token by 300 ms, so the backup starts at 303 ms; the backup's first token arrives at 394 ms and it wins; the primary is cancelled at 394 ms instead of answering at 800 ms.">
+    <svg viewBox="0 0 640 180">
+      <defs><linearGradient id="tg" x1="0" x2="1"><stop offset="0" stop-color="#16b5ff"/><stop offset=".5" stop-color="#2257e6"/><stop offset="1" stop-color="#8a3ffc"/></linearGradient></defs>
+      <!-- scale: x = 80 + 0.64 × ms -->
+      <text x="274" y="14" text-anchor="middle" style="fill:var(--accent)">hedge launched · 303 ms</text>
+      <line x1="274" y1="20" x2="274" y2="146" stroke="var(--accent)" stroke-dasharray="3 4"/>
+      <text class="lbl" x="0" y="50">primary</text>
+      <rect x="80" y="38" width="252" height="16" rx="8" fill="var(--line)"/>
+      <rect x="332" y="42" width="260" height="8" rx="4" fill="none" stroke="var(--line)" stroke-dasharray="4 4"/>
+      <text x="592" y="32" text-anchor="end">would have answered at 800 ms</text>
+      <line x1="332" y1="32" x2="332" y2="60" stroke="var(--bad)" stroke-width="2.5"/>
+      <text x="340" y="72" style="fill:var(--bad)">cancelled: lost the race</text>
+      <text class="lbl" x="0" y="112">backup</text>
+      <rect x="274" y="100" width="58" height="16" rx="8" fill="var(--line)"/>
+      <rect x="332" y="100" width="228" height="16" rx="8" fill="url(#tg)"/>
+      <text x="340" y="134">first token at 394 ms → streaming</text>
+      <line x1="80" y1="146" x2="592" y2="146" stroke="var(--line)"/>
+      <text x="80" y="164" text-anchor="middle">0</text>
+      <text x="264" y="164" text-anchor="end">303</text>
+      <text x="340" y="164">394</text>
+      <text x="592" y="164" text-anchor="middle">800 ms</text>
+    </svg>
+  </div>
+  <p>These are real measurements from acceptance demo 4, not an illustration.</p>
+  <h3>Fallback and continuation</h3>
+  <p>An error before the first token moves the request to the next backup immediately.</p>
+  <p>An error <em>after</em> tokens have streamed is handled differently. The partial answer goes to the next provider with an instruction to continue from exactly where it stopped, and you see one uninterrupted reply with a <code>continuing</code> status event.</p>
+  <p>Health comes from two sources: background probes and real traffic. A refused connection marks a provider offline at once, and offline providers never receive interactive traffic.</p>
+  <h3>Cancellation</h3>
+  <p><code>DELETE /v1/tasks/:id</code> stops everything: it aborts every provider request, stops escalation, closes the stream and records <code>CANCELLED</code>. Closing the connection does the same, so abandoned work never keeps consuming paid tokens.</p>
+  <p class="src">Code: <a href="https://github.com/Decentralised-si/Smart-LLM-Router/blob/main/oif-router/src/streams/manager.rs">streams/manager.rs</a> · <a href="https://github.com/Decentralised-si/Smart-LLM-Router/blob/main/oif-router/src/providers/health.rs">providers/health.rs</a> · <a href="https://github.com/Decentralised-si/Smart-LLM-Router/blob/main/oif-router/src/streams/cancellation.rs">streams/cancellation.rs</a></p>
+</section>
+
+<section id="escalation">
+  <div class="num">08</div>
+  <h2>More intelligence, only when needed</h2>
+  <p>After each answer, oifd estimates <b>uncertainty</b>, from 0 to 1. It combines:</p>
+  <ul>
+    <li>the provider's self-reported confidence (45%);</li>
+    <li>its predicted quality (15%);</li>
+    <li>whether the answer is complete (20%);</li>
+    <li>how well the provider's domain matched (10%);</li>
+    <li>whether required tools were missing (10%).</li>
+  </ul>
+  <p>It climbs the ladder only while uncertainty exceeds the mode's threshold (fast 0.50, cheap 0.45, balanced 0.35, deep 0.25) and the next step fits in the remaining budget and deadline.</p>
+  <div class="ladder">
+    <div class="rung"><b>R1</b><span>One cheap-enough expert: the scorer's pick</span><span class="pill live">built</span></div>
+    <div class="rung"><b>R2</b><span>One clearly stronger expert</span><span class="pill live">built</span></div>
+    <div class="rung off"><b>R3</b><span>Expert plus a tool or retrieval hook</span><span class="pill iface">interface</span></div>
+    <div class="rung"><b>R4</b><span>A second, <em>independent</em> expert, then synthesis</span><span class="pill live">built</span></div>
+    <div class="rung off"><b>R5</b><span>A verifier</span><span class="pill iface">interface</span></div>
+  </div>
+  <p>The second opinion is chosen for <b>diversity</b>, not similarity: a different provider, preferably from a different model family, and with a different specialty when the question spans domains. Two copies of the same model agreeing is not evidence.</p>
+  <p>When there are two answers, the most credible one is kept (quality × completeness × confidence). Alternatively, they are merged deterministically or by a configured synthesis model.</p>
+  <p>The client sees a <code>deepening</code> status, then a new segment, then the result. The <code>maximum</code> mode always takes the R4 step.</p>
+  <p class="src">Code: <a href="https://github.com/Decentralised-si/Smart-LLM-Router/blob/main/oif-router/src/router/escalation.rs">escalation.rs</a> · <a href="https://github.com/Decentralised-si/Smart-LLM-Router/blob/main/oif-router/src/router/stop.rs">stop.rs</a> · <a href="https://github.com/Decentralised-si/Smart-LLM-Router/blob/main/oif-router/src/router/synthesis.rs">synthesis.rs</a></p>
+</section>
+
+<section id="learning">
+  <div class="num">09</div>
+  <h2>Learning from outcomes</h2>
+  <p>Every attempt updates that provider's statistics for the task's domain and overall. The statistics cover:</p>
+  <ul>
+    <li>successes and failures;</li>
+    <li>average time to first token and total latency;</li>
+    <li>observed quality and cost.</li>
+  </ul>
+  <p>The scorer reads them from an in-memory route cache. SQLite is written behind it by a dedicated thread, so the request path never waits on disk.</p>
+  <p>Observations are blended into the configured expectations at weight <code>n / (n + 10)</code>, so a handful of samples nudges a provider's score without overturning it. <code>POST /v1/tasks/:id/feedback</code> with a rating of 1, 0 or −1 moves observed quality more strongly than passive signals do.</p>
+<pre>CREATE TABLE provider_stats (
+  provider_id TEXT, domain TEXT,
+  successes INTEGER, failures INTEGER,
+  avg_ttfi_ms REAL, avg_total_ms REAL, avg_quality REAL, avg_cost REAL,
+  last_used INTEGER,
+  PRIMARY KEY (provider_id, domain)
+);</pre>
+  <p>Each task is also persisted as an inspectable record: classification, plan, attempts, events, timing, cost and state. It never contains the prompt or the privacy mapping. Prompts are not logged unless you switch on <code>logging.log_prompts</code>.</p>
+  <p class="src">Code: <a href="https://github.com/Decentralised-si/Smart-LLM-Router/blob/main/oif-router/src/storage/cache.rs">storage/cache.rs</a> · <a href="https://github.com/Decentralised-si/Smart-LLM-Router/blob/main/oif-router/src/storage/sqlite.rs">storage/sqlite.rs</a> · <a href="https://github.com/Decentralised-si/Smart-LLM-Router/blob/main/oif-router/src/storage/outcomes.rs">storage/outcomes.rs</a></p>
+</section>
+
+<section id="gateway">
+  <div class="num">10</div>
+  <h2>The hosted gateway and the network</h2>
+  <p>Not every app can run a daemon, so the same ideas are also available as a hosted service at <code>api.decentralised.si</code>. It runs on Cloudflare Workers, and its code is in the same repository.</p>
+  <div class="grid">
+    <div class="card"><h3 style="margin-top:0">Drop-in APIs</h3><p class="muted">Anthropic Messages, OpenAI Chat Completions, Responses and Embeddings, Gemini, and MCP. Change one base URL and keep your SDK. Streaming, tools, vision, files and batches are translated between vendors.</p></div>
+    <div class="card"><h3 style="margin-top:0">Blind router</h3><p class="muted">Routes on a request's structure and your hints, not its meaning. It strips identity, spreads conversations across providers, and continues interrupted streams on another provider.</p></div>
+    <div class="card"><h3 style="margin-top:0">Accounts</h3><p class="muted">Bring-your-own keys with envelope encryption, rate and spend limits, workspaces, a full console, and crypto payments.</p></div>
+    <div class="card"><h3 style="margin-top:0">Open provider network</h3><p class="muted">Anyone can run <code>dsi-node</code> next to an open-weight model. The router probes it, signs its traffic and checks it with canaries. Operators earn PAI for verified work.</p></div>
+  </div>
+  <p>The two fit together naturally. The gateway speaks the OpenAI-compatible API, so oifd can use it as one more provider, next to your local models and your own keys. The daemon then decides when the gateway is the right expert, and your memory and privacy mapping stay on your machine.</p>
+  <p class="src">Code: <a href="https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/apps/gateway">apps/gateway</a> · <a href="https://github.com/Decentralised-si/Smart-LLM-Router/blob/main/packages/core/src/router.ts">packages/core/src/router.ts</a> · <a href="https://github.com/Decentralised-si/Smart-LLM-Router/blob/main/packages/core/src/continuity.ts">continuity.ts</a> · <a href="https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/packages/node">packages/node</a> · <a href="https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/packages/harness">packages/harness</a> · <a href="/whitepaper">whitepaper</a></p>
+</section>
+
+<section id="performance">
+  <div class="num">11</div>
+  <h2>Measured performance</h2>
+  <p>These routing-overhead figures come from the benchmark harness on a laptop, in a release build: classification, difficulty and scoring, excluding model inference.</p>
+  <div class="stats">
+    <div class="stat"><b>11 µs</b><span>provider scoring, p50 (8 providers)</span></div>
+    <div class="stat"><b>18 µs</b><span>full plan, repeat prompt, p50</span></div>
+    <div class="stat"><b>0.5 ms</b><span>full plan, new prompt, p50</span></div>
+    <div class="stat"><b>~190 µs</b><span>scoring 100 providers (debug build)</span></div>
+  </div>
+  <p>The targets were under 2 ms for scoring 100 providers, under 5 ms for a route-cache lookup and under 10 ms for planning.</p>
+  <p>The benchmark also compares strategies over a mixed workload with <em>simulated</em> providers:</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Strategy</th><th>First token p50</th><th>Cost / 1k requests</th><th>Simulated quality</th></tr></thead>
+    <tbody>
+      <tr><td>always the general model</td><td>87 ms</td><td>$0.013</td><td>0.830</td></tr>
+      <tr><td>always the frontier model</td><td>451 ms</td><td>$0.791</td><td>0.915</td></tr>
+      <tr><td><b>oifd adaptive</b></td><td><b>161 ms</b></td><td><b>$0.064</b></td><td><b>0.923</b></td></tr>
+    </tbody>
+  </table></div>
+  <p class="note">Latency, cost and quality are simulated from each provider's configuration. The test prompts were written alongside the classifier's rules. The result shows that routing sends work where the configured expertise is; it is not an evaluation of real model answers. Run <code>cargo run --release --bin benchmark</code> and publish your own numbers.</p>
+</section>
+
+<section id="status">
+  <div class="num">12</div>
+  <h2>What is built</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>Component</th><th>Where</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td>oifd local router (Rust)</td><td><a href="https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/oif-router"><code>oif-router/</code></a></td><td><span class="pill impl">preview</span> 36 tests, runnable from source; no packaged release yet</td></tr>
+      <tr><td>Hosted gateway, blind router, limits, billing</td><td><a href="https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/apps/gateway"><code>apps/gateway</code></a>, <code>packages/core</code></td><td><span class="pill live">live</span></td></tr>
+      <tr><td>Chat app, console, wallet</td><td><a href="https://github.com/Decentralised-si/web"><code>web</code></a></td><td><span class="pill live">live</span></td></tr>
+      <tr><td>dsi harness (local memory, MCP server)</td><td><a href="https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/packages/harness"><code>packages/harness</code></a></td><td><span class="pill impl">implemented</span> <a href="/dl/dsi.mjs">download</a></td></tr>
+      <tr><td>dsi-node provider agent</td><td><a href="https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/packages/node"><code>packages/node</code></a></td><td><span class="pill impl">implemented</span> <a href="/dl/dsi-node.mjs">download</a></td></tr>
+      <tr><td>PAI ledger</td><td><code>packages/pai</code></td><td><span class="pill impl">off-chain</span></td></tr>
+      <tr><td>PAI contract</td><td><a href="https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/contracts"><code>contracts/</code></a></td><td><span class="pill iface">reference, unaudited, not deployed</span></td></tr>
+      <tr><td>R3 tools / retrieval, R5 verifier</td><td><code>oif-router/src/future.rs</code></td><td><span class="pill iface">interfaces</span></td></tr>
+      <tr><td>Global discovery, shared reputation, settlement, TEE nodes</td><td>—</td><td><span class="pill road">roadmap</span></td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="run">
+  <div class="num">13</div>
+  <h2>Run it yourself</h2>
+  <p>You need a Rust toolchain; Docker works too. The default configuration uses three simulated experts, so no GPU or API key is required to see routing work.</p>
+<pre>git clone https://github.com/Decentralised-si/Smart-LLM-Router
+cd Smart-LLM-Router/oif-router
+cargo run --release                       <span class="c"># listens on 127.0.0.1:7766</span>
+
+curl -N localhost:7766/v1/ask -H 'Content-Type: application/json' \
+  -d '{"prompt": "Explain Black-Scholes implied volatility.", "mode": "balanced"}'
+
+curl localhost:7766/v1/route -H 'Content-Type: application/json' \
+  -d '{"prompt": "Write a Rust async TCP server."}'     <span class="c"># the decision, no inference</span>
+
+cargo test                                <span class="c"># 36 tests: routing, fallback, privacy, escalation, streaming</span>
+cargo run --release --bin benchmark       <span class="c"># overhead, TTFI, cost; CSV output</span></pre>
+  <p>To use real models, point <code>config/providers.yaml</code> at any OpenAI-compatible server (vLLM, llama.cpp, LM Studio, a hosted API or the Decentralised.si gateway) or at Ollama. Declare what each one is good at:</p>
+<pre>providers:
+  - id: quant-local
+    endpoint: http://127.0.0.1:8101/v1
+    adapter: openai                    <span class="c"># openai | ollama | mock</span>
+    model: quant-specialist
+    domains: { finance.quant: 0.90, finance.quant.derivatives: 0.97 }
+    price: { input_per_million: 0.20, output_per_million: 0.60 }
+    expected_ttfi_ms: 150
+    expected_quality: 0.95</pre>
+  <p>The daemon binds to <code>127.0.0.1</code> and refuses any other address unless an API token is set. Provider keys are read from environment variables named in the config, never written into it.</p>
+  <div class="repos">
+    <a class="card repo" href="https://github.com/Decentralised-si/Smart-LLM-Router"><h4><svg class="gh"><use href="#gh"/></svg> Decentralised-si/Smart-LLM-Router</h4><p>oifd (Rust), the hosted gateway and router (TypeScript), dsi-node, the dsi harness, the PAI ledger and contract, and the whitepaper.</p><code>oif-router/ · apps/gateway · packages/* · contracts/</code></a>
+    <a class="card repo" href="https://github.com/Decentralised-si/web"><h4><svg class="gh"><use href="#gh"/></svg> Decentralised-si/web</h4><p>This website, the chat app, the console and the wallet (React + Privy on Cloudflare).</p><code>public/ · app/ · src/</code></a>
+  </div>
+  <p>Issues and pull requests are welcome in both repositories. Good first areas are a learned difficulty estimator, a local embedding classifier, new provider adapters, and the R3 and R5 rungs.</p>
+</section>
+
+  </article>
+</div>
+
+<footer>
+  <div class="wrap">
+    <div><b style="color:var(--ink)">Decentralised<span style="color:var(--accent)">.si</span></b> · Decentralised Super Intelligence</div>
+    <div class="links">
+      <a href="/">Home</a>
+      <a href="/ai">Network</a>
+      <a href="/whitepaper">Whitepaper</a>
+      <a href="https://github.com/Decentralised-si/Smart-LLM-Router">GitHub · router</a>
+      <a href="https://github.com/Decentralised-si/web">GitHub · web</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+// Highlight the current section in the table of contents.
+(() => {
+  const links = [...document.querySelectorAll(".toc a")];
+  const byId = new Map(links.map((a) => [a.getAttribute("href").slice(1), a]));
+  const io = new IntersectionObserver((entries) => {
+    for (const e of entries) {
+      if (e.isIntersecting) {
+        links.forEach((a) => a.classList.remove("on"));
+        byId.get(e.target.id)?.classList.add("on");
+      }
+    }
+  }, { rootMargin: "-20% 0px -70% 0px" });
+  document.querySelectorAll("article section[id]").forEach((s) => io.observe(s));
+})();
+</script>
+</body>
+</html>

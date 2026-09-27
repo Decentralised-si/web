@@ -86,4 +86,5 @@ case ":$PATH:" in
     ;;
 esac
 say ""
-say "Next: run 'synapse', then open https://decentralise.si/download#first-run"
+say "Chat and watch routing live:  run 'synapse', then open http://127.0.0.1:7766/"
+say "Guide: https://decentralise.si/download#first-run"

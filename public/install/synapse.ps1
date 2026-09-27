@@ -49,4 +49,5 @@ if (-not ($userPath -split ';' | Where-Object { $_ -eq $dir })) {
 
 if ($env:SYNAPSE_NO_INIT -ne '1') { & $exe init }
 Write-Host ''
-Write-Host "Next: run 'synapse', then open https://decentralise.si/download#first-run"
+Write-Host "Chat and watch routing live:  run 'synapse', then open http://127.0.0.1:7766/"
+Write-Host "Guide: https://decentralise.si/download#first-run"

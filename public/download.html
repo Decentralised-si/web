@@ -201,7 +201,8 @@ Get-FileHash synapse-x86_64-pc-windows-msvc.zip         <span class="c"># Window
   <ol class="steps">
     <li><p><b>Start the router.</b> It listens on <code>127.0.0.1:7766</code>, so only your own machine can reach it.</p>
 <pre>synapse</pre></li>
-    <li><p><b>Ask something</b> in a second terminal. Tokens stream back as the answer is generated, starting with a <code>route</code> event that explains which expert was chosen and why.</p>
+    <li><p><b>Open the chat</b> at <a href="http://127.0.0.1:7766/">http://127.0.0.1:7766/</a>. Every answer shows where it was routed and why. You also see the model's reasoning as it streams, the score of every candidate provider, and live stats. Switch the mode per message to compare fast, balanced and deep.</p></li>
+    <li><p><b>Or use the API.</b> In a second terminal, ask something. Tokens stream back as the answer is generated, starting with a <code>route</code> event that explains which expert was chosen and why.</p>
 <pre>curl -N 127.0.0.1:7766/v1/ask -H 'Content-Type: application/json' \
   -d '{"prompt": "Explain Black-Scholes implied volatility."}'</pre>
       <p class="muted" style="font-size:14px">On Windows PowerShell, use <code>curl.exe</code> and escape the inner quotes: <code>-d '{\"prompt\": \"Explain implied volatility.\"}'</code></p></li>
@@ -243,6 +244,14 @@ Get-FileHash synapse-x86_64-pc-windows-msvc.zip         <span class="c"># Window
     expected_quality: 0.93</pre>
     </div>
   </div>
+  <h3>Specialist nodes from the network</h3>
+  <p class="muted" style="font-size:14.5px">Add this to <code>~/.synapse/router.yaml</code> and set <code>DSI_API_KEY</code>. Synapse then reads the network's public directory every 30 seconds and adds each specialist node as a provider, with its declared expertise, such as the <a href="https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/nodes/expert">law and accounting nodes</a>. The routing decision is still made on your machine.</p>
+<pre>discovery:
+  network:
+    gateway: https://api.decentralise.si
+    api_key_env: DSI_API_KEY
+hedging:
+  skip_modes: [deep]      # quality-first: wait for the specialist</pre>
   <p class="muted">Declare specialists with domain scores, such as <code>finance.quant.derivatives: 0.97</code> or <code>technology.software.rust: 0.96</code>, and the router will send matching questions to them. The <a href="/architecture#choose">architecture page</a> explains how scoring works. Get a gateway key in the <a href="/app/#/console/keys">console</a>.</p>
 </section>
 

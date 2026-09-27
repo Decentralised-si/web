@@ -1,19 +1,17 @@
-// decentralised.si is the canonical website. Every other brand domain serves the
-// same Worker and redirects here, so there is one origin (one dashboard session).
+// decentralised.si is the canonical website. The .ai domains have their own landing page
+// (the network story) at "/"; every other path on an alias domain redirects to the canonical
+// site so there is one origin (one app session).
 const CANONICAL = "decentralised.si";
-const ALIASES = new Set([
-  "www.decentralised.si",
-  "decentralise.si",
-  "www.decentralise.si",
-  "decentralised.ai",
-  "www.decentralised.ai",
-  "decentralise.ai",
-  "www.decentralise.ai",
-]);
+const AI_HOSTS = new Set(["decentralised.ai", "www.decentralised.ai", "decentralise.ai", "www.decentralise.ai"]);
+const ALIASES = new Set(["www.decentralised.si", "decentralise.si", "www.decentralise.si", ...AI_HOSTS]);
 
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    if (AI_HOSTS.has(url.hostname) && url.pathname === "/") {
+      url.pathname = "/ai";
+      return env.ASSETS.fetch(new Request(url, request));
+    }
     // Only redirect once the canonical domain actually resolves; until then every alias serves the site itself.
     if (env.CANONICAL_LIVE === "true" && ALIASES.has(url.hostname)) {
       url.hostname = CANONICAL;

@@ -10,6 +10,8 @@ const CANONICAL = "decentralised.si";
 const AI_HOSTS = new Set(["decentralised.ai", "www.decentralised.ai", "decentralise.ai", "www.decentralise.ai"]);
 const ALIASES = new Set(["www.decentralised.si", "decentralise.si", "www.decentralise.si", ...AI_HOSTS]);
 const SEEN = "dsi_intro=seen";
+// Pages and files renamed since publication.
+const MOVED = { "/install/oifd.sh": "/install/synapse.sh", "/install/oifd.ps1": "/install/synapse.ps1" };
 const BOTS = /bot|crawl|spider|slurp|preview|facebookexternalhit|embedly|whatsapp|telegram|discord|slack|linkedin|twitter|pinterest|vkshare|quora|redditbot|applebot|bingpreview|headless/i;
 
 function withHeaders(res, extra) {
@@ -29,6 +31,7 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     const isAi = AI_HOSTS.has(url.hostname);
+    if (MOVED[url.pathname]) return Response.redirect(new URL(MOVED[url.pathname], url).toString(), 301);
 
     // Only redirect once the canonical domain actually resolves; until then every alias serves the site itself.
     if (env.CANONICAL_LIVE === "true" && ALIASES.has(url.hostname) && !(isAi && url.pathname === "/")) {

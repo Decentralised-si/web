@@ -1,23 +1,23 @@
-# Installs oifd, the Decentralised.si local router, on Windows.
-#   irm https://decentralise.si/install/oifd.ps1 | iex
-# Options (environment variables): OIFD_VERSION (default latest), OIFD_INSTALL_DIR
-# (default %LOCALAPPDATA%\oifd), OIFD_NO_INIT=1 to skip creating %USERPROFILE%\.oif config files.
-# Source: https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/oif-router
+# Installs Synapse, the Decentralised.si local router, on Windows.
+#   irm https://decentralise.si/install/synapse.ps1 | iex
+# Options (environment variables): SYNAPSE_VERSION (default latest), SYNAPSE_INSTALL_DIR
+# (default %LOCALAPPDATA%\synapse), SYNAPSE_NO_INIT=1 to skip creating %USERPROFILE%\.synapse config files.
+# Source: https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/synapse
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
 
 $repo = 'Decentralised-si/Smart-LLM-Router'
-$version = if ($env:OIFD_VERSION) { $env:OIFD_VERSION } else { 'latest' }
-$dir = if ($env:OIFD_INSTALL_DIR) { $env:OIFD_INSTALL_DIR } else { Join-Path $env:LOCALAPPDATA 'oifd' }
+$version = if ($env:SYNAPSE_VERSION) { $env:SYNAPSE_VERSION } elseif ($env:OIFD_VERSION) { $env:OIFD_VERSION } else { 'latest' }
+$dir = if ($env:SYNAPSE_INSTALL_DIR) { $env:SYNAPSE_INSTALL_DIR } else { Join-Path $env:LOCALAPPDATA 'synapse' }
 
 $target = 'x86_64-pc-windows-msvc'
 if ($env:PROCESSOR_ARCHITECTURE -eq 'ARM64') {
   Write-Host 'Windows on ARM: installing the x64 build, which runs under emulation.'
 }
-$asset = "oifd-$target.zip"
+$asset = "synapse-$target.zip"
 $base = if ($version -eq 'latest') { "https://github.com/$repo/releases/latest/download" } else { "https://github.com/$repo/releases/download/$version" }
 
-$tmp = Join-Path ([IO.Path]::GetTempPath()) ("oifd-" + [Guid]::NewGuid())
+$tmp = Join-Path ([IO.Path]::GetTempPath()) ("synapse-" + [Guid]::NewGuid())
 New-Item -ItemType Directory -Path $tmp | Out-Null
 try {
   Write-Host "Downloading $asset ($version) ..."
@@ -32,12 +32,12 @@ try {
 
   Expand-Archive -Path (Join-Path $tmp $asset) -DestinationPath $tmp -Force
   New-Item -ItemType Directory -Force -Path $dir | Out-Null
-  Copy-Item (Join-Path $tmp "oifd-$target\oifd.exe") (Join-Path $dir 'oifd.exe') -Force
+  Copy-Item (Join-Path $tmp "synapse-$target\synapse.exe") (Join-Path $dir 'synapse.exe') -Force
 } finally {
   Remove-Item -Recurse -Force $tmp -ErrorAction SilentlyContinue
 }
 
-$exe = Join-Path $dir 'oifd.exe'
+$exe = Join-Path $dir 'synapse.exe'
 Write-Host "Installed $(& $exe --version) to $exe"
 
 $userPath = [Environment]::GetEnvironmentVariable('Path', 'User')
@@ -47,6 +47,6 @@ if (-not ($userPath -split ';' | Where-Object { $_ -eq $dir })) {
   Write-Host "Added $dir to your user PATH (open a new terminal to pick it up)."
 }
 
-if ($env:OIFD_NO_INIT -ne '1') { & $exe init }
+if ($env:SYNAPSE_NO_INIT -ne '1') { & $exe init }
 Write-Host ''
-Write-Host "Next: run 'oifd', then open https://decentralise.si/download#first-run"
+Write-Host "Next: run 'synapse', then open https://decentralise.si/download#first-run"

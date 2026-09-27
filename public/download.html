@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Download oifd — Decentralised.si</title>
-<meta name="description" content="Download and install oifd, the open-source Decentralised.si router, on macOS, Linux or Windows. One-line installers, direct downloads and checksums.">
-<meta property="og:title" content="Download oifd">
+<title>Download Synapse — Decentralised.si</title>
+<meta name="description" content="Download and install Synapse, the open-source Decentralised.si router, on macOS, Linux or Windows. One-line installers, direct downloads and checksums.">
+<meta property="og:title" content="Download Synapse">
 <meta property="og:description" content="Install the open-source Decentralised.si router on your laptop: macOS, Linux and Windows.">
 <meta property="og:image" content="/brand/logo.png">
 <meta name="theme-color" content="#000211">
@@ -110,15 +110,15 @@ footer a{color:var(--muted)}
 
 <header class="hero">
   <div class="wrap">
-    <div class="eyebrow">oifd · v0.1.0 · preview</div>
+    <div class="eyebrow">Synapse · v0.1.1 · preview</div>
     <h1>Put the router <em>on your laptop</em>.</h1>
-    <p class="lead"><b>oifd</b> is the open-source Decentralised.si router. It is one small program that runs in the background on your machine. For each request it picks the expert (a local model, your own API keys, or the network), keeps your identity and memory on your device, and explains every choice.</p>
+    <p class="lead"><b>Synapse</b> is the open-source Decentralised.si router. It is one small program that runs in the background on your machine. For each request it picks the expert (a local model, your own API keys, or the network), keeps your identity and memory on your device, and explains every choice.</p>
 
     <div class="card detected" id="detected">
       <span class="tag" id="det-tag">Your platform</span>
       <h2 id="det-name" style="margin-bottom:4px">macOS, Linux or Windows</h2>
       <p class="muted" id="det-hint">Run this in a terminal:</p>
-      <div class="cmd"><code id="det-cmd">curl -fsSL https://decentralise.si/install/oifd.sh | sh</code><button type="button" data-copy="det-cmd">Copy</button></div>
+      <div class="cmd"><code id="det-cmd">curl -fsSL https://decentralise.si/install/synapse.sh | sh</code><button type="button" data-copy="det-cmd">Copy</button></div>
       <p class="muted" style="font-size:14px;margin:8px 0 0">The installer:</p>
       <ul class="muted" style="font-size:14px;margin:4px 0 0">
         <li>downloads the build for your system from <a href="https://github.com/Decentralised-si/Smart-LLM-Router/releases/latest">GitHub Releases</a>;</li>
@@ -143,64 +143,64 @@ footer a{color:var(--muted)}
 
   <div data-pane="mac">
     <p>Open <b>Terminal</b> (Applications → Utilities) and run:</p>
-    <div class="cmd"><code id="c-mac">curl -fsSL https://decentralise.si/install/oifd.sh | sh</code><button type="button" data-copy="c-mac">Copy</button></div>
-    <p class="muted">This works on Apple silicon (M1–M4) and Intel Macs; the right build is picked automatically. It installs to <code>~/.local/bin/oifd</code>. If that folder isn't on your PATH yet, the installer prints the one line to add it.</p>
-    <p class="muted">You can also use <code>OIFD_INSTALL_DIR=/usr/local/bin</code> for a system-wide install (that may ask for your password), or <code>OIFD_VERSION=oifd-v0.1.0</code> to pin a version.</p>
+    <div class="cmd"><code id="c-mac">curl -fsSL https://decentralise.si/install/synapse.sh | sh</code><button type="button" data-copy="c-mac">Copy</button></div>
+    <p class="muted">This works on Apple silicon (M1–M4) and Intel Macs; the right build is picked automatically. It installs to <code>~/.local/bin/synapse</code>. If that folder isn't on your PATH yet, the installer prints the one line to add it.</p>
+    <p class="muted">You can also use <code>SYNAPSE_INSTALL_DIR=/usr/local/bin</code> for a system-wide install (that may ask for your password), or <code>SYNAPSE_VERSION=synapse-v0.1.1</code> to pin a version.</p>
   </div>
   <div data-pane="linux" hidden>
     <p>In a terminal:</p>
-    <div class="cmd"><code id="c-linux">curl -fsSL https://decentralise.si/install/oifd.sh | sh</code><button type="button" data-copy="c-linux">Copy</button></div>
-    <p class="muted">These are static binaries for x86_64 and arm64 (Raspberry Pi 4/5 with a 64-bit OS, Graviton, Ampere), so any distribution works with no dependencies. No <code>curl</code>? The installer also works with <code>wget -qO- https://decentralise.si/install/oifd.sh | sh</code>.</p>
+    <div class="cmd"><code id="c-linux">curl -fsSL https://decentralise.si/install/synapse.sh | sh</code><button type="button" data-copy="c-linux">Copy</button></div>
+    <p class="muted">These are static binaries for x86_64 and arm64 (Raspberry Pi 4/5 with a 64-bit OS, Graviton, Ampere), so any distribution works with no dependencies. No <code>curl</code>? The installer also works with <code>wget -qO- https://decentralise.si/install/synapse.sh | sh</code>.</p>
   </div>
   <div data-pane="win" hidden>
     <p>Open <b>PowerShell</b> (Start → type “PowerShell”) and run:</p>
-    <div class="cmd"><code id="c-win">irm https://decentralise.si/install/oifd.ps1 | iex</code><button type="button" data-copy="c-win">Copy</button></div>
-    <p class="muted">It installs to <code>%LOCALAPPDATA%\oifd\oifd.exe</code> and adds that folder to your user PATH, with no administrator rights needed. Open a new terminal afterwards. On Windows on ARM, the x64 build runs under emulation.</p>
+    <div class="cmd"><code id="c-win">irm https://decentralise.si/install/synapse.ps1 | iex</code><button type="button" data-copy="c-win">Copy</button></div>
+    <p class="muted">It installs to <code>%LOCALAPPDATA%\synapse\synapse.exe</code> and adds that folder to your user PATH, with no administrator rights needed. Open a new terminal afterwards. On Windows on ARM, the x64 build runs under emulation.</p>
   </div>
-  <p class="note ok">Prefer to read before you run? The scripts are short and commented: <a href="/install/oifd.sh">oifd.sh</a> · <a href="/install/oifd.ps1">oifd.ps1</a>.</p>
+  <p class="note ok">Prefer to read before you run? The scripts are short and commented: <a href="/install/synapse.sh">synapse.sh</a> · <a href="/install/synapse.ps1">synapse.ps1</a>.</p>
 </section>
 
 <section id="manual">
   <h2>Direct downloads</h2>
-  <p class="muted">Each archive contains the <code>oifd</code> binary, the README and example configs. Checksums are in <a href="https://github.com/Decentralised-si/Smart-LLM-Router/releases/latest/download/SHA256SUMS">SHA256SUMS</a>.</p>
+  <p class="muted">Each archive contains the <code>synapse</code> binary, the README and example configs. Checksums are in <a href="https://github.com/Decentralised-si/Smart-LLM-Router/releases/latest/download/SHA256SUMS">SHA256SUMS</a>.</p>
   <div class="plat" id="plat">
-    <a data-t="aarch64-apple-darwin" href="https://github.com/Decentralised-si/Smart-LLM-Router/releases/latest/download/oifd-aarch64-apple-darwin.tar.gz"><b>macOS · Apple silicon</b><span>oifd-aarch64-apple-darwin.tar.gz</span></a>
-    <a data-t="x86_64-apple-darwin" href="https://github.com/Decentralised-si/Smart-LLM-Router/releases/latest/download/oifd-x86_64-apple-darwin.tar.gz"><b>macOS · Intel</b><span>oifd-x86_64-apple-darwin.tar.gz</span></a>
-    <a data-t="x86_64-unknown-linux-musl" href="https://github.com/Decentralised-si/Smart-LLM-Router/releases/latest/download/oifd-x86_64-unknown-linux-musl.tar.gz"><b>Linux · x86_64</b><span>oifd-x86_64-unknown-linux-musl.tar.gz</span></a>
-    <a data-t="aarch64-unknown-linux-musl" href="https://github.com/Decentralised-si/Smart-LLM-Router/releases/latest/download/oifd-aarch64-unknown-linux-musl.tar.gz"><b>Linux · arm64</b><span>oifd-aarch64-unknown-linux-musl.tar.gz</span></a>
-    <a data-t="x86_64-pc-windows-msvc" href="https://github.com/Decentralised-si/Smart-LLM-Router/releases/latest/download/oifd-x86_64-pc-windows-msvc.zip"><b>Windows · x64</b><span>oifd-x86_64-pc-windows-msvc.zip</span></a>
+    <a data-t="aarch64-apple-darwin" href="https://github.com/Decentralised-si/Smart-LLM-Router/releases/latest/download/synapse-aarch64-apple-darwin.tar.gz"><b>macOS · Apple silicon</b><span>synapse-aarch64-apple-darwin.tar.gz</span></a>
+    <a data-t="x86_64-apple-darwin" href="https://github.com/Decentralised-si/Smart-LLM-Router/releases/latest/download/synapse-x86_64-apple-darwin.tar.gz"><b>macOS · Intel</b><span>synapse-x86_64-apple-darwin.tar.gz</span></a>
+    <a data-t="x86_64-unknown-linux-musl" href="https://github.com/Decentralised-si/Smart-LLM-Router/releases/latest/download/synapse-x86_64-unknown-linux-musl.tar.gz"><b>Linux · x86_64</b><span>synapse-x86_64-unknown-linux-musl.tar.gz</span></a>
+    <a data-t="aarch64-unknown-linux-musl" href="https://github.com/Decentralised-si/Smart-LLM-Router/releases/latest/download/synapse-aarch64-unknown-linux-musl.tar.gz"><b>Linux · arm64</b><span>synapse-aarch64-unknown-linux-musl.tar.gz</span></a>
+    <a data-t="x86_64-pc-windows-msvc" href="https://github.com/Decentralised-si/Smart-LLM-Router/releases/latest/download/synapse-x86_64-pc-windows-msvc.zip"><b>Windows · x64</b><span>synapse-x86_64-pc-windows-msvc.zip</span></a>
   </div>
   <div class="grid2">
     <div>
       <h3>macOS / Linux, by hand</h3>
-<pre>tar -xzf oifd-&lt;platform&gt;.tar.gz
+<pre>tar -xzf synapse-&lt;platform&gt;.tar.gz
 mkdir -p ~/.local/bin
-mv oifd-&lt;platform&gt;/oifd ~/.local/bin/
+mv synapse-&lt;platform&gt;/synapse ~/.local/bin/
 <span class="c"># macOS only, if you downloaded with a browser:</span>
-xattr -d com.apple.quarantine ~/.local/bin/oifd
-oifd init</pre>
+xattr -d com.apple.quarantine ~/.local/bin/synapse
+synapse init</pre>
     </div>
     <div>
       <h3>Windows, by hand</h3>
 <pre><span class="c"># unzip, then in PowerShell:</span>
-mkdir $env:LOCALAPPDATA\oifd
-move .\oifd-x86_64-pc-windows-msvc\oifd.exe $env:LOCALAPPDATA\oifd\
-&amp; $env:LOCALAPPDATA\oifd\oifd.exe init</pre>
+mkdir $env:LOCALAPPDATA\synapse
+move .\synapse-x86_64-pc-windows-msvc\synapse.exe $env:LOCALAPPDATA\synapse\
+&amp; $env:LOCALAPPDATA\synapse\synapse.exe init</pre>
       <p class="muted" style="font-size:14px">If SmartScreen warns about an unrecognised app, choose <b>More info → Run anyway</b>. The binaries aren't code-signed yet; the checksums let you verify them.</p>
     </div>
   </div>
   <h3>Verify a download</h3>
-<pre>shasum -a 256 oifd-aarch64-apple-darwin.tar.gz        <span class="c"># macOS</span>
-sha256sum oifd-x86_64-unknown-linux-musl.tar.gz      <span class="c"># Linux</span>
-Get-FileHash oifd-x86_64-pc-windows-msvc.zip         <span class="c"># Windows PowerShell</span></pre>
-  <p class="muted">Compare the output with the matching line in <code>SHA256SUMS</code>. Every release is built from the public source by <a href="https://github.com/Decentralised-si/Smart-LLM-Router/blob/main/.github/workflows/oifd-release.yml">this GitHub Actions workflow</a>, and all releases are listed on the <a href="https://github.com/Decentralised-si/Smart-LLM-Router/releases">releases page</a>.</p>
+<pre>shasum -a 256 synapse-aarch64-apple-darwin.tar.gz        <span class="c"># macOS</span>
+sha256sum synapse-x86_64-unknown-linux-musl.tar.gz      <span class="c"># Linux</span>
+Get-FileHash synapse-x86_64-pc-windows-msvc.zip         <span class="c"># Windows PowerShell</span></pre>
+  <p class="muted">Compare the output with the matching line in <code>SHA256SUMS</code>. Every release is built from the public source by <a href="https://github.com/Decentralised-si/Smart-LLM-Router/blob/main/.github/workflows/synapse-release.yml">this GitHub Actions workflow</a>, and all releases are listed on the <a href="https://github.com/Decentralised-si/Smart-LLM-Router/releases">releases page</a>.</p>
 </section>
 
 <section id="first-run">
   <h2>2 · First run</h2>
   <ol class="steps">
     <li><p><b>Start the router.</b> It listens on <code>127.0.0.1:7766</code>, so only your own machine can reach it.</p>
-<pre>oifd</pre></li>
+<pre>synapse</pre></li>
     <li><p><b>Ask something</b> in a second terminal. Tokens stream back as the answer is generated, starting with a <code>route</code> event that explains which expert was chosen and why.</p>
 <pre>curl -N 127.0.0.1:7766/v1/ask -H 'Content-Type: application/json' \
   -d '{"prompt": "Explain Black-Scholes implied volatility."}'</pre>
@@ -209,12 +209,12 @@ Get-FileHash oifd-x86_64-pc-windows-msvc.zip         <span class="c"># Windows P
 <pre>curl 127.0.0.1:7766/v1/route -H 'Content-Type: application/json' \
   -d '{"prompt": "Write a Rust async TCP server."}'</pre></li>
   </ol>
-  <p class="note">Out of the box, <code>~/.oif/providers.yaml</code> contains three <b>simulated</b> experts, so you can watch routing, fallback and privacy work right away. The answers themselves are canned. Connect real models in the next step.</p>
+  <p class="note">Out of the box, <code>~/.synapse/providers.yaml</code> contains three <b>simulated</b> experts, so you can watch routing, fallback and privacy work right away. The answers themselves are canned. Connect real models in the next step.</p>
 </section>
 
 <section id="models">
   <h2>3 · Connect real models</h2>
-  <p>Edit <code>~/.oif/providers.yaml</code> (on Windows, <code>%USERPROFILE%\.oif\providers.yaml</code>). Replace the simulated entries with your own, telling the router what each one is good at. Then reload without restarting:</p>
+  <p>Edit <code>~/.synapse/providers.yaml</code> (on Windows, <code>%USERPROFILE%\.synapse\providers.yaml</code>). Replace the simulated entries with your own, telling the router what each one is good at. Then reload without restarting:</p>
 <pre>curl -X POST 127.0.0.1:7766/v1/providers/reload</pre>
   <div class="grid2">
     <div>
@@ -255,46 +255,46 @@ Get-FileHash oifd-x86_64-pc-windows-msvc.zip         <span class="c"># Windows P
   </div>
   <div data-pane="mac">
     <p>Start at login with launchd:</p>
-<pre>cat &gt; ~/Library/LaunchAgents/si.decentralised.oifd.plist &lt;&lt;EOF
+<pre>cat &gt; ~/Library/LaunchAgents/si.decentralised.synapse.plist &lt;&lt;EOF
 &lt;?xml version="1.0" encoding="UTF-8"?&gt;
 &lt;!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd"&gt;
 &lt;plist version="1.0"&gt;&lt;dict&gt;
-  &lt;key&gt;Label&lt;/key&gt;&lt;string&gt;si.decentralised.oifd&lt;/string&gt;
-  &lt;key&gt;ProgramArguments&lt;/key&gt;&lt;array&gt;&lt;string&gt;$HOME/.local/bin/oifd&lt;/string&gt;&lt;/array&gt;
+  &lt;key&gt;Label&lt;/key&gt;&lt;string&gt;si.decentralised.synapse&lt;/string&gt;
+  &lt;key&gt;ProgramArguments&lt;/key&gt;&lt;array&gt;&lt;string&gt;$HOME/.local/bin/synapse&lt;/string&gt;&lt;/array&gt;
   &lt;key&gt;RunAtLoad&lt;/key&gt;&lt;true/&gt;
   &lt;key&gt;KeepAlive&lt;/key&gt;&lt;true/&gt;
-  &lt;key&gt;StandardErrorPath&lt;/key&gt;&lt;string&gt;$HOME/.oif/oifd.log&lt;/string&gt;
+  &lt;key&gt;StandardErrorPath&lt;/key&gt;&lt;string&gt;$HOME/.synapse/synapse.log&lt;/string&gt;
 &lt;/dict&gt;&lt;/plist&gt;
 EOF
-launchctl load ~/Library/LaunchAgents/si.decentralised.oifd.plist</pre>
-    <p class="muted" style="font-size:14px">Stop it with <code>launchctl unload ~/Library/LaunchAgents/si.decentralised.oifd.plist</code>.</p>
+launchctl load ~/Library/LaunchAgents/si.decentralised.synapse.plist</pre>
+    <p class="muted" style="font-size:14px">Stop it with <code>launchctl unload ~/Library/LaunchAgents/si.decentralised.synapse.plist</code>.</p>
   </div>
   <div data-pane="linux" hidden>
     <p>Run it as a systemd user service:</p>
 <pre>mkdir -p ~/.config/systemd/user
-cat &gt; ~/.config/systemd/user/oifd.service &lt;&lt;'EOF'
+cat &gt; ~/.config/systemd/user/synapse.service &lt;&lt;'EOF'
 [Unit]
-Description=oifd local router
+Description=Synapse local router
 
 [Service]
-ExecStart=%h/.local/bin/oifd
+ExecStart=%h/.local/bin/synapse
 Restart=on-failure
 
 [Install]
 WantedBy=default.target
 EOF
 systemctl --user daemon-reload
-systemctl --user enable --now oifd
-journalctl --user -u oifd -f          # logs</pre>
+systemctl --user enable --now synapse
+journalctl --user -u synapse -f          # logs</pre>
   </div>
   <div data-pane="win" hidden>
     <p>Start at sign-in with Task Scheduler, from PowerShell:</p>
-<pre>$exe = "$env:LOCALAPPDATA\oifd\oifd.exe"
+<pre>$exe = "$env:LOCALAPPDATA\synapse\synapse.exe"
 $action = New-ScheduledTaskAction -Execute $exe
 $trigger = New-ScheduledTaskTrigger -AtLogOn -User $env:USERNAME
-Register-ScheduledTask -TaskName "oifd" -Action $action -Trigger $trigger
-Start-ScheduledTask -TaskName "oifd"</pre>
-    <p class="muted" style="font-size:14px">Remove it with <code>Unregister-ScheduledTask -TaskName oifd</code>.</p>
+Register-ScheduledTask -TaskName "synapse" -Action $action -Trigger $trigger
+Start-ScheduledTask -TaskName "synapse"</pre>
+    <p class="muted" style="font-size:14px">Remove it with <code>Unregister-ScheduledTask -TaskName synapse</code>.</p>
   </div>
 </section>
 
@@ -303,10 +303,10 @@ Start-ScheduledTask -TaskName "oifd"</pre>
   <div class="tbl"><table>
     <thead><tr><th>Command</th><th>What it does</th></tr></thead>
     <tbody>
-      <tr><td><code>oifd</code></td><td>Start the router on 127.0.0.1:7766</td></tr>
-      <tr><td><code>oifd init</code></td><td>Write starter <code>~/.oif/router.yaml</code> and <code>providers.yaml</code> (<code>--force</code> to overwrite)</td></tr>
-      <tr><td><code>oifd paths</code></td><td>Show which config files are in use</td></tr>
-      <tr><td><code>oifd --port 7800 --providers ./my.yaml</code></td><td>Override the port or config files (or use <code>OIF_PORT</code>, <code>OIF_PROVIDERS</code>…)</td></tr>
+      <tr><td><code>synapse</code></td><td>Start the router on 127.0.0.1:7766</td></tr>
+      <tr><td><code>synapse init</code></td><td>Write starter <code>~/.synapse/router.yaml</code> and <code>providers.yaml</code> (<code>--force</code> to overwrite)</td></tr>
+      <tr><td><code>synapse paths</code></td><td>Show which config files are in use</td></tr>
+      <tr><td><code>synapse --port 7800 --providers ./my.yaml</code></td><td>Override the port or config files (or use <code>SYNAPSE_PORT</code>, <code>SYNAPSE_PROVIDERS</code>…)</td></tr>
       <tr><td><code>curl 127.0.0.1:7766/v1/providers</code></td><td>Provider health, observed latency and success rate</td></tr>
       <tr><td><code>curl 127.0.0.1:7766/v1/routes</code></td><td>Recent routing decisions</td></tr>
     </tbody>
@@ -315,22 +315,22 @@ Start-ScheduledTask -TaskName "oifd"</pre>
     <div>
       <h3>Uninstall</h3>
 <pre><span class="c"># macOS / Linux</span>
-rm ~/.local/bin/oifd
-rm -r ~/.oif                   <span class="c"># config, history and statistics</span>
+rm ~/.local/bin/synapse
+rm -r ~/.synapse                   <span class="c"># config, history and statistics</span>
 
 <span class="c"># Windows (PowerShell)</span>
-Remove-Item -Recurse $env:LOCALAPPDATA\oifd, $HOME\.oif</pre>
+Remove-Item -Recurse $env:LOCALAPPDATA\synapse, $HOME\.synapse</pre>
     </div>
     <div>
       <h3>Build from source or use Docker</h3>
 <pre>git clone https://github.com/Decentralised-si/Smart-LLM-Router
-cd Smart-LLM-Router/oif-router
+cd Smart-LLM-Router/synapse
 cargo run --release
 
-docker build -f docker/Dockerfile -t oifd .</pre>
+docker build -f docker/Dockerfile -t synapse .</pre>
     </div>
   </div>
-  <p class="note"><b>Preview release.</b> oifd is new: it has passed 36 automated tests and the acceptance demos, but it has not had wide use yet. Binaries are not code-signed. Please report problems on <a href="https://github.com/Decentralised-si/Smart-LLM-Router/issues">GitHub Issues</a>.</p>
+  <p class="note"><b>Preview release.</b> Synapse is new: it has passed 36 automated tests and the acceptance demos, but it has not had wide use yet. Binaries are not code-signed. Please report problems on <a href="https://github.com/Decentralised-si/Smart-LLM-Router/issues">GitHub Issues</a>.</p>
 </section>
 
 </main>
@@ -380,7 +380,7 @@ docker build -f docker/Dockerfile -t oifd .</pre>
     tag.textContent = "Detected: Windows";
     name.textContent = "Windows (x64)";
     hint.textContent = "Run this in PowerShell:";
-    cmd.textContent = "irm https://decentralise.si/install/oifd.ps1 | iex";
+    cmd.textContent = "irm https://decentralise.si/install/synapse.ps1 | iex";
     pick("x86_64-pc-windows-msvc");
   } else if (os === "linux") {
     setTab("linux");
@@ -397,7 +397,7 @@ docker build -f docker/Dockerfile -t oifd .</pre>
     check.then((v) => pick(v.architecture === "x86" ? "x86_64-apple-darwin" : "aarch64-apple-darwin")).catch(() => pick("aarch64-apple-darwin"));
   } else {
     tag.textContent = "Install on your laptop";
-    name.textContent = "oifd runs on macOS, Linux and Windows";
+    name.textContent = "Synapse runs on macOS, Linux and Windows";
   }
 
   document.querySelectorAll("[data-copy]").forEach((b) => b.addEventListener("click", async () => {

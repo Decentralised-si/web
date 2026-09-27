@@ -1,26 +1,26 @@
 #!/bin/sh
-# Installs oifd, the Decentralised.si local router, on macOS or Linux.
-#   curl -fsSL https://decentralise.si/install/oifd.sh | sh
+# Installs Synapse, the Decentralised.si local router, on macOS or Linux.
+#   curl -fsSL https://decentralise.si/install/synapse.sh | sh
 # Options (environment variables):
-#   OIFD_VERSION=oifd-v0.1.0     install a specific release (default: latest)
-#   OIFD_INSTALL_DIR=/usr/local/bin   install location (default: ~/.local/bin)
-#   OIFD_NO_INIT=1               do not create ~/.oif config files
-# Source: https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/oif-router
+#   SYNAPSE_VERSION=synapse-v0.1.1     install a specific release (default: latest)
+#   SYNAPSE_INSTALL_DIR=/usr/local/bin   install location (default: ~/.local/bin)
+#   SYNAPSE_NO_INIT=1               do not create ~/.synapse config files
+# Source: https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/synapse
 set -eu
 
 REPO="Decentralised-si/Smart-LLM-Router"
-VERSION="${OIFD_VERSION:-latest}"
-INSTALL_DIR="${OIFD_INSTALL_DIR:-$HOME/.local/bin}"
+VERSION="${SYNAPSE_VERSION:-${OIFD_VERSION:-latest}}"
+INSTALL_DIR="${SYNAPSE_INSTALL_DIR:-${OIFD_INSTALL_DIR:-$HOME/.local/bin}}"
 
 say() { printf '%s\n' "$*"; }
-fail() { printf 'oifd install: %s\n' "$*" >&2; exit 1; }
+fail() { printf 'synapse install: %s\n' "$*" >&2; exit 1; }
 
 os=$(uname -s)
 arch=$(uname -m)
 case "$os" in
   Darwin) os_part="apple-darwin" ;;
   Linux) os_part="unknown-linux-musl" ;;
-  *) fail "unsupported OS '$os'. On Windows run in PowerShell: irm https://decentralise.si/install/oifd.ps1 | iex" ;;
+  *) fail "unsupported OS '$os'. On Windows run in PowerShell: irm https://decentralise.si/install/synapse.ps1 | iex" ;;
 esac
 case "$arch" in
   x86_64 | amd64) arch_part="x86_64" ;;
@@ -32,7 +32,7 @@ if [ "$os" = Darwin ] && [ "$arch_part" = x86_64 ] && [ "$(sysctl -n sysctl.proc
   arch_part="aarch64"
 fi
 target="$arch_part-$os_part"
-asset="oifd-$target.tar.gz"
+asset="synapse-$target.tar.gz"
 if [ "$VERSION" = latest ]; then
   base="https://github.com/$REPO/releases/latest/download"
 else
@@ -63,14 +63,14 @@ say "Checksum verified."
 
 tar -xzf "$tmp/$asset" -C "$tmp"
 mkdir -p "$INSTALL_DIR"
-cp "$tmp/oifd-$target/oifd" "$INSTALL_DIR/oifd.tmp"
-chmod 755 "$INSTALL_DIR/oifd.tmp"
-mv "$INSTALL_DIR/oifd.tmp" "$INSTALL_DIR/oifd"
-[ "$os" = Darwin ] && xattr -d com.apple.quarantine "$INSTALL_DIR/oifd" 2>/dev/null || true
-say "Installed $("$INSTALL_DIR/oifd" --version) to $INSTALL_DIR/oifd"
+cp "$tmp/synapse-$target/synapse" "$INSTALL_DIR/synapse.tmp"
+chmod 755 "$INSTALL_DIR/synapse.tmp"
+mv "$INSTALL_DIR/synapse.tmp" "$INSTALL_DIR/synapse"
+[ "$os" = Darwin ] && xattr -d com.apple.quarantine "$INSTALL_DIR/synapse" 2>/dev/null || true
+say "Installed $("$INSTALL_DIR/synapse" --version) to $INSTALL_DIR/synapse"
 
-if [ "${OIFD_NO_INIT:-0}" != 1 ]; then
-  "$INSTALL_DIR/oifd" init
+if [ "${SYNAPSE_NO_INIT:-0}" != 1 ]; then
+  "$INSTALL_DIR/synapse" init
 fi
 
 case ":$PATH:" in
@@ -86,4 +86,4 @@ case ":$PATH:" in
     ;;
 esac
 say ""
-say "Next: run 'oifd', then open https://decentralise.si/download#first-run"
+say "Next: run 'synapse', then open https://decentralise.si/download#first-run"

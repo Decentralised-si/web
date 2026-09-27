@@ -118,6 +118,7 @@ footer a{color:var(--muted)}
       <a href="#privacy">Privacy</a>
       <a href="#pai">PAI</a>
       <a href="#build">Build</a>
+      <a href="/network">Live map</a>
       <a href="/download">Download</a>
       <a href="/architecture">Architecture</a>
       <a href="/whitepaper">Whitepaper</a>
@@ -136,7 +137,8 @@ footer a{color:var(--muted)}
     <p class="lead">An open network of AI providers, a router that picks one for you without reading your prompt, and memory that stays on your device. Anyone with a GPU can supply intelligence and earn PAI for it.</p>
     <div class="ctas">
       <a class="btn primary" href="/app/">Start chatting →</a>
-      <a class="btn" href="#run">Run a node and earn</a>
+      <a class="btn" href="/node">Run a node and earn</a>
+      <a class="btn" href="/network">Live map</a>
       <a class="btn" href="/whitepaper">Read the whitepaper</a>
     </div>
 
@@ -267,16 +269,15 @@ footer a{color:var(--muted)}
         <h2>Three commands from GPU to paid node.</h2>
         <p class="sub">Docker Compose starts an open model server, a Cloudflare tunnel and <code>dsi-node</code>. The node registers its models, accepts only router-signed requests and heartbeats every 30 seconds. Rewards settle daily.</p>
         <div class="ctas">
-          <a class="btn primary" href="/app/#/console/keys">Get a node key</a>
+          <a class="btn primary" href="/node">Choose a model and start →</a>
+          <a class="btn" href="/network">Live map</a>
           <a class="btn" href="/dl/SHA256SUMS">Checksums</a>
         </div>
       </div>
       <pre><span class="c"># Ollama + tunnel + dsi-node</span>
 curl -fsSLO https://<span class="host">decentralised.ai</span>/dl/docker-compose.yml
-DSI_API_KEY=ds_live_... docker compose up -d
-
-<span class="c"># any open-weight model your GPU fits</span>
-docker compose exec ollama ollama pull llama3.1:8b
+<span class="c"># any open-weight model your hardware fits (see /node)</span>
+DSI_API_KEY=ds_live_... DSI_MODEL=qwen2.5:7b docker compose up -d
 
 <span class="c"># already running vLLM / llama.cpp / LM Studio?</span>
 LLM_BASE_URL=http://localhost:8000/v1 node dsi-node.mjs up

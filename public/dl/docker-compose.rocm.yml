@@ -1,0 +1,7 @@
+# AMD GPU override (Linux, ROCm-supported Radeon/Instinct cards).
+#   docker compose -f docker-compose.yml -f docker-compose.rocm.yml up -d
+services:
+  ollama:
+    image: ollama/ollama:rocm
+    devices: ["/dev/kfd", "/dev/dri"]
+    group_add: ["video"]

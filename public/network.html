@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Network map — Decentralised.si</title>
+<meta name="description" content="Live map of the Decentralised.si provider network: connected open models by city, requests, tokens, work and PAI rewards, updated every few seconds.">
+<meta property="og:title" content="Decentralised.si network, live">
+<meta property="og:description" content="Connected models by city, traffic and rewards, in real time.">
+<meta property="og:image" content="/brand/logo.png">
+<meta name="theme-color" content="#000211">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="/brand/favicon-32.png">
+<link rel="apple-touch-icon" href="/brand/apple-touch-icon.png">
+<script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
+<style>
+:root{
+  --bg:#f6f5f1;--bg2:#efede6;--panel:#fff;--ink:#15171b;--muted:#5b616c;--line:#e1ded6;
+  --accent:#2257e6;--accent-soft:#e3eafe;--ok:#1f7a55;--ok-soft:#dcf1e7;--warn:#9a6a00;--bad:#c2410c;
+  --land:#e7e4dc;--ocean:#f1efe9;--grid:#e4e1d9;
+  --l0:#7a8699;--l1:#2257e6;--l2:#7a3fe0;--l3:#d9467a;
+  --grad:linear-gradient(120deg,#16b5ff,#2257e6 45%,#8a3ffc);--code:#f0eee8;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#0f1114;--bg2:#14171b;--panel:#1a1e24;--ink:#eceef1;--muted:#9aa1ad;--line:#282e37;
+  --accent:#4da3ff;--accent-soft:#12203d;--ok:#4cc38a;--ok-soft:#10291e;--warn:#e2b04a;--bad:#ff8a5c;
+  --land:#262b33;--ocean:#171a1f;--grid:#1f242b;
+  --l0:#8d97a8;--l1:#4da3ff;--l2:#b18cff;--l3:#ff7aa8;--code:#14171c;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:var(--accent)}
+.wrap{max-width:1240px;margin:0 auto;padding-inline:20px}
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;background:color-mix(in srgb,var(--bg) 85%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:60px;flex-wrap:wrap}
+.brand{font-weight:700;font-size:18px;text-decoration:none;color:var(--ink);display:flex;align-items:center;gap:9px}
+.brand b{color:var(--accent)}
+.logo{border-radius:8px;display:block}
+.links{display:flex;gap:20px;align-items:center;flex-wrap:wrap}
+.links a{color:var(--muted);text-decoration:none;font-size:14px}
+.links a:hover,.links a[aria-current]{color:var(--ink)}
+.gh{width:16px;height:16px;fill:currentColor;display:block}
+.btn{display:inline-flex;align-items:center;gap:8px;font:inherit;font-weight:600;font-size:14px;border-radius:10px;padding:8px 14px;text-decoration:none;border:1px solid var(--line);color:var(--ink);background:var(--panel)}
+.btn.primary{background:var(--grad);border-color:transparent;color:#fff}
+h1{font-family:var(--serif);font-weight:500;font-size:clamp(30px,4vw,44px);line-height:1.1;letter-spacing:-.02em;margin:0}
+h2{font-size:15px;margin:0 0 12px;letter-spacing:-.005em}
+.head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;padding:30px 0 18px}
+.live{display:inline-flex;align-items:center;gap:8px;font:600 13px var(--mono);color:var(--muted)}
+.live i{width:9px;height:9px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 0 color-mix(in srgb,var(--ok) 60%,transparent);animation:beat 2s infinite}
+.live.off i{background:var(--warn);animation:none}
+@keyframes beat{70%{box-shadow:0 0 0 8px transparent}100%{box-shadow:0 0 0 0 transparent}}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+@media (max-width:900px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.kpi b{display:block;font:600 24px/1.2 var(--mono);letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.kpi span{color:var(--muted);font-size:12.5px}
+.kpi small{color:var(--muted);font:12px var(--mono)}
+.kpi small:not(:empty)::before{content:"· "}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px}
+.mapcard{position:relative;margin-top:12px;padding:10px}
+#map{display:block;width:100%;height:auto;touch-action:manipulation}
+#map .sphere{fill:var(--ocean)}
+#map .grat{fill:none;stroke:var(--grid);stroke-width:.6}
+#map .land{fill:var(--land);stroke:var(--bg);stroke-width:.5}
+#map .city{cursor:pointer;stroke:var(--panel);stroke-width:1.5;fill-opacity:.85;transition:r .6s ease}
+#map .city.idle{fill-opacity:.35;stroke:var(--muted);stroke-width:1.5;stroke-dasharray:2 2}
+#map .city:focus{outline:none;stroke:var(--ink);stroke-width:2.5}
+#map .pulse{fill:none;stroke-width:2;pointer-events:none;animation:ping 1.4s ease-out forwards}
+@keyframes ping{from{opacity:.9;transform:scale(1)}to{opacity:0;transform:scale(3)}}
+@media (prefers-reduced-motion:reduce){#map .pulse{display:none}.live i{animation:none}#map .city{transition:none}}
+.legend{display:flex;gap:14px;flex-wrap:wrap;align-items:center;font-size:12.5px;color:var(--muted);padding:6px 6px 2px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+.tip{position:absolute;pointer-events:none;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:13px;box-shadow:0 12px 30px -12px rgb(0 0 0 / .35);min-width:210px;max-width:280px;z-index:5}
+.tip b{font-size:14px}
+.tip table{width:100%;border-collapse:collapse;margin-top:6px}
+.tip td{padding:1px 0;font-variant-numeric:tabular-nums}
+.tip td:last-child{text-align:right;font-family:var(--mono);font-size:12.5px}
+.empty{position:absolute;inset:10px;display:grid;place-items:center;pointer-events:none}
+.empty div{pointer-events:auto;background:color-mix(in srgb,var(--panel) 92%,transparent);border:1px solid var(--line);border-radius:14px;padding:18px 20px;max-width:420px;text-align:center;box-shadow:0 12px 30px -16px rgb(0 0 0 / .3)}
+.empty p{color:var(--muted);margin:6px 0 12px;font-size:14px}
+.row2{display:grid;grid-template-columns:1.6fr 1fr;gap:12px;margin-top:12px}
+.row2>*{min-width:0}
+@media (max-width:900px){.row2{grid-template-columns:1fr}}
+#spark{display:block;width:100%;height:110px}
+#spark rect{fill:var(--accent)}
+#spark rect.cur{fill-opacity:.4}
+#spark text{font:11px var(--mono);fill:var(--muted)}
+.tbl{overflow-x:auto}
+table.data{border-collapse:collapse;width:100%;min-width:640px;font-size:13.5px}
+table.data th,table.data td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line)}
+table.data th{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600}
+table.data td.n{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums}
+table.data th.n{text-align:right}
+table.data tr:last-child td{border-bottom:0}
+.lv{display:inline-block;font:600 10.5px/1 var(--mono);padding:4px 6px;border-radius:5px;color:#fff}
+.muted{color:var(--muted)}
+.fine{font-size:12.5px;color:var(--muted);margin:14px 0 0;max-width:900px}
+footer{border-top:1px solid var(--line);margin-top:30px;padding:28px 0 calc(28px + env(safe-area-inset-bottom,0px));color:var(--muted);font-size:14px}
+footer .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
+footer a{color:var(--muted)}
+[hidden]{display:none!important}
+@media (max-width:640px){.links a.hide-sm{display:none}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="gh" viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></symbol></svg>
+
+<div class="top">
+  <div class="wrap">
+    <a class="brand" href="/" aria-label="Decentralised.si home"><img src="/brand/logo-96.png" width="30" height="30" alt="" class="logo"><span>Decentralised<b>.si</b></span></a>
+    <nav class="links" aria-label="Main">
+      <a href="/network" aria-current="page">Live map</a>
+      <a href="/node">Run a node</a>
+      <a class="hide-sm" href="/download">Download</a>
+      <a class="hide-sm" href="/architecture">Architecture</a>
+      <a href="https://github.com/Decentralised-si/Smart-LLM-Router" aria-label="GitHub"><svg class="gh"><use href="#gh"/></svg></a>
+      <a class="btn primary" href="/node">Run a node</a>
+    </nav>
+  </div>
+</div>
+
+<main class="wrap">
+  <div class="head">
+    <div>
+      <h1>The network, live</h1>
+      <p class="muted" style="margin:6px 0 0">Open models served from people's homes and servers, by city. Updated every 5 seconds.</p>
+    </div>
+    <span class="live" id="live" role="status" aria-live="polite"><i aria-hidden="true"></i><span id="live-t">Connecting…</span></span>
+  </div>
+
+  <div class="kpis" aria-label="Network totals">
+    <div class="kpi"><b id="k-nodes">—</b><span>nodes online</span> <small id="k-nodes-sub"></small></div>
+    <div class="kpi"><b id="k-cities">—</b><span>cities</span> <small id="k-countries"></small></div>
+    <div class="kpi"><b id="k-rpm">—</b><span>requests / min</span> <small id="k-r60"></small></div>
+    <div class="kpi"><b id="k-tok">—</b><span>tokens, last hour</span></div>
+    <div class="kpi"><b id="k-models">—</b><span>distinct models</span></div>
+    <div class="kpi"><b id="k-work">—</b><span>work units today</span></div>
+    <div class="kpi"><b id="k-pool">—</b><span>PAI reward pool today</span></div>
+    <div class="kpi"><b id="k-paid">—</b><span>PAI earned so far today</span> <small>projected</small></div>
+  </div>
+
+  <div class="card mapcard">
+    <svg id="map" viewBox="0 0 960 500" role="img" aria-labelledby="map-title"><title id="map-title">World map of provider nodes by city</title></svg>
+    <div class="legend" aria-hidden="true">
+      <span>Circle size: requests in the last hour · colour: highest level served</span>
+      <span><i style="background:var(--l0)"></i>L0 recall</span><span><i style="background:var(--l1)"></i>L1 general</span><span><i style="background:var(--l2)"></i>L2 reasoning</span><span><i style="background:var(--l3)"></i>L3 frontier</span>
+      <span><i style="background:transparent;border:1.5px dashed var(--muted)"></i>registered, offline</span>
+    </div>
+    <div class="tip" id="tip" hidden></div>
+    <div class="empty" id="empty" hidden>
+      <div>
+        <b>No provider nodes are online right now.</b>
+        <p>The network is open to anyone with a GPU, a Mac or a spare server. Start one with Docker and your city lights up here within a minute.</p>
+        <a class="btn primary" href="/node">Run a node at home →</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="row2">
+    <div class="card">
+      <h2>Cities</h2>
+      <div class="tbl"><table class="data">
+        <thead><tr><th>City</th><th class="n">Nodes</th><th>Models</th><th class="n">Req / min</th><th class="n">Req 60 m</th><th class="n">Tokens 60 m</th><th class="n">Work today</th><th class="n">PAI today</th></tr></thead>
+        <tbody id="t-cities"><tr><td colspan="8" class="muted">Loading…</td></tr></tbody>
+      </table></div>
+    </div>
+    <div>
+      <div class="card">
+        <h2>Requests per minute · last hour</h2>
+        <svg id="spark" viewBox="0 0 360 110" preserveAspectRatio="none" role="img" aria-label="Requests per minute over the last hour"></svg>
+      </div>
+      <div class="card" style="margin-top:12px">
+        <h2>Models on the network</h2>
+        <div class="tbl"><table class="data" style="min-width:0">
+          <thead><tr><th>Model</th><th>Level</th><th class="n">Nodes</th></tr></thead>
+          <tbody id="t-models"><tr><td colspan="3" class="muted">Loading…</td></tr></tbody>
+        </table></div>
+      </div>
+    </div>
+  </div>
+
+  <p class="fine">
+    <b>How to read this.</b>
+    <b>Locations</b> are city-level: they come from Cloudflare's geolocation of each node's IP, rounded to about 10 km. Operators can opt out, and those nodes count only as "location hidden". Node names, addresses and operators are never shown.
+    <b>Requests and tokens</b> are what nodes served through the router in the last 60 minutes; requests per minute uses the last complete minute.
+    <b>Projected PAI</b> is today's provider reward pool (70% of the daily emission) shared by each city's portion of today's verified work so far. It is final only when the day's epoch is settled. PAI is currently an off-chain ledger, and no token has been issued.
+    Data: <a href="https://api.decentralise.si/api/network/map">/api/network/map</a> (public JSON) · source on <a href="https://github.com/Decentralised-si/Smart-LLM-Router/blob/main/apps/gateway/src/network-api.ts">GitHub</a>.
+  </p>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div><b style="color:var(--ink)">Decentralised<span style="color:var(--accent)">.si</span></b> · Decentralised Super Intelligence</div>
+    <div class="links">
+      <a href="/node">Run a node</a>
+      <a href="/ai">About the network</a>
+      <a href="/whitepaper">Whitepaper</a>
+      <a href="https://github.com/Decentralised-si/Smart-LLM-Router">GitHub</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+(() => {
+  const host = location.hostname.replace(/^www\./, "");
+  const override = /^(localhost|127\.0\.0\.1)$/.test(host) && new URLSearchParams(location.search).get("api");
+  const API = override || (["decentralise.si", "decentralised.si", "decentralised.ai", "decentralise.ai"].includes(host) ? `https://api.${host}` : "https://api.decentralise.si");
+  const $ = (id) => document.getElementById(id);
+  const nf = new Intl.NumberFormat("en", { maximumFractionDigits: 1 });
+  const compact = new Intl.NumberFormat("en", { notation: "compact", maximumFractionDigits: 1 });
+  const regionName = (() => { try { const d = new Intl.DisplayNames(["en"], { type: "region" }); return (c) => (c ? d.of(c) || c : ""); } catch { return (c) => c || ""; } })();
+  const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+  const levelColor = (l) => css(`--l${l}`) || "#888";
+  const topLevel = (levels) => { for (let l = 3; l >= 0; l--) if (levels[l] > 0) return l; return 0; };
+  const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+
+  // ---------- map ----------
+  const W = 960, H = 500;
+  const svg = d3 && d3.select("#map");
+  const projection = d3 ? d3.geoNaturalEarth1().fitExtent([[6, 6], [W - 6, H - 6]], { type: "Sphere" }) : null;
+  const gCities = svg ? svg.append("g") : null;
+  let worldReady = false;
+  async function drawWorld() {
+    if (!d3 || !window.topojson) return;
+    const path = d3.geoPath(projection);
+    const base = svg.insert("g", ":first-child");
+    base.append("path").attr("class", "sphere").attr("d", path({ type: "Sphere" }));
+    base.append("path").attr("class", "grat").attr("d", path(d3.geoGraticule10()));
+    try {
+      const topo = await (await fetch("https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-110m.json")).json();
+      base.append("path").attr("class", "land").attr("d", path(topojson.feature(topo, topo.objects.countries)));
+    } catch { /* map without coastlines still shows points */ }
+    worldReady = true;
+  }
+
+  const tip = $("tip");
+  const mapCard = document.querySelector(".mapcard");
+  function showTip(c, evt) {
+    const lv = c.levels.map((n, l) => (n ? `L${l}×${n}` : "")).filter(Boolean).join(" ");
+    tip.innerHTML = `<b>${esc(c.city || "Unknown city")}</b> <span class="muted">${esc(regionName(c.country))}</span>
+      <table>
+        <tr><td>Nodes online</td><td>${c.routable} / ${c.nodes}</td></tr>
+        <tr><td>Requests / min</td><td>${nf.format(c.requests_per_min)}</td></tr>
+        <tr><td>Requests, 60 min</td><td>${nf.format(c.requests_60m)}</td></tr>
+        <tr><td>Tokens, 60 min</td><td>${compact.format(c.tokens_60m)}</td></tr>
+        <tr><td>Work units today</td><td>${nf.format(c.work_units_today)}</td></tr>
+        <tr><td>PAI today (projected)</td><td>${compact.format(c.projected_pai_today)}</td></tr>
+        <tr><td>Reputation</td><td>${nf.format(c.avg_reputation)}</td></tr>
+      </table>
+      <div class="muted" style="margin-top:6px;font-size:12px">${esc(c.models.join(", "))}${lv ? " · " + lv : ""}</div>`;
+    tip.hidden = false;
+    const r = mapCard.getBoundingClientRect();
+    let x, y;
+    if (evt && evt.clientX) { x = evt.clientX - r.left; y = evt.clientY - r.top; }
+    else { const b = evt.target.getBoundingClientRect(); x = b.left - r.left + b.width / 2; y = b.top - r.top; }
+    const tw = tip.offsetWidth, th = tip.offsetHeight;
+    tip.style.left = Math.max(8, Math.min(r.width - tw - 8, x + 14)) + "px";
+    tip.style.top = Math.max(8, y - th - 12 < 0 ? y + 16 : y - th - 12) + "px";
+  }
+  const hideTip = () => (tip.hidden = true);
+
+  const prev = new Map();
+  function drawCities(cities) {
+    if (!gCities) return;
+    // Area ∝ traffic relative to the busiest city; every city with nodes stays visible.
+    const maxReq = Math.max(1, ...cities.map((c) => c.requests_60m));
+    const radius = (c) => 5 + 17 * Math.sqrt(c.requests_60m / maxReq) + Math.min(4, Math.sqrt(c.nodes));
+    const sel = gCities.selectAll("g.c").data(cities, (d) => d.id);
+    sel.exit().remove();
+    const enter = sel.enter().append("g").attr("class", "c");
+    enter.append("circle").attr("class", "city").attr("tabindex", 0).attr("r", 0)
+      .on("pointerenter pointermove", (e, d) => showTip(d, e)).on("pointerleave", hideTip)
+      .on("focus", (e, d) => showTip(d, e)).on("blur", hideTip)
+      .on("click", (e, d) => showTip(d, e));
+    const all = enter.merge(sel);
+    all.attr("transform", (d) => { const p = projection([d.lon, d.lat]); return `translate(${p[0]},${p[1]})`; });
+    all.select("circle.city")
+      .attr("aria-label", (d) => `${d.city || "Unknown"}, ${regionName(d.country)}: ${d.routable} of ${d.nodes} nodes online, ${d.requests_60m} requests in the last hour`)
+      .classed("idle", (d) => d.routable === 0)
+      .attr("fill", (d) => (d.routable ? levelColor(topLevel(d.levels)) : css("--muted")))
+      .attr("r", radius);
+    // A ring pulses from cities that served new requests since the last update.
+    all.each(function (d) {
+      const before = prev.get(d.id);
+      if (before !== undefined && d.requests_60m > before) {
+        d3.select(this).insert("circle", ":first-child").attr("class", "pulse").attr("r", radius(d)).attr("stroke", levelColor(topLevel(d.levels)))
+          .on("animationend", function () { this.remove(); });
+      }
+      prev.set(d.id, d.requests_60m);
+    });
+  }
+
+  function drawSpark(series) {
+    const s = d3.select("#spark");
+    s.selectAll("*").remove();
+    const w = 360, h = 110, pad = 16, max = Math.max(1, ...series);
+    const bw = (w - 2) / series.length;
+    series.forEach((v, i) => {
+      const bh = v ? Math.max(2, ((h - pad - 4) * v) / max) : 0;
+      s.append("rect").attr("x", 1 + i * bw).attr("y", h - pad - bh).attr("width", Math.max(1, bw - 1.5)).attr("height", bh).attr("rx", 1).classed("cur", i === series.length - 1);
+    });
+    s.append("text").attr("x", 2).attr("y", h - 3).text("60 min ago");
+    s.append("text").attr("x", w - 2).attr("y", h - 3).attr("text-anchor", "end").text("now");
+    s.append("text").attr("x", 2).attr("y", 11).text(`max ${nf.format(max)}/min`);
+  }
+
+  function fillTables(d) {
+    const rows = d.cities.map((c) => `<tr>
+      <td><b>${esc(c.city || "Unknown")}</b> <span class="muted">${esc(regionName(c.country))}</span></td>
+      <td class="n">${c.routable}/${c.nodes}</td>
+      <td>${esc(c.models.slice(0, 3).join(", "))}${c.models.length > 3 ? ` <span class="muted">+${c.models.length - 3}</span>` : ""}</td>
+      <td class="n">${nf.format(c.requests_per_min)}</td><td class="n">${nf.format(c.requests_60m)}</td><td class="n">${compact.format(c.tokens_60m)}</td>
+      <td class="n">${nf.format(c.work_units_today)}</td><td class="n">${compact.format(c.projected_pai_today)}</td></tr>`);
+    if (d.hidden.nodes) rows.push(`<tr><td class="muted">Location hidden</td><td class="n">${d.hidden.routable}/${d.hidden.nodes}</td><td class="muted">—</td><td class="n">—</td><td class="n">${nf.format(d.hidden.requests_60m)}</td><td class="n">${compact.format(d.hidden.tokens_60m)}</td><td class="n">${nf.format(d.hidden.work_units_today)}</td><td class="n">—</td></tr>`);
+    $("t-cities").innerHTML = rows.join("") || `<tr><td colspan="8" class="muted">No nodes yet. <a href="/node">Be the first →</a></td></tr>`;
+    $("t-models").innerHTML = d.models.map((m) => `<tr><td><code>${esc(m.id)}</code></td><td><span class="lv" style="background:${levelColor(m.level)}">L${m.level}</span></td><td class="n">${m.nodes}</td></tr>`).join("") || `<tr><td colspan="3" class="muted">None yet</td></tr>`;
+  }
+
+  function fillKpis(d) {
+    const t = d.totals;
+    $("k-nodes").textContent = nf.format(t.routable);
+    $("k-nodes-sub").textContent = `of ${t.nodes} registered`;
+    $("k-cities").textContent = nf.format(t.cities);
+    $("k-countries").textContent = `${t.countries} ${t.countries === 1 ? "country" : "countries"}`;
+    $("k-rpm").textContent = nf.format(t.requests_per_min);
+    $("k-r60").textContent = `${nf.format(t.requests_60m)} in 60 min`;
+    $("k-tok").textContent = compact.format(t.tokens_60m);
+    $("k-models").textContent = nf.format(d.models.length);
+    $("k-work").textContent = nf.format(t.work_units_today);
+    $("k-pool").textContent = compact.format(d.reward_pool_today_pai);
+    $("k-paid").textContent = compact.format(t.projected_pai_today);
+  }
+
+  // ---------- polling ----------
+  let lastOk = 0, delay = 5000, timer;
+  const liveEl = $("live"), liveT = $("live-t");
+  setInterval(() => {
+    if (!lastOk) return;
+    const s = Math.round((Date.now() - lastOk) / 1000);
+    liveT.textContent = s > 30 ? `Reconnecting… last update ${s}s ago` : `Live · updated ${s}s ago`;
+    liveEl.classList.toggle("off", s > 30);
+  }, 1000);
+
+  async function poll() {
+    clearTimeout(timer);
+    if (document.hidden) return;
+    try {
+      const r = await fetch(`${API}/api/network/map`, { cache: "no-store" });
+      if (!r.ok) throw new Error(r.status);
+      const d = await r.json();
+      lastOk = Date.now();
+      delay = 5000;
+      fillKpis(d);
+      fillTables(d);
+      if (d3) { if (!worldReady) await drawWorld(); drawCities(d.cities); drawSpark(d.series_requests_per_min); }
+      $("empty").hidden = d.totals.nodes > 0;
+      liveT.textContent = `Live · epoch ${d.epoch}`;
+    } catch {
+      delay = Math.min(60000, delay * 2);
+      liveEl.classList.add("off");
+      liveT.textContent = "Can't reach the network API, retrying…";
+    }
+    timer = setTimeout(poll, delay);
+  }
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) poll(); });
+  poll();
+})();
+</script>
+</body>
+</html>

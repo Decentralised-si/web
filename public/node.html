@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Run a node — Decentralised.si</title>
+<meta name="description" content="Run an open-source AI model at home with Docker and serve it to the Decentralised.si network. Pick a model for your hardware, start it with one command, and watch it on the live map.">
+<meta property="og:title" content="Run a Decentralised.si node at home">
+<meta property="og:description" content="Pick an open model for your hardware, start it with Docker, and serve the network.">
+<meta property="og:image" content="/brand/logo.png">
+<meta name="theme-color" content="#000211">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="/brand/favicon-32.png">
+<link rel="apple-touch-icon" href="/brand/apple-touch-icon.png">
+<style>
+:root{
+  --bg:#f6f5f1;--bg2:#efede6;--panel:#fff;--ink:#15171b;--muted:#5b616c;--line:#e1ded6;
+  --accent:#2257e6;--accent-soft:#e3eafe;--ok:#1f7a55;--ok-soft:#dcf1e7;--warn:#9a6a00;--warn-soft:#fbf0d4;--vio:#7a3fe0;--vio-soft:#efe6fd;
+  --grad:linear-gradient(120deg,#16b5ff,#2257e6 45%,#8a3ffc);--code:#f0eee8;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#0f1114;--bg2:#14171b;--panel:#1a1e24;--ink:#eceef1;--muted:#9aa1ad;--line:#282e37;
+  --accent:#4da3ff;--accent-soft:#12203d;--ok:#4cc38a;--ok-soft:#10291e;--warn:#e2b04a;--warn-soft:#2d2410;--vio:#b18cff;--vio-soft:#241a38;--code:#14171c;color-scheme:dark}}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:var(--accent)}
+.wrap{max-width:1080px;margin:0 auto;padding-inline:20px}
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;background:color-mix(in srgb,var(--bg) 85%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:60px;flex-wrap:wrap}
+.brand{font-weight:700;font-size:18px;text-decoration:none;color:var(--ink);display:flex;align-items:center;gap:9px}
+.brand b{color:var(--accent)}
+.logo{border-radius:8px;display:block}
+.links{display:flex;gap:20px;align-items:center;flex-wrap:wrap}
+.links a{color:var(--muted);text-decoration:none;font-size:14px}
+.links a:hover,.links a[aria-current]{color:var(--ink)}
+.gh{width:16px;height:16px;fill:currentColor;display:block}
+.btn{display:inline-flex;align-items:center;gap:8px;font:inherit;font-weight:600;font-size:15px;border-radius:10px;padding:10px 16px;text-decoration:none;border:1px solid var(--line);color:var(--ink);background:var(--panel);cursor:pointer}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--grad);border-color:transparent;color:#fff}
+.btn.small{padding:7px 13px;font-size:14px}
+.eyebrow{font:600 12px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+h1{font-family:var(--serif);font-weight:500;font-size:clamp(36px,5.2vw,60px);line-height:1.05;letter-spacing:-.025em;margin:14px 0 14px}
+h1 em{font-style:italic;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+h2{font-family:var(--serif);font-weight:500;font-size:clamp(26px,3.2vw,36px);line-height:1.1;letter-spacing:-.02em;margin:0 0 12px}
+h3{font-size:17px;margin:20px 0 6px}
+p{margin:0 0 12px}
+.lead{font-size:clamp(17px,1.9vw,19px);color:var(--muted);max-width:760px}
+.muted{color:var(--muted)}
+.small{font-size:14px}
+header.hero{padding:56px 0 24px}
+section{padding:40px 0;border-top:1px solid var(--line);scroll-margin-top:70px}
+.ctas{display:flex;gap:12px;flex-wrap:wrap;margin-top:18px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px}
+pre{font:13.5px/1.6 var(--mono);background:var(--code);border:1px solid var(--line);border-radius:12px;padding:14px 16px;overflow-x:auto;margin:8px 0 14px}
+pre .c{color:var(--muted)}
+pre mark{background:var(--accent-soft);color:var(--accent);border-radius:3px;padding:0 2px}
+code{font-family:var(--mono);font-size:.9em}
+:not(pre)>code{overflow-wrap:anywhere;background:var(--code);border:1px solid var(--line);border-radius:5px;padding:1px 5px}
+.grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(230px,1fr))}
+.grid>*{min-width:0}
+.steps3{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));margin-top:18px}
+.steps3 .n{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--grad);color:#fff;font:700 13px var(--mono);margin-bottom:10px}
+.hw{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 6px}
+.hw button{font:600 14px ui-sans-serif,system-ui;background:var(--panel);border:1px solid var(--line);color:var(--muted);border-radius:10px;padding:10px 14px;cursor:pointer;text-align:left;line-height:1.3}
+.hw button small{display:block;font-weight:500;font-size:12px}
+.hw button[aria-pressed="true"]{color:var(--ink);border-color:var(--accent);background:var(--accent-soft)}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:12px;margin:12px 0}
+table{border-collapse:collapse;width:100%;min-width:720px;background:var(--panel);font-size:14.5px}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:middle}
+th{font-size:11.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600}
+tr:last-child td{border-bottom:0}
+tr.pick td{background:var(--accent-soft)}
+td .tag{font:600 12.5px var(--mono)}
+.lvl{display:inline-block;font:600 11px/1 var(--mono);padding:5px 7px;border-radius:6px}
+.l0{background:var(--code);color:var(--muted);border:1px solid var(--line)}
+.l1{background:var(--accent-soft);color:var(--accent)}
+.l2{background:var(--vio-soft);color:var(--vio)}
+.use{font:600 13px ui-sans-serif,system-ui;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:8px;padding:6px 10px;cursor:pointer;white-space:nowrap}
+.use[aria-pressed="true"]{border-color:var(--accent);color:var(--accent)}
+.chosen{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:6px 0 16px;font-size:15px}
+.chosen code{font-size:14px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:16px 0 12px}
+.tabs button{font:600 14px ui-sans-serif,system-ui;background:var(--panel);border:1px solid var(--line);color:var(--muted);border-radius:9px;padding:8px 13px;cursor:pointer}
+.tabs button[aria-selected="true"]{color:var(--ink);border-color:var(--accent);background:var(--accent-soft)}
+.note{border-left:3px solid var(--warn);background:var(--warn-soft);padding:10px 14px;border-radius:0 10px 10px 0;margin:12px 0;font-size:15px}
+.note.ok{border-left-color:var(--ok);background:var(--ok-soft)}
+.note.info{border-left-color:var(--accent);background:var(--accent-soft)}
+ol.plain{padding-left:20px}
+ol.plain li{margin:4px 0}
+footer{border-top:1px solid var(--line);padding:32px 0 calc(32px + env(safe-area-inset-bottom,0px));color:var(--muted);font-size:14px}
+footer .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
+footer a{color:var(--muted)}
+[hidden]{display:none!important}
+@media (max-width:640px){.links a.hide-sm{display:none}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="gh" viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></symbol></svg>
+
+<div class="top">
+  <div class="wrap">
+    <a class="brand" href="/" aria-label="Decentralised.si home"><img src="/brand/logo-96.png" width="30" height="30" alt="" class="logo"><span>Decentralised<b>.si</b></span></a>
+    <nav class="links" aria-label="Main">
+      <a href="/network">Live map</a>
+      <a href="/node" aria-current="page">Run a node</a>
+      <a class="hide-sm" href="/download">Download</a>
+      <a class="hide-sm" href="/architecture">Architecture</a>
+      <a href="https://github.com/Decentralised-si/Smart-LLM-Router" aria-label="GitHub"><svg class="gh"><use href="#gh"/></svg></a>
+      <a class="btn small primary" href="/app/">Open app</a>
+    </nav>
+  </div>
+</div>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="eyebrow">Supply intelligence · open network</div>
+    <h1>Run an AI model <em>at home</em>, serve the network.</h1>
+    <p class="lead">Turn a gaming PC, a Mac or a spare server into a node of the Decentralised.si network. Pick an open model that fits your hardware and start it with Docker. Your node will appear on the <a href="/network">live map</a>.</p>
+    <p class="lead">Work you serve earns PAI, the network's reward token. The router only sends you requests it signs, and it never tells your node who is asking.</p>
+    <div class="steps3">
+      <div class="card"><span class="n">1</span><h3 style="margin-top:0">Choose a model</h3><p class="muted small">Tell us your hardware below; we list the open models that run well on it.</p></div>
+      <div class="card"><span class="n">2</span><h3 style="margin-top:0">Start it with Docker</h3><p class="muted small">One command starts the model server, a secure public tunnel and the node agent. No port forwarding or static IP needed.</p></div>
+      <div class="card"><span class="n">3</span><h3 style="margin-top:0">Serve and earn</h3><p class="muted small">The router probes and verifies your node, then sends it traffic. Watch it on the map and check your earnings.</p></div>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+<section id="models">
+  <h2>1 · Choose a model for your hardware</h2>
+  <p class="muted">What is the most memory your model can use? For a GPU, that's its VRAM. For a Mac or a machine without a GPU, it's the system RAM, minus room for everything else you run.</p>
+  <div class="hw" role="group" aria-label="Hardware">
+    <button type="button" data-hw="0" aria-pressed="false">Laptop, no GPU<small>8 GB RAM</small></button>
+    <button type="button" data-hw="1" aria-pressed="true">Mac 16 GB · GPU 8 GB<small>M1–M4, RTX 3060/4060</small></button>
+    <button type="button" data-hw="2" aria-pressed="false">Mac 24–36 GB · GPU 12–16 GB<small>M-Pro, RTX 4070/4080</small></button>
+    <button type="button" data-hw="3" aria-pressed="false">GPU 24 GB · Mac 48 GB<small>RTX 3090/4090, M-Max</small></button>
+    <button type="button" data-hw="4" aria-pressed="false">48 GB+<small>2×24 GB, RTX 6000, Mac 64–128 GB</small></button>
+  </div>
+  <div class="tbl">
+    <table>
+      <thead><tr><th>Model (Ollama tag)</th><th>Download</th><th>Good at</th><th>Level</th><th>Reward</th><th></th></tr></thead>
+      <tbody id="model-rows"></tbody>
+    </table>
+  </div>
+  <p class="muted small">Downloads are Ollama's default 4-bit builds (approximate). Each model's level is what <code>dsi-node</code> detects from its name, and it sets how much each unit of work is worth: L0 ×1, L1 ×2, L2 ×4. Serving <b>L2</b> models needs a 100 PAI provider bond (L3 needs 1,000). Stake is locked, not spent, and can be slashed for dishonesty. New models appear all the time: any model in the <a href="https://ollama.com/library">Ollama library</a> works; set its tag as <code>DSI_MODEL</code>.</p>
+</section>
+
+<section id="start">
+  <h2>2 · Start your node</h2>
+  <div class="chosen">Selected model: <code id="chosen-model">qwen2.5:7b</code> <span class="muted small">(the commands below use it)</span></div>
+  <ol class="plain">
+    <li>Install <a href="https://docs.docker.com/get-docker/">Docker</a> (Docker Desktop on Mac and Windows).</li>
+    <li>Create an API key in the <a href="/app/#/console/keys">console</a>. Your node's rewards go to that key's organization.</li>
+    <li>Follow the steps for your machine:</li>
+  </ol>
+  <div class="tabs" role="tablist" aria-label="Machine">
+    <button role="tab" aria-selected="true" data-os="nvidia">Linux · NVIDIA</button>
+    <button role="tab" aria-selected="false" data-os="win">Windows · NVIDIA</button>
+    <button role="tab" aria-selected="false" data-os="mac">Mac (Apple silicon)</button>
+    <button role="tab" aria-selected="false" data-os="amd">Linux · AMD</button>
+    <button role="tab" aria-selected="false" data-os="cpu">CPU only</button>
+  </div>
+
+  <div data-pane="nvidia">
+    <p>First install the <a href="https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html">NVIDIA Container Toolkit</a> so containers can use the GPU (check with <code>nvidia-smi</code>). Then:</p>
+<pre>mkdir dsi-node &amp;&amp; cd dsi-node
+curl -fsSLO https://decentralise.si/dl/docker-compose.yml
+curl -fsSLO https://decentralise.si/dl/docker-compose.gpu.yml
+
+export DSI_API_KEY=ds_live_...          <span class="c"># your key</span>
+export DSI_MODEL=<mark class="m">qwen2.5:7b</mark>
+docker compose -f docker-compose.yml -f docker-compose.gpu.yml up -d</pre>
+  </div>
+  <div data-pane="win" hidden>
+    <p>Use Docker Desktop with the WSL 2 backend and an up-to-date NVIDIA driver; GPU support is built in. In <b>PowerShell</b>:</p>
+<pre>mkdir dsi-node; cd dsi-node
+curl.exe -fsSLO https://decentralise.si/dl/docker-compose.yml
+curl.exe -fsSLO https://decentralise.si/dl/docker-compose.gpu.yml
+
+$env:DSI_API_KEY = "ds_live_..."        <span class="c"># your key</span>
+$env:DSI_MODEL = "<mark class="m">qwen2.5:7b</mark>"
+docker compose -f docker-compose.yml -f docker-compose.gpu.yml up -d</pre>
+  </div>
+  <div data-pane="mac" hidden>
+    <p>Docker on a Mac cannot use the Apple GPU, so run the model with the native <a href="https://ollama.com/download">Ollama app</a>, which uses Metal and is many times faster. Docker then only runs the tunnel and the node agent.</p>
+<pre><span class="c"># 1. model server (native, uses the GPU)</span>
+brew install ollama            <span class="c"># or install the app from ollama.com</span>
+ollama serve &amp;                 <span class="c"># not needed if the Ollama app is running</span>
+ollama pull <mark class="m">qwen2.5:7b</mark>
+
+<span class="c"># 2. tunnel + node agent</span>
+mkdir dsi-node &amp;&amp; cd dsi-node
+curl -fsSLO https://decentralise.si/dl/docker-compose.yml
+export DSI_API_KEY=ds_live_...
+export DSI_MODEL=<mark class="m">qwen2.5:7b</mark>
+export LLM_BASE_URL=http://host.docker.internal:11434/v1
+docker compose up -d --no-deps cloudflared dsi-node</pre>
+    <p class="muted small">Keep the Mac awake while serving (System Settings → Energy, or <code>caffeinate -s</code>).</p>
+  </div>
+  <div data-pane="amd" hidden>
+    <p>This is for ROCm-supported Radeon and Instinct cards on Linux:</p>
+<pre>mkdir dsi-node &amp;&amp; cd dsi-node
+curl -fsSLO https://decentralise.si/dl/docker-compose.yml
+curl -fsSLO https://decentralise.si/dl/docker-compose.rocm.yml
+
+export DSI_API_KEY=ds_live_...
+export DSI_MODEL=<mark class="m">qwen2.5:7b</mark>
+docker compose -f docker-compose.yml -f docker-compose.rocm.yml up -d</pre>
+  </div>
+  <div data-pane="cpu" hidden>
+    <p>Any machine with Docker works. Pick a small model (≤ 4 GB): CPUs manage a few tokens per second, which is fine for short answers.</p>
+<pre>mkdir dsi-node &amp;&amp; cd dsi-node
+curl -fsSLO https://decentralise.si/dl/docker-compose.yml
+export DSI_API_KEY=ds_live_...
+export DSI_MODEL=<mark class="m">qwen2.5:7b</mark>
+docker compose up -d</pre>
+  </div>
+
+  <h3>What starts</h3>
+  <div class="grid">
+    <div class="card"><b>ollama</b><p class="muted small" style="margin:4px 0 0">Serves the model on your machine. <code>model-pull</code> downloads <code>DSI_MODEL</code> once.</p></div>
+    <div class="card"><b>cloudflared</b><p class="muted small" style="margin:4px 0 0">Gives the node a public https address through a Cloudflare Tunnel. Your IP stays private and no ports are opened.</p></div>
+    <div class="card"><b>dsi-node</b><p class="muted small" style="margin:4px 0 0">Registers your model, accepts only requests signed by the router, streams answers, and heartbeats every 30 s.</p></div>
+  </div>
+  <p class="muted small">The compose files and node agent are open source: <a href="/dl/docker-compose.yml">docker-compose.yml</a> · <a href="https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/packages/node">packages/node</a> · checksums in <a href="/dl/SHA256SUMS">SHA256SUMS</a>.</p>
+</section>
+
+<section id="check">
+  <h2>3 · Check it's serving</h2>
+<pre>docker compose logs -f dsi-node
+<span class="c"># [dsi-node] registered as n… with 1 model(s); status: probation until canaries pass
+# [dsi-node] live at https://….trycloudflare.com/v1 as n…</span>
+
+docker compose exec dsi-node node /app/dsi-node.mjs earnings     <span class="c"># work units and PAI</span></pre>
+  <p>Your node now counts on the <a href="/network">live network map</a> in your city: nodes online, requests per minute, tokens and projected rewards update every few seconds.</p>
+  <div class="note info">
+    <p style="margin:0 0 6px"><b>What to expect at first.</b></p>
+    <ul style="margin:0;padding-left:20px">
+      <li><b>Probation:</b> new nodes start on probation. The router sends test prompts (canaries) to check the node serves the model it claims; after three passes it becomes active.</li>
+      <li><b>Traffic follows reputation:</b> a new node gets little traffic until it has a record of good, fast answers. How much it gets after that depends on demand for its model and level.</li>
+      <li><b>Uptime counts:</b> keep the node online. Nodes that stop heartbeating stop receiving work, and missed service-level targets lower reputation.</li>
+    </ul>
+  </div>
+  <h3>Useful commands</h3>
+<pre>docker compose ps                                        <span class="c"># status</span>
+docker compose down                                      <span class="c"># stop serving</span>
+DSI_MODEL=qwen2.5:14b docker compose up -d               <span class="c"># switch model (with your -f files)</span>
+docker compose pull &amp;&amp; docker compose up -d              <span class="c"># update</span></pre>
+</section>
+
+<section id="privacy">
+  <h2>Privacy and rewards, plainly</h2>
+  <div class="grid">
+    <div class="card">
+      <h3 style="margin-top:0">What the map shows</h3>
+      <p class="muted small">Your node is placed at city level, using Cloudflare's geolocation of the node's IP, rounded to about 10 km. The map shows only per-city totals. Your node's name, address, tunnel URL and account are never public. To stay off the map, set <code>DSI_NODE_LOCATION=hidden</code>; the node then counts only in the "location hidden" total.</p>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">What your node sees</h3>
+      <p class="muted small">Your node sees single requests, signed by the router, with no account, key or user identity, and pseudonymised by the sender's router where they use one. It does see the text it is asked to answer, as any model server does. Don't run a node on a machine you don't trust with that.</p>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">How rewards work</h3>
+      <p class="muted small">Each day the network's emission is split: 70% to providers, pro rata to verified work units. Work units combine tokens, bandwidth, reputation and the model's level. PAI currently lives on an off-chain ledger: no token has been issued, and none is scheduled. Earnings depend on demand and are not guaranteed. See the <a href="/whitepaper">whitepaper</a> for the exact formulas.</p>
+    </div>
+  </div>
+  <div class="ctas"><a class="btn primary" href="/network">Open the live map</a><a class="btn" href="/architecture#gateway">How the network fits in</a></div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <div><b style="color:var(--ink)">Decentralised<span style="color:var(--accent)">.si</span></b> · Decentralised Super Intelligence</div>
+    <div class="links">
+      <a href="/network">Live map</a>
+      <a href="/download">Download oifd</a>
+      <a href="/architecture">Architecture</a>
+      <a href="https://github.com/Decentralised-si/Smart-LLM-Router">GitHub</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+(() => {
+  // min tier: 0 laptop 8 GB · 1 16 GB · 2 24–36 GB · 3 24 GB GPU / 48 GB · 4 48 GB+
+  const MODELS = [
+    { tag: "llama3.2:3b", gb: 2.0, tier: 0, level: 0, good: "Everyday chat, summaries, rewriting" },
+    { tag: "qwen2.5:3b", gb: 1.9, tier: 0, level: 0, good: "Multilingual, structured output" },
+    { tag: "gemma3:4b", gb: 3.3, tier: 0, level: 0, good: "General chat, image understanding" },
+    { tag: "qwen2.5:7b", gb: 4.7, tier: 1, level: 0, good: "Strong all-rounder, multilingual, maths" },
+    { tag: "llama3.1:8b", gb: 4.9, tier: 1, level: 0, good: "General assistant, long context" },
+    { tag: "qwen2.5-coder:7b", gb: 4.7, tier: 1, level: 0, good: "Code generation and review" },
+    { tag: "qwen3:8b", gb: 5.2, tier: 1, level: 0, good: "General, with a step-by-step thinking mode" },
+    { tag: "phi4:14b", gb: 9.1, tier: 2, level: 1, good: "Reasoning, maths, science" },
+    { tag: "qwen2.5:14b", gb: 9.0, tier: 2, level: 1, good: "General, multilingual" },
+    { tag: "gemma3:12b", gb: 8.1, tier: 2, level: 1, good: "General, image understanding" },
+    { tag: "deepseek-r1:14b", gb: 9.0, tier: 2, level: 2, good: "Step-by-step reasoning (slower)" },
+    { tag: "mistral-small:24b", gb: 14, tier: 3, level: 1, good: "General, function calling" },
+    { tag: "gpt-oss:20b", gb: 14, tier: 3, level: 1, good: "Reasoning and tool use" },
+    { tag: "qwen3:30b", gb: 19, tier: 3, level: 1, good: "Fast mixture-of-experts all-rounder" },
+    { tag: "qwen2.5-coder:32b", gb: 20, tier: 3, level: 1, good: "Code, near frontier quality" },
+    { tag: "gemma3:27b", gb: 17, tier: 3, level: 1, good: "General, image understanding" },
+    { tag: "deepseek-r1:32b", gb: 20, tier: 3, level: 2, good: "Deep reasoning, maths" },
+    { tag: "llama3.3:70b", gb: 43, tier: 4, level: 2, good: "Frontier-class general assistant" },
+    { tag: "qwen2.5:72b", gb: 47, tier: 4, level: 2, good: "Frontier-class, multilingual" },
+    { tag: "gpt-oss:120b", gb: 65, tier: 4, level: 2, good: "Frontier-class reasoning and tools" },
+  ];
+  const DEFAULT_FOR_TIER = ["llama3.2:3b", "qwen2.5:7b", "phi4:14b", "qwen2.5-coder:32b", "llama3.3:70b"];
+  const mult = ["×1", "×2", "×4", "×8"];
+  const rows = document.getElementById("model-rows");
+  let tier = 1;
+  let chosen = "qwen2.5:7b";
+
+  const setModel = (tag) => {
+    chosen = tag;
+    document.getElementById("chosen-model").textContent = tag;
+    document.querySelectorAll("mark.m").forEach((m) => (m.textContent = tag));
+    render();
+  };
+  const render = () => {
+    rows.replaceChildren();
+    for (const m of MODELS.filter((x) => x.tier <= tier).sort((a, b) => b.tier - a.tier || a.gb - b.gb)) {
+      const tr = document.createElement("tr");
+      if (m.tag === chosen) tr.className = "pick";
+      const bond = m.level >= 2 ? " · 100 PAI bond" : "";
+      tr.innerHTML = `<td><span class="tag"></span>${m.tier === tier ? ' <span class="muted" style="font-size:12px">· best fit</span>' : ""}</td>
+        <td>≈ ${m.gb} GB</td><td class="muted"></td>
+        <td><span class="lvl l${m.level}">L${m.level}</span></td><td>${mult[m.level]}<span class="muted" style="font-size:12px">${bond}</span></td>
+        <td><button type="button" class="use" aria-pressed="${m.tag === chosen}">${m.tag === chosen ? "Selected" : "Use this"}</button></td>`;
+      tr.querySelector(".tag").textContent = m.tag;
+      tr.querySelectorAll("td")[2].textContent = m.good;
+      tr.querySelector(".use").addEventListener("click", () => setModel(m.tag));
+      rows.appendChild(tr);
+    }
+  };
+  document.querySelectorAll(".hw button").forEach((b) =>
+    b.addEventListener("click", () => {
+      tier = Number(b.dataset.hw);
+      document.querySelectorAll(".hw button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+      setModel(DEFAULT_FOR_TIER[tier]);
+    })
+  );
+
+  const tabs = document.querySelectorAll(".tabs button");
+  const panes = document.querySelectorAll("[data-pane]");
+  const setOs = (os) => {
+    tabs.forEach((t) => t.setAttribute("aria-selected", String(t.dataset.os === os)));
+    panes.forEach((p) => (p.hidden = p.dataset.pane !== os));
+  };
+  tabs.forEach((t) => t.addEventListener("click", () => setOs(t.dataset.os)));
+  const ua = navigator.userAgent;
+  if (/Mac OS X/.test(ua) && !/iPhone|iPad/.test(ua)) setOs("mac");
+  else if (/Windows/.test(ua)) setOs("win");
+
+  setModel(chosen);
+})();
+</script>
+</body>
+</html>

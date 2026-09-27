@@ -160,6 +160,7 @@ footer a{color:var(--muted)}
     <nav class="links" aria-label="Main">
       <a href="/download">Download</a>
       <a href="/architecture" aria-current="page">Architecture</a>
+      <a class="hide-sm" href="/network">Live map</a>
       <a class="hide-sm" href="/ai">Network</a>
       <a class="hide-sm" href="/whitepaper">Whitepaper</a>
       <a href="https://github.com/Decentralised-si" aria-label="GitHub"><svg class="gh"><use href="#gh"/></svg></a>
@@ -518,7 +519,7 @@ Email me at yousef@example.com and analyse this option position.
     <div class="card"><h3 style="margin-top:0">Drop-in APIs</h3><p class="muted">Anthropic Messages, OpenAI Chat Completions, Responses and Embeddings, Gemini, and MCP. Change one base URL and keep your SDK. Streaming, tools, vision, files and batches are translated between vendors.</p></div>
     <div class="card"><h3 style="margin-top:0">Blind router</h3><p class="muted">Routes on a request's structure and your hints, not its meaning. It strips identity, spreads conversations across providers, and continues interrupted streams on another provider.</p></div>
     <div class="card"><h3 style="margin-top:0">Accounts</h3><p class="muted">Bring-your-own keys with envelope encryption, rate and spend limits, workspaces, a full console, and crypto payments.</p></div>
-    <div class="card"><h3 style="margin-top:0">Open provider network</h3><p class="muted">Anyone can run <code>dsi-node</code> next to an open-weight model. The router probes it, signs its traffic and checks it with canaries. Operators earn PAI for verified work.</p></div>
+    <div class="card"><h3 style="margin-top:0">Open provider network</h3><p class="muted">Anyone can run <code>dsi-node</code> next to an open-weight model (<a href="/node">set one up with Docker</a>; see it on the <a href="/network">live map</a>). The router probes it, signs its traffic and checks it with canaries. Operators earn PAI for verified work.</p></div>
   </div>
   <p>The two fit together naturally. The gateway speaks the OpenAI-compatible API, so oifd can use it as one more provider, next to your local models and your own keys. The daemon then decides when the gateway is the right expert, and your memory and privacy mapping stay on your machine.</p>
   <p class="src">Code: <a href="https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/apps/gateway">apps/gateway</a> · <a href="https://github.com/Decentralised-si/Smart-LLM-Router/blob/main/packages/core/src/router.ts">packages/core/src/router.ts</a> · <a href="https://github.com/Decentralised-si/Smart-LLM-Router/blob/main/packages/core/src/continuity.ts">continuity.ts</a> · <a href="https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/packages/node">packages/node</a> · <a href="https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/packages/harness">packages/harness</a> · <a href="/whitepaper">whitepaper</a></p>
@@ -557,6 +558,7 @@ Email me at yousef@example.com and analyse this option position.
       <tr><td>Hosted gateway, blind router, limits, billing</td><td><a href="https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/apps/gateway"><code>apps/gateway</code></a>, <code>packages/core</code></td><td><span class="pill live">live</span></td></tr>
       <tr><td>Chat app, console, wallet</td><td><a href="https://github.com/Decentralised-si/web"><code>web</code></a></td><td><span class="pill live">live</span></td></tr>
       <tr><td>dsi harness (local memory, MCP server)</td><td><a href="https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/packages/harness"><code>packages/harness</code></a></td><td><span class="pill impl">implemented</span> <a href="/dl/dsi.mjs">download</a></td></tr>
+      <tr><td>Live network map (by city)</td><td><a href="/network"><code>/network</code></a>, <code>/api/network/map</code></td><td><span class="pill live">live</span></td></tr>
       <tr><td>dsi-node provider agent</td><td><a href="https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/packages/node"><code>packages/node</code></a></td><td><span class="pill impl">implemented</span> <a href="/dl/dsi-node.mjs">download</a></td></tr>
       <tr><td>PAI ledger</td><td><code>packages/pai</code></td><td><span class="pill impl">off-chain</span></td></tr>
       <tr><td>PAI contract</td><td><a href="https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/contracts"><code>contracts/</code></a></td><td><span class="pill iface">reference, unaudited, not deployed</span></td></tr>

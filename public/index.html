@@ -3,23 +3,26 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Decentralised.si — every AI model, one URL</title>
+<title>Decentralised.si — Decentralised Super Intelligence</title>
 <meta name="description" content="Keep your Anthropic, OpenAI or Gemini code and change one base URL. Decentralised.si routes each request to the cheapest provider that is capable, fast and private enough, with chat, a full console and crypto payments.">
-<meta property="og:title" content="Decentralised.si — every AI model, one URL">
+<meta property="og:title" content="Decentralised.si — Decentralised Super Intelligence">
+<meta property="og:image" content="/brand/logo.png">
 <meta property="og:description" content="A drop-in gateway and intelligence router for Anthropic, OpenAI and Gemini SDKs. Chat, console, and pay with crypto.">
-<meta name="theme-color" content="#f6f5f1">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231f6f5c'/%3E%3Cpath d='M7 16h6l4-7h8M13 16l4 7h8' stroke='white' stroke-width='2.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<meta name="theme-color" content="#000211">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="/brand/favicon-32.png">
+<link rel="apple-touch-icon" href="/brand/apple-touch-icon.png">
 <style>
 :root{
   --bg:#f6f5f1;--bg2:#efede6;--panel:#fff;--ink:#15171b;--muted:#5b616c;--line:#e1ded6;
-  --accent:#1f6f5c;--accent-soft:#dcefe8;--accent-ink:#fff;--a2:#3a55c4;--code:#f0eee8;--warm:#c96a4a;
+  --accent:#2257e6;--accent-soft:#e3eafe;--accent-ink:#fff;--a2:#7a3fe0;--bad:#d4380d;--grad:linear-gradient(120deg,#16b5ff,#2257e6 45%,#8a3ffc);--code:#f0eee8;--warm:#c96a4a;
   --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
   --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
   color-scheme:light;
 }
 @media (prefers-color-scheme:dark){:root{
   --bg:#0f1114;--bg2:#14171b;--panel:#1a1e24;--ink:#eceef1;--muted:#9aa1ad;--line:#282e37;
-  --accent:#4cc3a0;--accent-soft:#16302a;--accent-ink:#06140f;--a2:#8ea8ff;--code:#14171c;--warm:#e08a6a;color-scheme:dark}}
+  --accent:#4da3ff;--accent-soft:#12203d;--accent-ink:#020716;--a2:#b18cff;--bad:#ff6b5a;--code:#14171c;--warm:#e08a6a;color-scheme:dark}}
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
@@ -30,16 +33,17 @@ img{max-width:100%}
 .top .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:60px;flex-wrap:wrap}
 .brand{font-weight:700;font-size:18px;letter-spacing:-.01em;text-decoration:none;color:var(--ink);display:flex;align-items:center;gap:9px}
 .brand b{font-weight:700;color:var(--accent)}
+.logo{border-radius:8px;display:block}
 .links{display:flex;gap:20px;align-items:center;flex-wrap:wrap}
 .links a{color:var(--muted);text-decoration:none;font-size:14px}
 .links a:hover{color:var(--ink)}
 .btn{display:inline-flex;align-items:center;gap:8px;font:inherit;font-weight:600;font-size:15px;border-radius:10px;padding:11px 18px;text-decoration:none;border:1px solid var(--line);color:var(--ink);background:var(--panel);cursor:pointer}
 .btn:hover{border-color:var(--muted)}
-.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.primary{background:var(--grad);border-color:transparent;color:#fff}
 .btn.small{padding:7px 13px;font-size:14px}
 .eyebrow{font:600 12px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
 h1{font-family:var(--serif);font-weight:500;font-size:clamp(40px,6.4vw,76px);line-height:1.03;letter-spacing:-.025em;margin:18px 0 20px}
-h1 em{font-style:italic;color:var(--accent)}
+h1 em{font-style:italic;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
 h2{font-family:var(--serif);font-weight:500;font-size:clamp(30px,4.2vw,46px);line-height:1.08;letter-spacing:-.02em;margin:12px 0 16px;max-width:820px}
 h3{font-size:18px;margin:0 0 8px;letter-spacing:-.01em}
 .lead{font-size:clamp(17px,1.9vw,20px);color:var(--muted);max-width:600px;margin:0 0 28px}
@@ -52,20 +56,33 @@ h3{font-size:18px;margin:0 0 8px;letter-spacing:-.01em}
 .hero .wrap{display:grid;grid-template-columns:1.05fr 1fr;gap:48px;align-items:center}
 .hero .wrap>*{min-width:0}
 @media (max-width:920px){.hero .wrap{grid-template-columns:1fr}}
-.flow{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:0 20px 60px -30px rgb(0 0 0 / .25)}
+.flow{margin:0;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px 16px 14px;box-shadow:0 24px 70px -34px rgb(20 40 120 / .35)}
 .flow svg{display:block;width:100%;height:auto}
-.flow .n rect{fill:var(--bg);stroke:var(--line)}
-.flow .n text{fill:var(--ink);font:600 13px ui-sans-serif,system-ui,sans-serif}
-.flow .n .s{fill:var(--muted);font:500 11px var(--mono)}
-.flow .router rect{fill:var(--accent-soft);stroke:var(--accent)}
-.flow .edge{stroke:var(--line);stroke-width:2;fill:none}
-.flow .edge.on{stroke:var(--accent);stroke-width:2.5;stroke-dasharray:6 6;animation:dash .8s linear infinite}
-.flow .n.on rect{stroke:var(--accent);stroke-width:2}
-@keyframes dash{to{stroke-dashoffset:-12}}
-@media (prefers-reduced-motion:reduce){.flow .edge.on{animation:none}html{scroll-behavior:auto}}
-.receipt{margin-top:14px;font:12.5px/1.7 var(--mono);background:var(--code);border-radius:10px;padding:12px 14px;color:var(--muted);overflow-x:auto;white-space:pre}
-.receipt b{color:var(--ink);font-weight:600}
-.receipt i{color:var(--accent);font-style:normal}
+.flow text{fill:var(--ink);font:600 12.5px ui-sans-serif,system-ui,sans-serif;text-anchor:middle}
+.flow .s{fill:var(--muted);font:500 10.5px var(--mono)}
+.flow .hd text{fill:var(--muted);font:600 10px var(--mono);letter-spacing:.12em}
+.flow rect{fill:var(--bg);stroke:var(--line);stroke-width:1.2;transition:stroke .3s,fill .3s,opacity .3s}
+.flow .dev .outer{fill:none;stroke:var(--accent);stroke-dasharray:4 4}
+.flow .dev .mem{fill:var(--accent-soft);stroke:var(--accent)}
+.flow .m{stroke:var(--line);stroke-width:1;fill:none;opacity:.8;transition:opacity .3s}
+.flow .p{fill:none;stroke:url(#g);stroke-width:3;stroke-linecap:round;stroke-dasharray:7 7;animation:dash .7s linear infinite}
+.flow .p.cut{stroke:var(--bad);stroke-dasharray:3 6;animation:none;opacity:.8}
+.flow .nd.on rect{stroke:url(#g);stroke-width:2.4}
+.flow .nd.down rect{opacity:.35;stroke:var(--bad);stroke-dasharray:4 3}
+.flow .nd.down text{opacity:.45}
+.flow .nd .x{display:none;fill:var(--bad);font:700 16px ui-sans-serif,system-ui}
+.flow .nd.down .x{display:block}
+.flow .dot{fill:var(--accent)}
+.flow .nd.down .dot{fill:var(--bad)}
+@keyframes dash{to{stroke-dashoffset:-14}}
+@media (prefers-reduced-motion:reduce){.flow .p{animation:none}html{scroll-behavior:auto}}
+.flow figcaption{border-top:1px solid var(--line);margin-top:10px;padding-top:12px;min-height:96px}
+.flow figcaption p{margin:6px 0 8px;font-size:15px;line-height:1.45}
+.flow figcaption p b{color:var(--accent)}
+.flow figcaption code{display:block;font-size:11.5px;color:var(--muted);white-space:pre;overflow-x:auto}
+.steps-dots{display:flex;gap:6px}
+.steps-dots i{width:22px;height:4px;border-radius:2px;background:var(--line)}
+.steps-dots i.on{background:var(--grad)}
 /* sections */
 section{padding:84px 0;border-top:1px solid var(--line)}
 section.alt{background:var(--bg2)}
@@ -133,7 +150,7 @@ footer a{color:var(--muted)}
 <header class="top">
   <div class="wrap">
     <a class="brand" href="/" aria-label="Decentralised.si home">
-      <svg width="24" height="24" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="currentColor" style="color:var(--accent)"/><path d="M7 16h6l4-7h8M13 16l4 7h8" stroke="var(--accent-ink)" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <img src="/brand/logo-96.png" width="30" height="30" alt="" class="logo">
       <span>Decentralised<b>.si</b></span>
     </a>
     <nav class="links" aria-label="Main">
@@ -152,9 +169,9 @@ footer a{color:var(--muted)}
 <div class="hero">
   <div class="wrap">
     <div>
-      <div class="eyebrow">Drop-in for Anthropic · OpenAI · Gemini</div>
-      <h1>Every AI model.<br><em>One URL.</em></h1>
-      <p class="lead">Keep your SDK, prompts and tools. Change one base URL, and each request goes to the cheapest provider that is capable, fast and private enough: your own vendor keys, or an open network of GPU operators.</p>
+      <div class="eyebrow">Decentralised Super Intelligence</div>
+      <h1>Every AI model.<br><em>One URL.</em><br>No single point of failure.</h1>
+      <p class="lead">Keep your SDK, prompts and tools and change one base URL. Any of many stateless routers sends each request to the cheapest provider that can handle it: your own vendor keys, or an open network of GPU operators. Your context stays on your device, so if a router or a provider goes down, the next one picks up where it stopped.</p>
       <div class="ctas">
         <a class="btn primary" href="/app/">Start chatting →</a>
         <a class="btn" href="/app/#/console/keys">Get an API key</a>
@@ -163,22 +180,29 @@ footer a{color:var(--muted)}
       <div class="chips" aria-label="Guarantees"><span>No prompt rewrite</span><span>No response rewrite</span><span>No SDK rewrite</span><span>No tool rewrite</span></div>
     </div>
 
-    <div class="flow" role="img" aria-label="Your application calls Decentralised.si, which routes each request to Anthropic, OpenAI, Gemini or the open network, and returns headers saying which model answered.">
-      <svg viewBox="0 0 520 300" aria-hidden="true">
-        <path class="edge" id="e-in" d="M120 150 H190"/>
-        <path class="edge" data-e="0" d="M330 150 C 370 150, 360 45, 400 45"/>
-        <path class="edge" data-e="1" d="M330 150 C 370 150, 360 115, 400 115"/>
-        <path class="edge" data-e="2" d="M330 150 C 370 150, 360 185, 400 185"/>
-        <path class="edge" data-e="3" d="M330 150 C 370 150, 360 255, 400 255"/>
-        <g class="n"><rect x="8" y="118" width="112" height="64" rx="12"/><text x="64" y="146" text-anchor="middle">Your app</text><text class="s" x="64" y="164" text-anchor="middle">same SDK</text></g>
-        <g class="n router"><rect x="190" y="104" width="140" height="92" rx="14"/><text x="260" y="138" text-anchor="middle">Decentralised.si</text><text class="s" x="260" y="158" text-anchor="middle">adapter · router</text><text class="s" x="260" y="175" text-anchor="middle" id="mode">mode: optimise</text></g>
-        <g class="n" data-n="0"><rect x="400" y="22" width="112" height="46" rx="10"/><text x="456" y="43" text-anchor="middle">Anthropic</text><text class="s" x="456" y="59" text-anchor="middle">your key</text></g>
-        <g class="n" data-n="1"><rect x="400" y="92" width="112" height="46" rx="10"/><text x="456" y="113" text-anchor="middle">OpenAI</text><text class="s" x="456" y="129" text-anchor="middle">your key</text></g>
-        <g class="n" data-n="2"><rect x="400" y="162" width="112" height="46" rx="10"/><text x="456" y="183" text-anchor="middle">Gemini</text><text class="s" x="456" y="199" text-anchor="middle">your key</text></g>
-        <g class="n" data-n="3"><rect x="400" y="232" width="112" height="46" rx="10"/><text x="456" y="253" text-anchor="middle">Network</text><text class="s" x="456" y="269" text-anchor="middle">open GPUs · PAI</text></g>
+    <figure class="flow" aria-labelledby="flow-cap">
+      <svg viewBox="0 0 560 340" role="img" aria-label="Your device holds the app and your context. Several interchangeable routers each connect to every provider: vendor APIs and independent GPU nodes. Any router or provider can fail without stopping the conversation.">
+        <defs>
+          <linearGradient id="g" x1="0" x2="1"><stop offset="0" stop-color="#16b5ff"/><stop offset=".5" stop-color="#2257e6"/><stop offset="1" stop-color="#8a3ffc"/></linearGradient>
+        </defs>
+        <g class="hd"><text x="70" y="18">YOUR DEVICE</text><text x="259" y="18">ANY ROUTER</text><text x="482" y="18">ANY PROVIDER</text></g>
+        <g id="mesh"></g>
+        <g id="live"></g>
+        <g class="dev">
+          <rect class="outer" x="6" y="112" width="128" height="150" rx="14"/>
+          <rect x="16" y="124" width="108" height="46" rx="9"/><text x="70" y="143">Your app</text><text class="s" x="70" y="159">same SDK</text>
+          <rect class="mem" x="16" y="178" width="108" height="72" rx="9"/><text x="70" y="198">Harness</text><text class="s" x="70" y="214">memory</text><text class="s" x="70" y="228">context</text><text class="s" x="70" y="242">keys</text>
+        </g>
+        <g id="routers"></g>
+        <g id="providers"></g>
       </svg>
-      <div class="receipt" id="receipt" aria-hidden="true"></div>
-    </div>
+      <figcaption id="flow-cap">
+        <div class="steps-dots" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+        <p id="cap-t"></p>
+        <code id="cap-h"></code>
+      </figcaption>
+    </figure>
+  </div>
   </div>
 </div>
 
@@ -430,32 +454,51 @@ x-decentralise-actual-provider / -market / -receipt</pre>
     document.querySelectorAll("[data-p]").forEach((p) => (p.hidden = p.dataset.p !== b.dataset.t));
   }));
 
-  // Hero: cycle through example routing decisions.
-  const demo = [
-    { mode: "passthrough", to: 0, req: "claude-sonnet-5", model: "claude-sonnet-5", prov: "anthropic", market: "byok", why: "exactly as requested" },
-    { mode: "cheapest", to: 3, req: "claude-sonnet-5", model: "llama-3.3-70b", prov: "network", market: "network", why: "capable, 91% cheaper" },
-    { mode: "optimise", to: 1, req: "auto", model: "gpt-5-mini", prov: "openai", market: "byok", why: "tools + JSON schema" },
-    { mode: "fastest", to: 2, req: "auto", model: "gemini-2.5-flash", prov: "gemini", market: "byok", why: "lowest latency" },
+  // Hero: a mesh with no single point of failure. Any router reaches any provider;
+  // context lives on the device, so failures are routed around mid-conversation.
+  const NS = "http://www.w3.org/2000/svg";
+  const R = [{ y: 74, city: "edge · Frankfurt" }, { y: 164, city: "edge · Singapore" }, { y: 254, city: "edge · Virginia" }];
+  const P = [["Anthropic", "your key"], ["OpenAI", "your key"], ["Gemini", "your key"], ["GPU node", "Lagos"], ["GPU node", "Berlin"], ["GPU node", "São Paulo"]].map((t, i) => ({ t, y: 36 + i * 50 }));
+  const el = (tag, attrs, parent) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); parent && parent.appendChild(e); return e; };
+  const txt = (parent, x, y, t, cls) => { const e = el("text", { x, y, class: cls || "" }, parent); e.textContent = t; return e; };
+  const devOut = [134, 187];
+  const rc = (i) => R[i].y + 23, pc = (j) => P[j].y + 19;
+  const dR = (i) => `M${devOut[0]} ${devOut[1]} C 167 ${devOut[1]}, 167 ${rc(i)}, 200 ${rc(i)}`;
+  const dP = (i, j) => `M318 ${rc(i)} C 364 ${rc(i)}, 364 ${pc(j)}, 410 ${pc(j)}`;
+  const mesh = document.getElementById("mesh"), live = document.getElementById("live");
+  R.forEach((_, i) => { el("path", { d: dR(i), class: "m" }, mesh); P.forEach((_, j) => el("path", { d: dP(i, j), class: "m" }, mesh)); });
+  const rg = document.getElementById("routers"), pg = document.getElementById("providers");
+  const rn = R.map((r, i) => { const g = el("g", { class: "nd" }, rg); el("rect", { x: 200, y: r.y, width: 118, height: 46, rx: 10 }, g); txt(g, 259, r.y + 20, "Router"); txt(g, 259, r.y + 36, r.city, "s"); const x = txt(g, 309, r.y + 14, "✕", "x"); return g; });
+  const pn = P.map((p, j) => { const g = el("g", { class: "nd" }, pg); el("rect", { x: 410, y: p.y, width: 144, height: 38, rx: 9 }, g); if (j > 2) el("circle", { cx: 422, cy: p.y + 19, r: 3.5, class: "dot" }, g); txt(g, 484, p.y + 16, p.t[0]); txt(g, 484, p.y + 30, p.t[1], "s"); txt(g, 545, p.y + 13, "✕", "x"); return g; });
+
+  const scenes = [
+    { r: 1, p: 4, down: [], dr: [], t: "<b>New conversation.</b> Any healthy router takes it and picks the cheapest provider that supports every feature it uses.",
+      h: "x-decentralise-actual-provider: network   # GPU node, Berlin\nx-decentralise-market: network" },
+    { r: 1, p: 1, from: 4, down: [4], dr: [], t: "<b>A provider drops mid-answer.</b> The stream continues on another provider from the exact point it stopped. Your app sees one reply.",
+      h: "x-decentralise-failovers: 1\nx-decentralise-providers: network,openai" },
+    { r: 0, p: 1, down: [4], dr: [1], t: "<b>A router goes down.</b> Routers hold no conversation state, so the next request simply lands on another edge. Your context is on your device.",
+      h: "# edge Singapore offline → edge Frankfurt\nx-decentralise-actual-provider: openai" },
+    { r: 2, p: 5, down: [], dr: [], t: "<b>Next conversation, different provider.</b> Sessions are spread across providers, so none of them sees your whole history.",
+      h: "x-decentralise-actual-provider: network   # GPU node, São Paulo\nx-decentralise-market: network" },
   ];
-  const r = document.getElementById("receipt");
-  const modeEl = document.getElementById("mode");
-  const esc = (s) => String(s).replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c]);
-  let i = 0;
+  const dots = document.querySelectorAll(".steps-dots i");
+  const capT = document.getElementById("cap-t"), capH = document.getElementById("cap-h");
+  let k = 0;
   const show = () => {
-    const d = demo[i % demo.length];
-    modeEl.textContent = "mode: " + d.mode;
-    document.getElementById("e-in").classList.add("on");
-    document.querySelectorAll("[data-e]").forEach((e) => e.classList.toggle("on", +e.dataset.e === d.to));
-    document.querySelectorAll("[data-n]").forEach((e) => e.classList.toggle("on", +e.dataset.n === d.to));
-    r.innerHTML =
-      `<b>x-decentralise-requested-model</b>: ${esc(d.req)}\n` +
-      `<b>x-decentralise-actual-model</b>:    <i>${esc(d.model)}</i>\n` +
-      `<b>x-decentralise-actual-provider</b>: ${esc(d.prov)}  <span># ${esc(d.why)}</span>\n` +
-      `<b>x-decentralise-market</b>:          ${esc(d.market)}`;
-    i++;
+    const sc = scenes[k % scenes.length];
+    live.replaceChildren();
+    if (sc.from !== undefined) el("path", { d: dP(sc.r, sc.from), class: "p cut" }, live);
+    el("path", { d: dR(sc.r), class: "p" }, live);
+    el("path", { d: dP(sc.r, sc.p), class: "p" }, live);
+    rn.forEach((g, i) => { g.classList.toggle("on", i === sc.r); g.classList.toggle("down", sc.dr.includes(i)); });
+    pn.forEach((g, j) => { g.classList.toggle("on", j === sc.p); g.classList.toggle("down", sc.down.includes(j)); });
+    dots.forEach((d, i) => d.classList.toggle("on", i === k % scenes.length));
+    capT.innerHTML = sc.t;
+    capH.textContent = sc.h;
+    k++;
   };
   show();
-  if (!matchMedia("(prefers-reduced-motion: reduce)").matches) setInterval(show, 3200);
+  if (!matchMedia("(prefers-reduced-motion: reduce)").matches) setInterval(show, 4200);
 })();
 </script>
 </body>

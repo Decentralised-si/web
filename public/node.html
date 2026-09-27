@@ -247,6 +247,13 @@ docker compose exec dsi-node node /app/dsi-node.mjs earnings     <span class="c"
       <li><b>Uptime counts:</b> keep the node online. Nodes that stop heartbeating stop receiving work, and missed service-level targets lower reputation.</li>
     </ul>
   </div>
+  <h3>Make your node a specialist</h3>
+  <p class="muted">A small model can answer like an expert in one field when it has the right notes. Give the node a persona and a folder of Markdown notes. For each question, the node searches the notes and passes the most relevant passages to the model. It also declares its expertise, so routers such as <a href="/download">Synapse</a> send it the questions it is best at.</p>
+<pre>DSI_DOMAINS=law:0.95,law.corporate:0.9      <span class="c"># declared expertise (taxonomy path: competence)</span>
+DSI_PERSONA_FILE=/notes/persona.md          <span class="c"># system prompt for every question</span>
+DSI_KNOWLEDGE_DIR=/notes/knowledge          <span class="c"># Markdown, split at ## headings, searched per question</span>
+DSI_TRACE_RETRIEVAL=1                       <span class="c"># start answers with the passages consulted</span></pre>
+  <p class="muted small">Declared expertise is tested like everything else: canaries check the model, and results decide how much traffic the node gets. Two working examples, a law node and an accounting node, are in <a href="https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/nodes/expert">nodes/expert</a>.</p>
   <h3>Useful commands</h3>
 <pre>docker compose ps                                        <span class="c"># status</span>
 docker compose down                                      <span class="c"># stop serving</span>

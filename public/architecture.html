@@ -158,6 +158,7 @@ footer a{color:var(--muted)}
       <span>Decentralised<b>.si</b></span>
     </a>
     <nav class="links" aria-label="Main">
+      <a href="/download">Download</a>
       <a href="/architecture" aria-current="page">Architecture</a>
       <a class="hide-sm" href="/ai">Network</a>
       <a class="hide-sm" href="/whitepaper">Whitepaper</a>
@@ -183,7 +184,7 @@ footer a{color:var(--muted)}
     <div class="ctas">
       <a class="btn primary" href="https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/oif-router"><svg class="gh"><use href="#gh"/></svg> oifd on GitHub</a>
       <a class="btn" href="https://github.com/Decentralised-si/Smart-LLM-Router"><svg class="gh"><use href="#gh"/></svg> Smart-LLM-Router</a>
-      <a class="btn" href="#run">Run it locally</a>
+      <a class="btn" href="/download">Download for your laptop</a>
     </div>
   </div>
 </header>
@@ -552,7 +553,7 @@ Email me at yousef@example.com and analyse this option position.
   <div class="tbl"><table>
     <thead><tr><th>Component</th><th>Where</th><th>Status</th></tr></thead>
     <tbody>
-      <tr><td>oifd local router (Rust)</td><td><a href="https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/oif-router"><code>oif-router/</code></a></td><td><span class="pill impl">preview</span> 36 tests, runnable from source; no packaged release yet</td></tr>
+      <tr><td>oifd local router (Rust)</td><td><a href="https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/oif-router"><code>oif-router/</code></a></td><td><span class="pill impl">preview</span> 36 tests; <a href="/download">binaries for macOS, Linux, Windows</a></td></tr>
       <tr><td>Hosted gateway, blind router, limits, billing</td><td><a href="https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/apps/gateway"><code>apps/gateway</code></a>, <code>packages/core</code></td><td><span class="pill live">live</span></td></tr>
       <tr><td>Chat app, console, wallet</td><td><a href="https://github.com/Decentralised-si/web"><code>web</code></a></td><td><span class="pill live">live</span></td></tr>
       <tr><td>dsi harness (local memory, MCP server)</td><td><a href="https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/packages/harness"><code>packages/harness</code></a></td><td><span class="pill impl">implemented</span> <a href="/dl/dsi.mjs">download</a></td></tr>
@@ -568,7 +569,11 @@ Email me at yousef@example.com and analyse this option position.
 <section id="run">
   <div class="num">13</div>
   <h2>Run it yourself</h2>
-  <p>You need a Rust toolchain; Docker works too. The default configuration uses three simulated experts, so no GPU or API key is required to see routing work.</p>
+  <p><b>Install a prebuilt binary</b> for macOS (Apple silicon or Intel), Linux (x86_64 or arm64) or Windows. The <a href="/download">download page</a> has one-line installers, direct downloads, checksums and background-service setup.</p>
+<pre>curl -fsSL https://decentralise.si/install/oifd.sh | sh      <span class="c"># macOS, Linux</span>
+irm https://decentralise.si/install/oifd.ps1 | iex          <span class="c"># Windows PowerShell</span>
+oifd</pre>
+  <p>Or build from source with a Rust toolchain (Docker works too). The default configuration uses three simulated experts, so no GPU or API key is required to see routing work.</p>
 <pre>git clone https://github.com/Decentralised-si/Smart-LLM-Router
 cd Smart-LLM-Router/oif-router
 cargo run --release                       <span class="c"># listens on 127.0.0.1:7766</span>
@@ -607,6 +612,7 @@ cargo run --release --bin benchmark       <span class="c"># overhead, TTFI, cost
     <div><b style="color:var(--ink)">Decentralised<span style="color:var(--accent)">.si</span></b> · Decentralised Super Intelligence</div>
     <div class="links">
       <a href="/">Home</a>
+      <a href="/download">Download</a>
       <a href="/ai">Network</a>
       <a href="/whitepaper">Whitepaper</a>
       <a href="https://github.com/Decentralised-si/Smart-LLM-Router">GitHub · router</a>

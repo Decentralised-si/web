@@ -18,10 +18,21 @@ export interface Config {
   platformVendors: string[];
 }
 
-export async function loadConfig(): Promise<Config> {
-  const r = await fetch(`${API}/api/config`);
-  if (!r.ok) throw new Error(`config ${r.status}`);
-  return r.json();
+/** Startup config. Mobile networks drop the odd request, so retry a few times before giving up. */
+export async function loadConfig(attempts = 4): Promise<Config> {
+  let last: unknown;
+  for (let i = 0; i < attempts; i++) {
+    if (i) await new Promise((r) => setTimeout(r, 600 * 2 ** (i - 1)));
+    try {
+      const r = await fetch(`${API}/api/config`, { cache: "no-store", signal: AbortSignal.timeout?.(10_000) });
+      if (r.ok) return await r.json();
+      last = new Error(`HTTP ${r.status}`);
+      if (r.status < 500 && r.status !== 429) break;
+    } catch (e) {
+      last = e;
+    }
+  }
+  throw last;
 }
 
 let tokenSource: () => Promise<string | null> = async () => null;

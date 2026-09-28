@@ -18,7 +18,20 @@ function Unconfigured({ error }: { error?: string }) {
             Decentralised<span className="tld">.si</span>
           </span>
         </div>
-        <p className="muted">{error ? "The Decentralised.si service did not respond. Please try again in a moment." : "Sign-in is temporarily unavailable. Developers can still use the API with a ds_ key."}</p>
+        <p className="muted">{error ? "Couldn't reach the Decentralised.si service from this connection." : "Sign-in is temporarily unavailable. Developers can still use the API with a ds_ key."}</p>
+        {error && (
+          <>
+            <p>
+              <button className="primary" onClick={() => location.reload()}>
+                Try again
+              </button>
+            </p>
+            <p className="fine">
+              {navigator.onLine === false ? "Your device is offline. " : "If this keeps happening, switch between Wi-Fi and mobile data, or turn off any content blocker for api.decentralised.si. "}
+              Details: {error}
+            </p>
+          </>
+        )}
         <p>
           <a href="/home">Back to the site</a> · <a href="/dashboard">API-key dashboard</a>
         </p>

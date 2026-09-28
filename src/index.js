@@ -2,16 +2,12 @@
 // (the network story) at "/"; every other path on an alias domain redirects to the canonical
 // site so there is one origin (one app session).
 //
-// The intro film (/intro) is what "/" shows whenever someone arrives from outside the site
-// (typed address, bookmark, a link elsewhere). Navigating within the site (logo, "Home",
-// "Enter the site" / "Skip intro" = /?intro=skip) goes to the landing page: a same-site
-// Referer, or a 30-minute cookie for browsers that strip the Referer. Crawlers and
-// link-preview bots always get the landing page.
+// "/" always plays the intro film (/intro). The landing page lives at /home: "Skip intro",
+// "Enter the site", the old /?intro=skip link and every "Home"/logo link go there.
+// Crawlers and link-preview bots get the landing page at "/" so the site stays indexable.
 const CANONICAL = "decentralised.si";
 const AI_HOSTS = new Set(["decentralised.ai", "www.decentralised.ai", "decentralise.ai", "www.decentralise.ai"]);
 const ALIASES = new Set(["www.decentralised.si", "decentralise.si", "www.decentralise.si", ...AI_HOSTS]);
-const ENTERED = "dsi_entered=1";
-const SITE_HOSTS = new Set([CANONICAL, ...ALIASES]);
 // Pages and files renamed since publication.
 const MOVED = { "/install/oifd.sh": "/install/synapse.sh", "/install/oifd.ps1": "/install/synapse.ps1" };
 const BOTS = /bot|crawl|spider|slurp|preview|facebookexternalhit|embedly|whatsapp|telegram|discord|slack|linkedin|twitter|pinterest|vkshare|quora|redditbot|applebot|bingpreview|headless/i;
@@ -43,27 +39,16 @@ export default {
       return Response.redirect(url.toString(), 301);
     }
 
+    const landing = isAi ? "/ai" : "/";
+    const html = (res) => withHeaders(res, { "cache-control": "private, no-cache", vary: "User-Agent" });
+    if (url.pathname === "/home") return html(await asset(env, request, url, landing));
     if (url.pathname === "/") {
-      if (url.searchParams.get("intro") === "skip") {
+      if (url.searchParams.has("intro")) {
         url.searchParams.delete("intro");
-        return new Response(null, {
-          status: 302,
-          headers: {
-            location: url.pathname + url.search,
-            "set-cookie": `${ENTERED}; Max-Age=1800; Path=/; Secure; SameSite=Lax`,
-            "cache-control": "no-store",
-          },
-        });
+        return new Response(null, { status: 302, headers: { location: "/home" + url.search, "cache-control": "no-store" } });
       }
-      let fromSite = false;
-      try {
-        fromSite = SITE_HOSTS.has(new URL(request.headers.get("referer") || "").hostname);
-      } catch {}
-      const seen = fromSite || (request.headers.get("cookie") || "").split(/;\s*/).includes(ENTERED);
       const bot = BOTS.test(request.headers.get("user-agent") || "");
-      const landing = isAi ? "/ai" : "/";
-      const res = !seen && !bot ? await asset(env, request, url, "/intro") : await asset(env, request, url, landing);
-      return withHeaders(res, { "cache-control": "private, no-cache", vary: "Cookie, User-Agent, Referer" });
+      return html(await asset(env, request, url, bot ? landing : "/intro"));
     }
 
     return env.ASSETS.fetch(request);

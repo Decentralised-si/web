@@ -253,7 +253,7 @@ const res = await ai.models.generateContent({ model: "gemini-2.5-pro", contents:
     <thead><tr><th>X-Decentralise-Reasoning</th><th>Use it for</th><th>Quality target</th><th>Typically answered by</th></tr></thead>
     <tbody>
       <tr><td><code>0</code> · recall</td><td>lookup, rewriting, classification, extraction</td><td class="n">0.68</td><td>small open models, community nodes</td></tr>
-      <tr><td><code>1</code> · general</td><td>everyday Q&amp;A, summaries, code help</td><td class="n">0.80</td><td>open models such as Llama 3.3 70B</td></tr>
+      <tr><td><code>1</code> · general</td><td>everyday Q&amp;A, summaries, code help</td><td class="n">0.80</td><td>community nodes (8B-class and up, or a specialist in the topic); Llama 3.3 70B on Cloudflare as fallback</td></tr>
       <tr><td><code>2</code> · reasoning</td><td>multi-step analysis, agents, planning</td><td class="n">0.87</td><td>large open or mid-tier frontier models</td></tr>
       <tr><td><code>3</code> · frontier</td><td>research, hard reasoning, high-stakes answers</td><td class="n">0.93</td><td>the strongest model you have connected (your vendor key)</td></tr>
     </tbody>
@@ -271,7 +271,7 @@ const res = await ai.models.generateContent({ model: "gemini-2.5-pro", contents:
 
 <section id="prices">
   <h2>List prices, side by side</h2>
-  <p class="muted">Standard API prices in US dollars per million tokens, as published by each vendor on 28 September 2026 (no batch, cache or volume discounts). The cost column is for one million requests of 1,500 input and 500 output tokens, a typical chat or agent step. <b>With Decentralised.si</b> is the same million requests routed as in the calculator below: 70% to community nodes, 20% to Llama 3.3 70B, and the hardest 10% still to that model, with your own key and no routing fee. Where a model is already cheaper than routing, the router sends everything to it at its own price.</p>
+  <p class="muted">Standard API prices in US dollars per million tokens, as published by each vendor on 28 September 2026 (no batch, cache or volume discounts). The cost column is for one million requests of 1,500 input and 500 output tokens, a typical chat or agent step. <b>With Decentralised.si</b> is the same million requests routed as in the calculator below: 70% to community nodes, 20% to Llama 3.3 70B (hosted fallback), and the hardest 10% still to that model, with your own key and no routing fee. Where a model is already cheaper than routing, the router sends everything to it at its own price.</p>
   <div class="tbl"><table class="cost">
     <thead><tr><th>Model</th><th class="n">Input / 1M</th><th class="n">Output / 1M</th><th class="n">Direct<br>1M requests</th><th class="n dsi"><span class="lg">With Decentralised.si</span><span class="sm">With DSI</span><br>1M requests</th><th class="n">You save</th></tr></thead>
     <tbody>
@@ -286,8 +286,8 @@ const res = await ai.models.generateContent({ model: "gemini-2.5-pro", contents:
       <tr><td>Claude Haiku 4.5<span class="vendor">Anthropic</span></td><td class="n">$1.00</td><td class="n">$5.00</td><td class="n">$4,000</td><td class="n dsi"><b>$923</b></td><td class="n save"><b>$3,077</b><small>77% less</small></td></tr>
       <tr><td>GPT-6 Luna<span class="vendor">OpenAI</span></td><td class="n">$0.10</td><td class="n">$0.50</td><td class="n">$400</td><td class="n dsi"><b>$400</b></td><td class="n muted">same price, $0 fee</td></tr>
       <tr><td>Gemini 2.5 Flash-Lite<span class="vendor">Google</span></td><td class="n">$0.10</td><td class="n">$0.40</td><td class="n">$350</td><td class="n dsi"><b>$350</b></td><td class="n muted">same price, $0 fee</td></tr>
-      <tr class="net"><td>Llama 3.3 70B (open model, Cloudflare Workers AI)<span class="vendor">Decentralised.si network</span></td><td class="n">$0.29</td><td class="n">$2.25</td><td class="n">$1,566</td><td class="n dsi"><b>$1,566</b></td><td class="n muted">network price</td></tr>
-      <tr class="net"><td>Llama 3.1 8B (open model, Cloudflare Workers AI)<span class="vendor">Decentralised.si network</span></td><td class="n">$0.045</td><td class="n">$0.38</td><td class="n">$260</td><td class="n dsi"><b>$260</b></td><td class="n muted">network price</td></tr>
+      <tr class="net"><td>Llama 3.3 70B (open model, Cloudflare Workers AI)<span class="vendor">Hosted fallback, used when no community node fits</span></td><td class="n">$0.29</td><td class="n">$2.25</td><td class="n">$1,566</td><td class="n dsi"><b>$1,566</b></td><td class="n muted">fallback price</td></tr>
+      <tr class="net"><td>Llama 3.1 8B (open model, Cloudflare Workers AI)<span class="vendor">Hosted fallback, used when no community node fits</span></td><td class="n">$0.045</td><td class="n">$0.38</td><td class="n">$260</td><td class="n dsi"><b>$260</b></td><td class="n muted">fallback price</td></tr>
       <tr class="net"><td>Community node (open model on a member's computer)<span class="vendor">Decentralised.si network</span></td><td class="n">$0.10</td><td class="n">$0.30</td><td class="n">$300</td><td class="n dsi"><b>$300</b></td><td class="n muted">network price</td></tr>
     </tbody>
   </table></div>
@@ -297,7 +297,7 @@ const res = await ai.models.generateContent({ model: "gemini-2.5-pro", contents:
 
 <section id="calculator">
   <h2>Estimate your bill</h2>
-  <p class="muted">Pick the model you would otherwise send everything to, then your traffic. The routed estimate sends easy requests to community nodes, medium ones to Llama 3.3 70B, and hard ones to your chosen model through your own key, at the vendor's price.</p>
+  <p class="muted">Pick the model you would otherwise send everything to, then your traffic. The routed estimate sends easy requests to community nodes, medium ones to Llama 3.3 70B (the hosted fallback, until enough community nodes cover them), and hard ones to your chosen model through your own key, at the vendor's price.</p>
   <div class="calc">
     <div class="card">
       <label for="base">Model you use today</label>

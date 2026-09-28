@@ -68,6 +68,15 @@ function render(md: string) {
   return { __html: DOMPurify.sanitize(marked.parse(md, { async: false, gfm: true, breaks: true }) as string) };
 }
 
+/** Who answered, in plain words: a community node, the hosted fallback, or a vendor through your key. */
+function servedBy(meta: { model?: string; provider?: string; market?: string }): string {
+  const model = (meta.model ?? "").replace(/^node:[^/]+\//, "").replace(/^@cf\/[^/]+\//, "");
+  const p = meta.provider ?? "";
+  if (p.startsWith("node:")) return `${model} · community node`;
+  if (p === "workers-ai") return `${model} · Cloudflare-hosted fallback (no community node fit this request)`;
+  return `${model} · ${p}${meta.market === "byok" ? " · your key" : meta.market ? ` · ${meta.market}` : ""}`;
+}
+
 /** Splits reasoning models' <think>…</think> blocks (possibly still streaming) from the answer. */
 function splitThinking(raw: string): { thinks: Array<{ text: string; open: boolean }>; answer: string } {
   const thinks: Array<{ text: string; open: boolean }> = [];
@@ -475,7 +484,7 @@ export function Chat({ id, onSaved, config, name }: { id?: string; onSaved: () =
                   )}
                   {m.meta?.model && (
                     <p className="c-meta">
-                      {m.meta.model} · {m.meta.provider} · {m.meta.market}
+                      {servedBy(m.meta)}
                     </p>
                   )}
                 </div>

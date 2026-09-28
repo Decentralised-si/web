@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Decentralised.si — Decentralised Super Intelligence</title>
-<meta name="description" content="Open-source AI routing that runs on your device: Synapse picks the cheapest expert that is good enough for each request, strips what identifies you, backs up slow providers and escalates only when unsure. Plus drop-in Anthropic, OpenAI and Gemini APIs.">
+<meta name="description" content="Open-source AI routing that runs on your device: DSI Synapse picks the cheapest expert that is good enough for each request, strips what identifies you, backs up slow providers and escalates only when unsure. Plus drop-in Anthropic, OpenAI and Gemini APIs.">
 <meta property="og:url" content="https://decentralised.si/home">
 <meta property="og:image" content="https://decentralised.si/brand/logo.png">
 <meta name="twitter:card" content="summary">
@@ -200,7 +200,7 @@ footer a{color:var(--muted)}
     <div>
       <div class="eyebrow">Decentralised Super Intelligence · open source</div>
       <h1>Every AI model.<br><em>Routed on your device.</em></h1>
-      <p class="lead"><b>Synapse</b> is an open-source router that runs on your machine. For each request it:</p>
+      <p class="lead"><b>DSI Synapse</b> is an open-source router that runs on your machine. For each request it:</p>
       <ul class="lead hero-list">
         <li>works out what kind of expertise is needed;</li>
         <li>removes what identifies you;</li>
@@ -216,7 +216,7 @@ footer a{color:var(--muted)}
     </div>
 
     <figure class="flow" aria-labelledby="flow-cap">
-      <svg viewBox="0 0 560 384" role="img" aria-label="Your app sends requests to Synapse on your device, which understands, protects, chooses, streams and escalates, keeping memory locally, and sends each request to one of several expert providers: local specialists, a local general model, a strong model on your own API key, a network GPU node or the hosted gateway.">
+      <svg viewBox="0 0 560 384" role="img" aria-label="Your app sends requests to Synapse on your device, which understands, protects, chooses, streams and escalates, keeping memory locally, and sends each request to one of several expert providers: local specialists, a local general model, a strong model on your own API key, a network GPU node or DSI Axon, the hosted blind router.">
         <defs>
           <linearGradient id="g" x1="0" x2="1"><stop offset="0" stop-color="#16b5ff"/><stop offset=".5" stop-color="#2257e6"/><stop offset="1" stop-color="#8a3ffc"/></linearGradient>
         </defs>
@@ -228,7 +228,7 @@ footer a{color:var(--muted)}
         <path class="link" d="M124 82 V98"/>
         <g class="od">
           <rect class="frame" x="18" y="98" width="212" height="216" rx="12"/>
-          <text x="124" y="120">Synapse · local router</text>
+          <text x="124" y="120">DSI Synapse · local router</text>
           <g id="steps"></g>
         </g>
         <path class="link" d="M124 314 V326"/>
@@ -265,7 +265,7 @@ footer a{color:var(--muted)}
 <section id="what" class="alt">
   <div class="wrap">
     <div class="eyebrow">What you get</div>
-    <h2>A local router, a hosted gateway, a chat app and a console.</h2>
+    <h2>DSI Synapse on your device, DSI Axon in the network, a chat app and a console.</h2>
     <p class="sub">Sign in with email, Google, GitHub or a wallet. You get a chat interface, a console with everything a model provider's dashboard gives you, and a wallet for crypto top-ups (opening soon).</p>
     <div class="grid">
       <div class="card"><div class="ic" aria-hidden="true">⇄</div><h3>Drop-in APIs</h3><p>Anthropic Messages, OpenAI Chat Completions, Responses and Embeddings, Gemini generateContent, and MCP. Streaming, tools, vision, JSON schema, files and batches all work.</p></div>
@@ -459,14 +459,14 @@ x-decentralise-actual-provider / -market / -receipt</pre>
         <p class="sub">Every part is public on GitHub:</p>
         <ul class="sub oss-list">
           <li>the Rust router daemon;</li>
-          <li>the hosted gateway;</li>
+          <li>DSI Axon, the hosted blind router;</li>
           <li>the provider node and the local memory harness;</li>
           <li>the token ledger;</li>
           <li>this site and app.</li>
         </ul>
         <p class="sub"><b>Install in one line</b> on macOS, Linux or Windows from the <a href="/download">download page</a>, or build it from source. The default config uses simulated experts, so you can watch routing, fallback, hedging and escalation work without a GPU or an API key.</p>
         <div class="repos">
-          <a class="card repo" href="https://github.com/Decentralised-si/Smart-LLM-Router"><b>Decentralised-si/Smart-LLM-Router</b><span>Synapse (Rust) · gateway &amp; router (TypeScript) · dsi-node · dsi harness · PAI</span></a>
+          <a class="card repo" href="https://github.com/Decentralised-si/Smart-LLM-Router"><b>Decentralised-si/Smart-LLM-Router</b><span>DSI Synapse (Rust) · DSI Axon (TypeScript) · dsi-node · dsi harness · PAI</span></a>
           <a class="card repo" href="https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/synapse"><b>synapse/</b><span>the local router daemon: test suite, benchmark harness, Dockerfile</span></a>
           <a class="card repo" href="https://github.com/Decentralised-si/web"><b>Decentralised-si/web</b><span>this website, chat app, console and wallet</span></a>
         </div>
@@ -579,7 +579,7 @@ cargo run --release --bin benchmark</pre>
     txt(g, 54, y + 18, st[1]);
     return g;
   });
-  const P = [["Quant specialist", "local GPU"], ["Coder specialist", "local GPU"], ["General model", "Ollama · local"], ["Strong model", "your API key"], ["Network GPU node", "dsi-node"], ["Hosted gateway", "api.decentralised.si"]]
+  const P = [["Quant specialist", "local GPU"], ["Coder specialist", "local GPU"], ["General model", "Ollama · local"], ["Strong model", "your API key"], ["Network GPU node", "dsi-node"], ["DSI Axon", "api.decentralised.si"]]
     .map((t, i) => ({ t, y: 38 + i * 56 }));
   const pc = (j) => P[j].y + 21;
   const path = (j) => `M230 206 C 280 206, 280 ${pc(j)}, 330 ${pc(j)}`;

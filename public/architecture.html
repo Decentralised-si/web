@@ -9,7 +9,7 @@
 <meta property="og:image" content="https://decentralised.si/brand/logo.png">
 <meta name="twitter:card" content="summary">
 <meta property="og:title" content="Decentralised.si architecture">
-<meta property="og:description" content="How the local router, the hosted gateway and the open provider network fit together.">
+<meta property="og:description" content="How DSI Synapse (the router on your device), DSI Axon (the blind router in the network) and the open provider network fit together.">
 
 <meta name="theme-color" content="#000211">
 <link rel="icon" href="/favicon.ico" sizes="any">
@@ -177,7 +177,7 @@ footer a{color:var(--muted)}
   <div class="wrap">
     <div class="eyebrow">Architecture · open source</div>
     <h1>How a request finds <em>the right intelligence</em>.</h1>
-    <p class="lead">Decentralised.si is a set of open-source components. At the centre is <b>Synapse</b>, a router that runs on your own device and acts as a scheduler for intelligence. For every request it decides:</p>
+    <p class="lead">Decentralised.si is a set of open-source components. At the centre is <b>DSI Synapse</b>, a router that runs on your own device and acts as a scheduler for intelligence. For every request it decides:</p>
     <ul class="lead">
       <li>what kind of expertise is needed, and how much;</li>
       <li>which provider should supply it;</li>
@@ -207,7 +207,7 @@ footer a{color:var(--muted)}
       <li><a href="#reliability">Streaming without interruption</a></li>
       <li><a href="#escalation">More intelligence, only when needed</a></li>
       <li><a href="#learning">Learning from outcomes</a></li>
-      <li><a href="#gateway">The hosted gateway and the network</a></li>
+      <li><a href="#gateway">DSI Axon and the network</a></li>
       <li><a href="#performance">Measured performance</a></li>
       <li><a href="#status">What is built</a></li>
       <li><a href="#run">Run it yourself</a></li>
@@ -239,12 +239,12 @@ footer a{color:var(--muted)}
   <h2>The system at a glance</h2>
   <p>There are three layers. Only the first is required. Everything below it is a <em>provider</em>, and Synapse treats them all the same way: an endpoint with a price, an expected latency and quality, and a map of the domains it is good at.</p>
 
-  <div class="sys" role="img" aria-label="Layer 1: your device, running your apps, the Synapse router and local memory. Layer 2: expert providers — local models, your own vendor keys, the Decentralised.si gateway and independent GPU nodes. Layer 3: future fabric services — discovery, reputation, settlement and verification.">
+  <div class="sys" role="img" aria-label="Layer 1: your device, running your apps, the DSI Synapse router and local memory. Layer 2: expert providers — local models, your own vendor keys, DSI Axon (the blind router) and independent GPU nodes. Layer 3: future fabric services — discovery, reputation, settlement and verification.">
     <div class="layer device">
       <h4><span>① Your device</span><span>required · runs locally</span></h4>
       <div class="row">
         <div class="box"><b>Your apps</b><span>scripts, chat, agents: anything that can call a local HTTP API</span></div>
-        <div class="box hot" style="grid-column:span 2"><b>Synapse — local router</b><span>127.0.0.1:7766 · Rust · one binary</span>
+        <div class="box hot" style="grid-column:span 2"><b>DSI Synapse — local router</b><span>127.0.0.1:7766 · Rust · one binary</span>
           <div class="synapse-steps"><div>understand</div><div>protect</div><div>choose</div><div>stream &amp; guard</div><div>escalate &amp; learn</div></div>
         </div>
         <div class="box"><b>Local state</b><span>conversation memory, privacy mapping, provider statistics (SQLite)</span></div>
@@ -256,7 +256,7 @@ footer a{color:var(--muted)}
       <div class="row">
         <div class="box"><b>Local models</b><span>Ollama, vLLM, llama.cpp, LM Studio on this machine or LAN</span></div>
         <div class="box"><b>Your vendor keys</b><span>any OpenAI-compatible API, billed to you directly</span></div>
-        <div class="box"><b>Decentralised.si gateway</b><span>drop-in Anthropic / OpenAI / Gemini APIs, blind router, limits, billing</span></div>
+        <div class="box"><b>DSI Axon — blind router</b><span>drop-in Anthropic / OpenAI / Gemini APIs, routing without reading prompts, limits, billing</span></div>
         <div class="box"><b>Network GPU nodes</b><span>independent operators running <code>dsi-node</code>, paid in PAI</span></div>
       </div>
     </div>
@@ -517,15 +517,15 @@ Email me at you@example.com and analyse this option position.
 
 <section id="gateway">
   <div class="num">10</div>
-  <h2>The hosted gateway and the network</h2>
+  <h2>DSI Axon and the network</h2>
   <p>Not every app can run a daemon, so the same ideas are also available as a hosted service at <code>api.decentralised.si</code>. It runs on Cloudflare Workers, and its code is in the same repository.</p>
   <div class="grid">
     <div class="card"><h3 style="margin-top:0">Drop-in APIs</h3><p class="muted">Anthropic Messages, OpenAI Chat Completions, Responses and Embeddings, Gemini, and MCP. Change one base URL and keep your SDK. Streaming, tools, vision, files and batches are translated between vendors.</p></div>
-    <div class="card"><h3 style="margin-top:0">Blind router</h3><p class="muted">Routes on a request's structure and your hints, not its meaning. It strips identity, spreads conversations across providers, and continues interrupted streams on another provider.</p></div>
+    <div class="card"><h3 style="margin-top:0">A blind router</h3><p class="muted">Routes on a request's structure and your hints, not its meaning. It strips identity, spreads conversations across providers, and continues interrupted streams on another provider.</p></div>
     <div class="card"><h3 style="margin-top:0">Accounts</h3><p class="muted">Bring-your-own keys with envelope encryption, rate and spend limits, workspaces, a full console, and crypto payments.</p></div>
     <div class="card"><h3 style="margin-top:0">Open provider network</h3><p class="muted">Anyone can run <code>dsi-node</code> next to an open-weight model (<a href="/node">set one up with Docker</a>; see it on the <a href="/network">live map</a>). The router probes it, signs its traffic and checks it with canaries. Operators earn PAI for verified work.</p></div>
   </div>
-  <p>The two fit together naturally. The gateway speaks the OpenAI-compatible API, so Synapse can use it as one more provider, next to your local models and your own keys. The daemon then decides when the gateway is the right expert, and your memory and privacy mapping stay on your machine.</p>
+  <p>The two fit together naturally. Axon speaks the OpenAI-compatible API, so Synapse can use it as one more provider, next to your local models and your own keys. Synapse then decides when Axon is the right expert, and your memory and privacy mapping stay on your machine.</p>
   <p class="src">Code: <a href="https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/apps/gateway">apps/gateway</a> · <a href="https://github.com/Decentralised-si/Smart-LLM-Router/blob/main/packages/core/src/router.ts">packages/core/src/router.ts</a> · <a href="https://github.com/Decentralised-si/Smart-LLM-Router/blob/main/packages/core/src/continuity.ts">continuity.ts</a> · <a href="https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/packages/node">packages/node</a> · <a href="https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/packages/harness">packages/harness</a> · <a href="/whitepaper">whitepaper</a></p>
 </section>
 
@@ -558,8 +558,8 @@ Email me at you@example.com and analyse this option position.
   <div class="tbl"><table>
     <thead><tr><th>Component</th><th>Where</th><th>Status</th></tr></thead>
     <tbody>
-      <tr><td>Synapse local router (Rust)</td><td><a href="https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/synapse"><code>synapse/</code></a></td><td><span class="pill impl">preview</span> tested; <a href="/download">binaries for macOS, Linux, Windows</a></td></tr>
-      <tr><td>Hosted gateway, blind router, limits, billing</td><td><a href="https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/apps/gateway"><code>apps/gateway</code></a>, <code>packages/core</code></td><td><span class="pill live">live</span></td></tr>
+      <tr><td>DSI Synapse, the local router (Rust)</td><td><a href="https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/synapse"><code>synapse/</code></a></td><td><span class="pill impl">preview</span> tested; <a href="/download">binaries for macOS, Linux, Windows</a></td></tr>
+      <tr><td>DSI Axon, the hosted blind router: APIs, limits, billing</td><td><a href="https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/apps/gateway"><code>apps/gateway</code></a>, <code>packages/core</code></td><td><span class="pill live">live</span></td></tr>
       <tr><td>Chat app, console, wallet</td><td><a href="https://github.com/Decentralised-si/web"><code>web</code></a></td><td><span class="pill live">live</span></td></tr>
       <tr><td>dsi harness (local memory, MCP server)</td><td><a href="https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/packages/harness"><code>packages/harness</code></a></td><td><span class="pill impl">implemented</span> <a href="/dl/dsi.mjs">download</a></td></tr>
       <tr><td>Live network map (by city)</td><td><a href="/network"><code>/network</code></a>, <code>/api/network/map</code></td><td><span class="pill live">live</span></td></tr>
@@ -592,7 +592,7 @@ curl localhost:7766/v1/route -H 'Content-Type: application/json' \
 
 cargo test                                <span class="c"># tests: routing, fallback, privacy, escalation, streaming</span>
 cargo run --release --bin benchmark       <span class="c"># overhead, TTFI, cost; CSV output</span></pre>
-  <p>To use real models, point <code>config/providers.yaml</code> at any OpenAI-compatible server (vLLM, llama.cpp, LM Studio, a hosted API or the Decentralised.si gateway) or at Ollama. Declare what each one is good at:</p>
+  <p>To use real models, point <code>config/providers.yaml</code> at any OpenAI-compatible server (vLLM, llama.cpp, LM Studio, a hosted API or DSI Axon) or at Ollama. Declare what each one is good at:</p>
 <pre>providers:
   - id: quant-local
     endpoint: http://127.0.0.1:8101/v1
@@ -604,7 +604,7 @@ cargo run --release --bin benchmark       <span class="c"># overhead, TTFI, cost
     expected_quality: 0.95</pre>
   <p>The daemon binds to <code>127.0.0.1</code> and refuses any other address unless an API token is set. Provider keys are read from environment variables named in the config, never written into it.</p>
   <div class="repos">
-    <a class="card repo" href="https://github.com/Decentralised-si/Smart-LLM-Router"><h4><svg class="gh"><use href="#gh"/></svg> Decentralised-si/Smart-LLM-Router</h4><p>Synapse (Rust), the hosted gateway and router (TypeScript), dsi-node, the dsi harness, the PAI ledger and contract, and the whitepaper.</p><code>synapse/ · apps/gateway · packages/* · contracts/</code></a>
+    <a class="card repo" href="https://github.com/Decentralised-si/Smart-LLM-Router"><h4><svg class="gh"><use href="#gh"/></svg> Decentralised-si/Smart-LLM-Router</h4><p>DSI Synapse (Rust), DSI Axon (TypeScript), dsi-node, the dsi harness, the PAI ledger and contract, and the whitepaper.</p><code>synapse/ · apps/gateway · packages/* · contracts/</code></a>
     <a class="card repo" href="https://github.com/Decentralised-si/web"><h4><svg class="gh"><use href="#gh"/></svg> Decentralised-si/web</h4><p>This website, the chat app, the console and the wallet (React + Privy on Cloudflare).</p><code>public/ · app/ · src/</code></a>
   </div>
   <p>Issues and pull requests are welcome in both repositories. Good first areas are a learned difficulty estimator, a local embedding classifier, new provider adapters, and the R3 and R5 rungs.</p>

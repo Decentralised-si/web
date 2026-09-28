@@ -10,7 +10,7 @@
 
 Intelligence is becoming a utility, but today it is dispensed by a handful of vendors, each with its own API, its own prices, and a complete view of everything its users ask. Meanwhile millions of GPUs sit idle in homes, labs and data centres, and capable open-weight models are free to run.
 
-Decentralised.si is the routing layer between applications and intelligence. Applications keep the SDK and code they already have and change one base URL. A **harness** on the user's device keeps their memory and preferences. A **blind router** picks, for each conversation, the cheapest provider that is capable, fast and private enough: the user's own commercial API accounts, or an open network of independent GPU operators. The router works without reading the query. Anyone can join the network by running one container next to an open-source model server, and is paid in **PAI**, a token capped at 10B. Its emission falls over time and as the network grows, a share of every fee is burned, and staking it unlocks access to the most capable ("novel") intelligence.
+Decentralised.si is the routing layer between applications and intelligence. Applications keep the SDK and code they already have and change one base URL. A **harness** on the user's device keeps their memory and preferences, and **DSI Synapse**, an optional router on the device, can choose between local models, the user's own keys and the network. **DSI Axon**, a **blind router** in the network, picks, for each conversation, the cheapest provider that is capable, fast and private enough: the user's own commercial API accounts, or an open network of independent GPU operators. The router works without reading the query. Anyone can join the network by running one container next to an open-source model server, and is paid in **PAI**, a token capped at 10B. Its emission falls over time and as the network grows, a share of every fee is burned, and staking it unlocks access to the most capable ("novel") intelligence.
 
 This paper describes the architecture, the privacy model, the provider network, and the PAI economics. It also states which parts run today and which are on the roadmap.
 
@@ -39,8 +39,9 @@ This paper describes the architecture, the privacy model, the provider network, 
 | Layer | Runs where | Responsibility | Status |
 |---|---|---|---|
 | **Harness** (`dsi`) | User's device | Memory, preferences, local recall, difficulty hint, session ids; MCP server; local proxy | Implemented |
+| **DSI Synapse** (`synapse`) | User's device (optional) | Local routing by domain, difficulty and quality; pseudonymisation; hedging, fallback and escalation; discovery of specialist nodes | Preview |
 | **Access layer** | Edge (`api.decentralised.si`) | Anthropic, OpenAI and Gemini compatible APIs; MCP over Streamable HTTP | Implemented |
-| **Blind router** | Edge, stateless | Canonical translation, capability gate, scoring, session sharding, failover, stream translation, identity stripping | Implemented |
+| **DSI Axon** (the blind router) | Edge, stateless | Canonical translation, capability gate, scoring, session sharding, failover, stream translation, identity stripping | Implemented |
 | **Provider markets** | Vendors / operators | A: customer's own commercial keys (BYOK). B: community and specialist nodes | Implemented |
 | **Verification** | Router + (phase 2) verifiers | Structural checks, canary prompts, reputation, slashing | Canaries implemented; verifier market phase 2 |
 | **PAI settlement** | Off-chain ledger → chain | Work metering, epoch emission, burn, staking, bonds | Ledger + reference contract implemented; mainnet not launched |
@@ -53,7 +54,7 @@ sequenceDiagram
     participant App as App / agent
     participant H as Harness (device)
     participant A as Access layer
-    participant R as Blind router
+    participant R as DSI Axon (blind router)
     participant P as Provider
     participant L as PAI ledger
     App->>H: prompt
@@ -130,7 +131,7 @@ Every response reports its provenance (`x-decentralise-actual-provider`, `-actua
 
 ---
 
-## 5. The blind router
+## 5. DSI Axon, the blind router
 
 ### 5.1 What the router is allowed to know
 
@@ -202,7 +203,7 @@ The key design decision is that **no provider holds conversation state**. A conv
 |---|---|---|
 | Full history (messages, tool calls and results) | The client (harness or application) | As long as the user keeps it |
 | Long-term memory and preferences | The harness, on the device | Until the user deletes it |
-| The partial answer of the turn in flight | The gateway, in memory (`StreamAccumulator`) | One turn; never persisted |
+| The partial answer of the turn in flight | Axon, in memory (`StreamAccumulator`) | One turn; never persisted |
 | Affinity: which provider served the last turn | The client, echoed in `X-Decentralise-Affinity` | One conversation |
 
 Every request carries the full context the provider needs for that turn, translated into that provider's native schema by the protocol adapters. A provider is a pure function from context to next message. Losing it loses nothing that cannot be reproduced.
@@ -212,7 +213,7 @@ Every request carries the full context the provider needs for that turn, transla
 | When it fails | What the network does | What the client sees |
 |---|---|---|
 | **Before the first byte** of a turn | Fails over down a diversified candidate list: the best candidate of each *other* provider first, and every model of a provider that refused the connection is skipped | A normal response, a little later; `x-decentralise-failovers` counts the retries |
-| **In the middle of a streamed answer** | The gateway keeps the partial answer, sends the conversation plus the partial answer and a one-line continuation note to the next compatible provider, and splices its stream into the same response: one `message_start`, one text block, usage summed | One uninterrupted message in its own protocol. The receipt records `resumedOn` |
+| **In the middle of a streamed answer** | Axon keeps the partial answer, sends the conversation plus the partial answer and a one-line continuation note to the next compatible provider, and splices its stream into the same response: one `message_start`, one text block, usage summed | One uninterrupted message in its own protocol. The receipt records `resumedOn` |
 | **Between turns** | The client's affinity points at a provider that is gone. The router skips it and picks the next equivalent one; the next response carries the new affinity | Nothing unusual |
 | **The original provider comes back** | The client keeps echoing the new affinity, so the conversation **stays** with its replacement instead of bouncing back | Nothing |
 | **A whole vendor or the whole network is down** | Candidates from other vendors and the other market remain; only an explicit `network_only` or `byok_only` policy can exclude them | An honest `5xx` only if *every* compatible provider is down |
@@ -221,7 +222,7 @@ Every request carries the full context the provider needs for that turn, transla
 sequenceDiagram
     autonumber
     participant C as Client (holds history)
-    participant G as Gateway
+    participant G as DSI Axon
     participant A as Provider A
     participant B as Provider B
     C->>G: turn n (full history, affinity=A)
@@ -269,7 +270,7 @@ Multi-vendor gateways that retry on another API already exist, and they solve pa
 The claims above follow from five invariants of the design. Each is checked by the test suite in the Smart-LLM-Router repository (`apps/gateway/test/continuity.test.ts` and the SDK compatibility suites), with real Anthropic, OpenAI, Gemini and MCP client SDKs on one side and providers speaking each vendor's wire format on the other.
 
 **I1 · Providers are stateless with respect to the conversation.** Everything a provider needs is in the request, and nothing it holds is needed later (§7.1).
-*So:* removing any provider removes no conversation state. The only thing at risk is the partial output of the turn in flight, which the gateway holds.
+*So:* removing any provider removes no conversation state. The only thing at risk is the partial output of the turn in flight, which Axon holds.
 *Test:* "provider goes offline between turns". Anthropic serves a tool call, then goes offline. The next turn, still asking for Anthropic, is served by another vendor. That vendor receives the complete history, including the tool call and its result, valid in its own schema, and not one byte of the turn reaches the offline provider.
 
 **I2 · Every vendor schema maps to and from one canonical form.** Each adapter is a pair of translations (vendor → canonical, canonical → vendor) that preserve messages, tool calls, tool results, structured output and system instructions. The capability gate only admits providers that support every feature the conversation uses.

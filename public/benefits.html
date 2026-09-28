@@ -110,6 +110,13 @@ footer a{color:var(--muted)}
 table.cost td:nth-child(1){white-space:normal}
 table.cost td.n,table.cost th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
 table.cost tr.net td{background:var(--accent-soft)}
+table.cost th.dsi,table.cost td.dsi{background:var(--accent-soft)}
+table.cost td.dsi b{color:var(--accent)}
+table.cost td.save b{display:block;color:var(--ok)}
+table.cost td.save small{color:var(--muted);font-size:12px}
+table.cost td.muted{color:var(--muted);font-size:13px}
+table.cost .sm{display:none}
+@media (max-width:640px){table.cost .lg{display:none}table.cost .sm{display:inline}table.cost{min-width:0;font-size:13.5px}table.cost th,table.cost td{padding:9px 7px}table.cost th.n{white-space:normal;letter-spacing:.03em;font-size:10.5px}table.cost td.save small{display:block}table.cost .vendor{font-size:11px}table.cost th:nth-child(2),table.cost td:nth-child(2),table.cost th:nth-child(3),table.cost td:nth-child(3){display:none}table.cost td.muted{white-space:normal}}
 table.cost .vendor{display:block;font-size:12px;color:var(--muted)}
 .bar{height:8px;border-radius:4px;background:var(--grad);min-width:2px}
 .calc{display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));align-items:start}
@@ -264,24 +271,24 @@ const res = await ai.models.generateContent({ model: "gemini-2.5-pro", contents:
 
 <section id="prices">
   <h2>List prices, side by side</h2>
-  <p class="muted">Standard API prices in US dollars per million tokens, as published by each vendor on 28 September 2026 (no batch, cache or volume discounts). The cost column is for one million requests of 1,500 input and 500 output tokens, a typical chat or agent step.</p>
+  <p class="muted">Standard API prices in US dollars per million tokens, as published by each vendor on 28 September 2026 (no batch, cache or volume discounts). The cost column is for one million requests of 1,500 input and 500 output tokens, a typical chat or agent step. <b>With Decentralised.si</b> is the same million requests routed as in the calculator below: 70% to community nodes, 20% to Llama 3.3 70B, and the hardest 10% still to that model, with your own key and no routing fee. Where a model is already cheaper than routing, the router sends everything to it at its own price.</p>
   <div class="tbl"><table class="cost">
-    <thead><tr><th>Model</th><th class="n">Input / 1M</th><th class="n">Output / 1M</th><th class="n">1M requests</th><th class="n">Costs × node price</th><th></th></tr></thead>
+    <thead><tr><th>Model</th><th class="n">Input / 1M</th><th class="n">Output / 1M</th><th class="n">Direct<br>1M requests</th><th class="n dsi"><span class="lg">With Decentralised.si</span><span class="sm">With DSI</span><br>1M requests</th><th class="n">You save</th></tr></thead>
     <tbody>
-      <tr><td>Claude Fable 5.1<span class="vendor">Anthropic</span></td><td class="n">$10.00</td><td class="n">$50.00</td><td class="n"><b>$40,000</b></td><td class="n">133.3×</td><td style="width:22%"><div class="bar" style="width:29.6%"></div></td></tr>
-      <tr><td>GPT-6 Astra<span class="vendor">OpenAI</span></td><td class="n">$10.00</td><td class="n">$50.00</td><td class="n"><b>$40,000</b></td><td class="n">133.3×</td><td style="width:22%"><div class="bar" style="width:29.6%"></div></td></tr>
-      <tr><td>GPT-5.5 Pro<span class="vendor">OpenAI</span></td><td class="n">$30.00</td><td class="n">$180.00</td><td class="n"><b>$135,000</b></td><td class="n">450.0×</td><td style="width:22%"><div class="bar" style="width:100.0%"></div></td></tr>
-      <tr><td>GPT-5.5<span class="vendor">OpenAI</span></td><td class="n">$5.00</td><td class="n">$30.00</td><td class="n"><b>$22,500</b></td><td class="n">75.0×</td><td style="width:22%"><div class="bar" style="width:16.7%"></div></td></tr>
-      <tr><td>Claude Opus 5.5<span class="vendor">Anthropic</span></td><td class="n">$4.00</td><td class="n">$20.00</td><td class="n"><b>$16,000</b></td><td class="n">53.3×</td><td style="width:22%"><div class="bar" style="width:11.9%"></div></td></tr>
-      <tr><td>Gemini 3.1 Pro (preview)<span class="vendor">Google</span></td><td class="n">$2.00</td><td class="n">$12.00</td><td class="n"><b>$9,000</b></td><td class="n">30.0×</td><td style="width:22%"><div class="bar" style="width:6.7%"></div></td></tr>
-      <tr><td>Claude Sonnet 5<span class="vendor">Anthropic</span></td><td class="n">$2.00</td><td class="n">$10.00</td><td class="n"><b>$8,000</b></td><td class="n">26.7×</td><td style="width:22%"><div class="bar" style="width:5.9%"></div></td></tr>
-      <tr><td>GPT-6 Sol<span class="vendor">OpenAI</span></td><td class="n">$2.00</td><td class="n">$10.00</td><td class="n"><b>$8,000</b></td><td class="n">26.7×</td><td style="width:22%"><div class="bar" style="width:5.9%"></div></td></tr>
-      <tr><td>Claude Haiku 4.5<span class="vendor">Anthropic</span></td><td class="n">$1.00</td><td class="n">$5.00</td><td class="n"><b>$4,000</b></td><td class="n">13.3×</td><td style="width:22%"><div class="bar" style="width:3.0%"></div></td></tr>
-      <tr><td>GPT-6 Luna<span class="vendor">OpenAI</span></td><td class="n">$0.10</td><td class="n">$0.50</td><td class="n"><b>$400</b></td><td class="n">1.3×</td><td style="width:22%"><div class="bar" style="width:0.6%"></div></td></tr>
-      <tr><td>Gemini 2.5 Flash-Lite<span class="vendor">Google</span></td><td class="n">$0.10</td><td class="n">$0.40</td><td class="n"><b>$350</b></td><td class="n">1.2×</td><td style="width:22%"><div class="bar" style="width:0.6%"></div></td></tr>
-      <tr class="net"><td>Llama 3.3 70B (open model, Cloudflare Workers AI)<span class="vendor">Decentralised.si network</span></td><td class="n">$0.29</td><td class="n">$2.25</td><td class="n"><b>$1,566</b></td><td class="n">5.2×</td><td style="width:22%"><div class="bar" style="width:1.2%"></div></td></tr>
-      <tr class="net"><td>Llama 3.1 8B (open model, Cloudflare Workers AI)<span class="vendor">Decentralised.si network</span></td><td class="n">$0.045</td><td class="n">$0.38</td><td class="n"><b>$260</b></td><td class="n">0.9×</td><td style="width:22%"><div class="bar" style="width:0.6%"></div></td></tr>
-      <tr class="net"><td>Community node (open model on a member's computer)<span class="vendor">Decentralised.si network</span></td><td class="n">$0.10</td><td class="n">$0.30</td><td class="n"><b>$300</b></td><td class="n">1.0×</td><td style="width:22%"><div class="bar" style="width:0.6%"></div></td></tr>
+      <tr><td>Claude Fable 5.1<span class="vendor">Anthropic</span></td><td class="n">$10.00</td><td class="n">$50.00</td><td class="n">$40,000</td><td class="n dsi"><b>$4,523</b></td><td class="n save"><b>$35,477</b><small>89% less</small></td></tr>
+      <tr><td>GPT-6 Astra<span class="vendor">OpenAI</span></td><td class="n">$10.00</td><td class="n">$50.00</td><td class="n">$40,000</td><td class="n dsi"><b>$4,523</b></td><td class="n save"><b>$35,477</b><small>89% less</small></td></tr>
+      <tr><td>GPT-5.5 Pro<span class="vendor">OpenAI</span></td><td class="n">$30.00</td><td class="n">$180.00</td><td class="n">$135,000</td><td class="n dsi"><b>$14,023</b></td><td class="n save"><b>$120,977</b><small>90% less</small></td></tr>
+      <tr><td>GPT-5.5<span class="vendor">OpenAI</span></td><td class="n">$5.00</td><td class="n">$30.00</td><td class="n">$22,500</td><td class="n dsi"><b>$2,773</b></td><td class="n save"><b>$19,727</b><small>88% less</small></td></tr>
+      <tr><td>Claude Opus 5.5<span class="vendor">Anthropic</span></td><td class="n">$4.00</td><td class="n">$20.00</td><td class="n">$16,000</td><td class="n dsi"><b>$2,123</b></td><td class="n save"><b>$13,877</b><small>87% less</small></td></tr>
+      <tr><td>Gemini 3.1 Pro (preview)<span class="vendor">Google</span></td><td class="n">$2.00</td><td class="n">$12.00</td><td class="n">$9,000</td><td class="n dsi"><b>$1,423</b></td><td class="n save"><b>$7,577</b><small>84% less</small></td></tr>
+      <tr><td>Claude Sonnet 5<span class="vendor">Anthropic</span></td><td class="n">$2.00</td><td class="n">$10.00</td><td class="n">$8,000</td><td class="n dsi"><b>$1,323</b></td><td class="n save"><b>$6,677</b><small>83% less</small></td></tr>
+      <tr><td>GPT-6 Sol<span class="vendor">OpenAI</span></td><td class="n">$2.00</td><td class="n">$10.00</td><td class="n">$8,000</td><td class="n dsi"><b>$1,323</b></td><td class="n save"><b>$6,677</b><small>83% less</small></td></tr>
+      <tr><td>Claude Haiku 4.5<span class="vendor">Anthropic</span></td><td class="n">$1.00</td><td class="n">$5.00</td><td class="n">$4,000</td><td class="n dsi"><b>$923</b></td><td class="n save"><b>$3,077</b><small>77% less</small></td></tr>
+      <tr><td>GPT-6 Luna<span class="vendor">OpenAI</span></td><td class="n">$0.10</td><td class="n">$0.50</td><td class="n">$400</td><td class="n dsi"><b>$400</b></td><td class="n muted">same price, $0 fee</td></tr>
+      <tr><td>Gemini 2.5 Flash-Lite<span class="vendor">Google</span></td><td class="n">$0.10</td><td class="n">$0.40</td><td class="n">$350</td><td class="n dsi"><b>$350</b></td><td class="n muted">same price, $0 fee</td></tr>
+      <tr class="net"><td>Llama 3.3 70B (open model, Cloudflare Workers AI)<span class="vendor">Decentralised.si network</span></td><td class="n">$0.29</td><td class="n">$2.25</td><td class="n">$1,566</td><td class="n dsi"><b>$1,566</b></td><td class="n muted">network price</td></tr>
+      <tr class="net"><td>Llama 3.1 8B (open model, Cloudflare Workers AI)<span class="vendor">Decentralised.si network</span></td><td class="n">$0.045</td><td class="n">$0.38</td><td class="n">$260</td><td class="n dsi"><b>$260</b></td><td class="n muted">network price</td></tr>
+      <tr class="net"><td>Community node (open model on a member's computer)<span class="vendor">Decentralised.si network</span></td><td class="n">$0.10</td><td class="n">$0.30</td><td class="n">$300</td><td class="n dsi"><b>$300</b></td><td class="n muted">network price</td></tr>
     </tbody>
   </table></div>
   <p class="src">Sources: <a href="https://platform.claude.com/docs/en/about-claude/pricing">Anthropic pricing</a> · <a href="https://developers.openai.com/api/docs/pricing">OpenAI pricing</a> · <a href="https://ai.google.dev/gemini-api/docs/pricing">Gemini API pricing</a> · <a href="https://developers.cloudflare.com/workers-ai/platform/pricing/">Cloudflare Workers AI pricing</a> · community node price: the default a node declares in <a href="https://github.com/Decentralised-si/DSI-AXON/blob/main/packages/core/src/network.ts">network.ts</a> (operators can set their own). Cost = (1,500 × input price + 500 × output price) ÷ 1,000,000 per request.</p>

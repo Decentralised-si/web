@@ -36,7 +36,9 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 :focus-visible{outline:2px solid var(--sea);outline-offset:3px}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 
-#gl{touch-action:none;position:fixed;inset:0;width:100%;height:100%;display:block}
+#gl{touch-action:none;position:fixed;inset:0;width:100%;height:100%;display:block;transition:opacity .9s ease}
+/* nothing but Start until the film begins: the point appears, and beats, only after Start */
+body:not(.playing) #gl{opacity:0}
 .atmos{position:fixed;inset:0;pointer-events:none;
   background:radial-gradient(90% 70% at 50% 45%,rgba(40,30,80,.18),transparent 70%),
              radial-gradient(130% 100% at 50% 50%,transparent 50%,rgba(4,3,9,.9));transition:background 3s ease}
@@ -55,7 +57,7 @@ body:not(.filming) .bars-cine.b{transform:translateY(100%)}
 /* gate */
 .gate{position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;
   text-align:center;padding:24px;transition:opacity 1.6s ease,visibility 0s linear 1.6s}
-.gate.gone{opacity:0;visibility:hidden;pointer-events:none}
+.gate.gone{opacity:0;visibility:hidden;pointer-events:none;transition:opacity .4s ease,visibility 0s linear .4s}
 .gate .mark{width:58px;height:58px;animation:turn 18s linear infinite;margin-bottom:6px}
 @keyframes turn{to{transform:rotate(360deg)}}
 .gate h1{font-size:clamp(28px,4.4vw,58px);font-weight:700;letter-spacing:-.035em;line-height:1.02;font-variation-settings:'opsz' 96,'wdth' 90;max-width:14ch}
@@ -212,8 +214,7 @@ body.no-webgl .nogl{display:block}
 <div class="atmos" id="atmos" aria-hidden="true"></div>
 <div class="grain" aria-hidden="true"></div>
 <div class="flash" id="flash" aria-hidden="true"></div>
-<section class="gate bang" id="gate" aria-labelledby="gateTitle">
-  <h1 id="gateTitle">Everything began as a single point.</h1>
+<section class="gate" id="gate" aria-label="Start">
   <div class="go">
     <button class="btn" id="beginSound" type="button" disabled>Start</button>
   </div>

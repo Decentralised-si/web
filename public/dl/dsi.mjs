@@ -1098,11 +1098,11 @@ var require_util = __commonJS({
       return false;
     }
     exports.schemaHasRules = schemaHasRules;
-    function schemaHasRulesButRef(schema, RULES) {
+    function schemaHasRulesButRef(schema, RULES2) {
       if (typeof schema == "boolean")
         return !schema;
       for (const key in schema)
-        if (key !== "$ref" && RULES.all[key])
+        if (key !== "$ref" && RULES2.all[key])
           return true;
       return false;
     }
@@ -2496,17 +2496,17 @@ var require_validate = __commonJS({
     }
     function schemaKeywords(it, types, typeErrors, errsCount) {
       const { gen, schema, data, allErrors, opts, self } = it;
-      const { RULES } = self;
-      if (schema.$ref && (opts.ignoreKeywordsWithRef || !(0, util_1.schemaHasRulesButRef)(schema, RULES))) {
-        gen.block(() => keywordCode(it, "$ref", RULES.all.$ref.definition));
+      const { RULES: RULES2 } = self;
+      if (schema.$ref && (opts.ignoreKeywordsWithRef || !(0, util_1.schemaHasRulesButRef)(schema, RULES2))) {
+        gen.block(() => keywordCode(it, "$ref", RULES2.all.$ref.definition));
         return;
       }
       if (!opts.jtd)
         checkStrictTypes(it, types);
       gen.block(() => {
-        for (const group of RULES.rules)
+        for (const group of RULES2.rules)
           groupKeywords(group);
-        groupKeywords(RULES.post);
+        groupKeywords(RULES2.post);
       });
       function groupKeywords(group) {
         if (!(0, applicability_1.shouldUseGroup)(schema, group))
@@ -3352,9 +3352,9 @@ var require_utils = __commonJS({
       let output2 = "";
       for (let i = 0; i < input2.length; i++) {
         if (input2[i] === "%" && i + 2 < input2.length) {
-          const hex3 = input2.slice(i + 1, i + 3);
-          if (isHexPair(hex3)) {
-            const normalizedHex = hex3.toUpperCase();
+          const hex4 = input2.slice(i + 1, i + 3);
+          if (isHexPair(hex4)) {
+            const normalizedHex = hex4.toUpperCase();
             const decoded = String.fromCharCode(parseInt(normalizedHex, 16));
             if (decodeUnreserved && isUnreserved(decoded)) {
               output2 += decoded;
@@ -3374,9 +3374,9 @@ var require_utils = __commonJS({
       for (let i = 0; i < input2.length; i++) {
         const ch = input2[i];
         if (ch === "%" && i + 2 < input2.length) {
-          const hex3 = input2.slice(i + 1, i + 3);
-          if (isHexPair(hex3)) {
-            const normalizedHex = hex3.toUpperCase();
+          const hex4 = input2.slice(i + 1, i + 3);
+          if (isHexPair(hex4)) {
+            const normalizedHex = hex4.toUpperCase();
             const decoded = String.fromCharCode(parseInt(normalizedHex, 16));
             if (decoded !== "." && isUnreserved(decoded)) {
               output2 += decoded;
@@ -3416,9 +3416,9 @@ var require_utils = __commonJS({
       for (let i = 0; i < input2.length; i++) {
         const ch = input2[i];
         if (ch === "%" && i + 2 < input2.length) {
-          const hex3 = input2.slice(i + 1, i + 3);
-          if (isHexPair(hex3)) {
-            output2 += "%" + hex3.toUpperCase();
+          const hex4 = input2.slice(i + 1, i + 3);
+          if (isHexPair(hex4)) {
+            output2 += "%" + hex4.toUpperCase();
             i += 2;
             continue;
           }
@@ -3454,9 +3454,9 @@ var require_utils = __commonJS({
       for (let i = 0; i < input2.length; i++) {
         const ch = input2[i];
         if (ch === "%" && i + 2 < input2.length) {
-          const hex3 = input2.slice(i + 1, i + 3);
-          if (isHexPair(hex3)) {
-            output2 += "%" + hex3.toUpperCase();
+          const hex4 = input2.slice(i + 1, i + 3);
+          if (isHexPair(hex4)) {
+            output2 += "%" + hex4.toUpperCase();
             i += 2;
             continue;
           }
@@ -3501,9 +3501,9 @@ var require_utils = __commonJS({
       for (let i = 0; i < input2.length; i++) {
         const ch = input2[i];
         if (ch === "%" && i + 2 < input2.length) {
-          const hex3 = input2.slice(i + 1, i + 3);
-          if (isHexPair(hex3)) {
-            const normalizedHex = hex3.toUpperCase();
+          const hex4 = input2.slice(i + 1, i + 3);
+          if (isHexPair(hex4)) {
+            const normalizedHex = hex4.toUpperCase();
             const decoded = String.fromCharCode(parseInt(normalizedHex, 16));
             if (isUnreserved(decoded)) {
               output2 += decoded;
@@ -3541,9 +3541,9 @@ var require_utils = __commonJS({
       let output2 = "";
       for (let i = 0; i < input2.length; i++) {
         if (input2[i] === "%" && i + 2 < input2.length) {
-          const hex3 = input2.slice(i + 1, i + 3);
-          if (isHexPair(hex3)) {
-            output2 += "%" + hex3.toUpperCase();
+          const hex4 = input2.slice(i + 1, i + 3);
+          if (isHexPair(hex4)) {
+            output2 += "%" + hex4.toUpperCase();
             i += 2;
             continue;
           }
@@ -4605,10 +4605,10 @@ var require_core = __commonJS({
       }
       // Remove keyword
       removeKeyword(keyword) {
-        const { RULES } = this;
-        delete RULES.keywords[keyword];
-        delete RULES.all[keyword];
-        for (const group of RULES.rules) {
+        const { RULES: RULES2 } = this;
+        delete RULES2.keywords[keyword];
+        delete RULES2.all[keyword];
+        for (const group of RULES2.rules) {
           const i = group.rules.findIndex((rule) => rule.keyword === keyword);
           if (i >= 0)
             group.rules.splice(i, 1);
@@ -4776,9 +4776,9 @@ var require_core = __commonJS({
     }
     var KEYWORD_NAME = /^[a-z_$][a-z0-9_$:-]*$/i;
     function checkKeyword(keyword, def) {
-      const { RULES } = this;
+      const { RULES: RULES2 } = this;
       (0, util_1.eachItem)(keyword, (kwd) => {
-        if (RULES.keywords[kwd])
+        if (RULES2.keywords[kwd])
           throw new Error(`Keyword ${kwd} is already defined`);
         if (!KEYWORD_NAME.test(kwd))
           throw new Error(`Keyword ${kwd} has invalid name`);
@@ -4794,13 +4794,13 @@ var require_core = __commonJS({
       const post = definition === null || definition === void 0 ? void 0 : definition.post;
       if (dataType && post)
         throw new Error('keyword with "post" flag cannot have "type"');
-      const { RULES } = this;
-      let ruleGroup = post ? RULES.post : RULES.rules.find(({ type: t }) => t === dataType);
+      const { RULES: RULES2 } = this;
+      let ruleGroup = post ? RULES2.post : RULES2.rules.find(({ type: t }) => t === dataType);
       if (!ruleGroup) {
         ruleGroup = { type: dataType, rules: [] };
-        RULES.rules.push(ruleGroup);
+        RULES2.rules.push(ruleGroup);
       }
-      RULES.keywords[keyword] = true;
+      RULES2.keywords[keyword] = true;
       if (!definition)
         return;
       const rule = {
@@ -4815,7 +4815,7 @@ var require_core = __commonJS({
         addBeforeRule.call(this, ruleGroup, rule, definition.before);
       else
         ruleGroup.rules.push(rule);
-      RULES.all[keyword] = rule;
+      RULES2.all[keyword] = rule;
       (_a3 = definition.implements) === null || _a3 === void 0 ? void 0 : _a3.forEach((kwd) => this.addKeyword(kwd));
     }
     function addBeforeRule(ruleGroup, rule, before) {
@@ -7408,6 +7408,38 @@ var SIMPLE_WORDS = /\b(hi|hello|thanks|what is|define|spell|capital of|convert|y
 var CODE = /```|\bdef \w+\(|\bfunction \w+\(|=>|#include|\bclass \w+|\bimport \w+/;
 var MATH = /[∑∫√≤≥]|\\frac|\\sum|\bintegral\b|\bequation\b|\bmatrix\b/i;
 var FINANCE = /\b(portfolio|valuation|dcf|ebitda|interest rate|derivative pricing|balance sheet)\b/i;
+var DOMAIN_TERMS = [
+  ["law.corporate", /\b(director'?s?|corporations act|shareholders?|asic|insolvent trading|business judg(e)?ment rule|company law|board of directors)\b/gi],
+  ["law.tax", /\b(tax law|tax return|capital gains|ato|irs|withholding tax)\b/gi],
+  ["law", /\b(law|legal|lawyers?|liab(le|ility)|sue|lawsuit|court|contract|breach|negligence|duty of care|tort|statute|section \d+|consumer law|acl|unfair (dismissal|contract)|limitation period|damages|plaintiff|defendant)\b/gi],
+  ["law.securities", /\b(securities law|insider trading|prospectus|disclosure obligations?|market manipulation|continuous disclosure|sec filing|asx listing rules)\b/gi],
+  ["medicine.primary_care", /\b(gp|general practi(ce|tioner)|family (doctor|medicine)|primary care|check-?up|referral|prescri(be|ption)|blood pressure|vaccinat\w*|cholesterol)\b/gi],
+  ["medicine", /\b(medicine|medical|doctor|symptoms?|diagnos\w*|disease|illness|treatment|patient|clinical|fever|infection|diabetes|asthma|hypertension|dose|dosage|medication|side effects?|pain|headache|cancer|heart attack|stroke|nurse|hospital)\b/gi],
+  ["software.python", /\b(python|pip|pandas|numpy|django|flask|pytest|virtualenv|venv|list comprehension|pep ?8)\b/gi],
+  ["software.sql", /\b(sql|select \*|inner join|left join|postgres(ql)?|mysql|sqlite|database index|primary key|foreign key|query plan|normali[sz]ation)\b/gi],
+  ["software", /\b(software|programming|code|coding|bug|debug\w*|compile\w*|api|javascript|typescript|java|rust|golang|git|docker|kubernetes|algorithm|function|refactor\w*|unit tests?|frontend|backend|deploy\w*|framework|handler|http status|status code|endpoint|exception|library)\b/gi],
+  ["mathematics.calculus", /\b(calculus|derivative|integral|integrat(e|ion)|differentiat\w*|limit of|chain rule|taylor series|gradient)\b/gi],
+  ["mathematics.probability", /\b(probabilit\w*|random variable|expected value|variance|bayes|distribution|binomial|poisson|odds|dice|coin (toss|flip))\b/gi],
+  ["mathematics", /\b(math(s|ematics)?|algebra|geometry|equation|theorem|proof|prime numbers?|matrix|matrices|vector|trigonometr\w*|arithmetic|fraction|polynomial|logarithm|sequence|divisible|integer|numbers)\b/gi],
+  ["travel.europe", /\b(europe(an)?|schengen|eurail|interrail|eurostar|euro zone|eurozone)\b/gi],
+  ["travel", /\b(travel\w*|trip|holiday|vacation|flights?|airport|hotel|hostel|itinerary|visa|passport|luggage|backpack\w*|tourist|sightseeing|jet lag|couchette|night train|trains?|rail(way)?|how do i get to)\b/gi],
+  ["agriculture.crops", /\b(crops?|wheat|maize|corn|rice|barley|soybeans?|harvest|sowing|planting|yield|irrigation|fertili[sz]er|pesticide|crop rotation|seeds?)\b/gi],
+  ["agriculture", /\b(agricultur\w*|farm(s|ing|er|ers)?|livestock|cattle|sheep|poultry|dairy|soil|tractor|agronom\w*|pasture|orchard|greenhouse)\b/gi],
+  ["finance.accounting", /\b(accounting|accountant|bookkeeping|double[- ]entry|journal entr(y|ies)|debit|ledger|trial balance|depreciat\w*|amorti[sz]ation|accrual|prepa(id|yment)|aasb|ifrs|gaap|revenue recognition|deferred revenue|invoice|gst|bas|fifo|lifo|inventory|cogs|impairment|balance sheet|income statement|reconciliation|capitali[sz]ation threshold)\b/gi]
+];
+function classifyDomain(text) {
+  let best;
+  let bestScore = 0;
+  const scores = /* @__PURE__ */ new Map();
+  for (const [domain2, re] of DOMAIN_TERMS) scores.set(domain2, text.match(re)?.length ?? 0);
+  for (const [domain2, n] of scores) {
+    const total = n + (domain2.includes(".") ? 0 : [...scores].filter(([d]) => d.startsWith(domain2 + ".")).reduce((a, [, m]) => a + m, 0));
+    if (total > bestScore) best = domain2, bestScore = total;
+  }
+  if (!best) return void 0;
+  const child = [...scores].filter(([d, n]) => d.startsWith(best + ".") && n > 0).sort((a, b) => b[1] - a[1])[0];
+  return child ? child[0] : best;
+}
 function classifyDifficulty(req) {
   const signals = [];
   const lastUser = [...req.messages].reverse().find((m) => m.role === "user");
@@ -12635,8 +12667,8 @@ function base64urlToUint8Array(base64url3) {
 function uint8ArrayToBase64url(bytes) {
   return uint8ArrayToBase64(bytes).replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
 }
-function hexToUint8Array(hex3) {
-  const cleanHex = hex3.replace(/^0x/, "");
+function hexToUint8Array(hex4) {
+  const cleanHex = hex4.replace(/^0x/, "");
   if (cleanHex.length % 2 !== 0) {
     throw new Error("Invalid hex string length");
   }
@@ -37036,6 +37068,227 @@ async function runStdio(h, transport = new StdioServerTransport()) {
   await createMcpServer(h).connect(transport);
 }
 
+// ../learning/src/types.ts
+var LEARNING_OBJECT_TYPES = [
+  "NEW_FACT",
+  "CORRECTION",
+  "COUNTEREXAMPLE",
+  "MODEL_FAILURE",
+  "PROCEDURE",
+  "TOOL_VERIFIED_RESULT",
+  "CODE_FIX",
+  "CALIBRATION_ERROR",
+  "ROBUSTNESS_CASE",
+  "NEW_DATA_SOURCE"
+];
+
+// ../learning/src/hash.ts
+function canonicalJson(value) {
+  if (value === null || typeof value !== "object") return JSON.stringify(value ?? null);
+  if (Array.isArray(value)) return `[${value.map(canonicalJson).join(",")}]`;
+  const entries = Object.entries(value).filter(([, v]) => v !== void 0).sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0);
+  return `{${entries.map(([k, v]) => `${JSON.stringify(k)}:${canonicalJson(v)}`).join(",")}}`;
+}
+var hex3 = (buf) => [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
+async function sha256Hex2(data) {
+  return hex3(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(data)));
+}
+async function contentId(prefix, obj) {
+  const { id: _id, ...rest } = obj;
+  return `${prefix}:${await sha256Hex2(canonicalJson(rest))}`;
+}
+
+// ../learning/src/privacy.ts
+var REIDENTIFICATION_THRESHOLD = 0.05;
+function luhn(s) {
+  const d = s.replace(/\D/g, "");
+  if (d.length < 13 || d.length > 19) return false;
+  let sum = 0;
+  for (let i = 0; i < d.length; i++) {
+    let n = Number(d[d.length - 1 - i]);
+    if (i % 2) n = n * 2 > 9 ? n * 2 - 9 : n * 2;
+    sum += n;
+  }
+  return sum % 10 === 0;
+}
+var MONTHS = "January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec";
+function roundAmount(sym, num, suffix = "") {
+  const n = Number(num.replace(/,/g, ""));
+  if (!Number.isFinite(n) || n < 1e3) return `${sym}${num}${suffix}`;
+  const mag = 10 ** (Math.floor(Math.log10(n)) - 1);
+  const r = Math.round(n / mag) * mag;
+  const short = r >= 1e9 ? `${+(r / 1e9).toPrecision(2)}B` : r >= 1e6 ? `${+(r / 1e6).toPrecision(2)}M` : `${+(r / 1e3).toPrecision(2)}k`;
+  return `about ${sym}${short}${suffix}`;
+}
+var RULES = [
+  { kind: "credential", re: /-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]*?-----END [A-Z ]*PRIVATE KEY-----/g, replace: "[SECRET]" },
+  { kind: "credential", re: /\b(?:sk-ant-[A-Za-z0-9_-]{8,}|sk-(?:proj-|svcacct-|admin-)?[A-Za-z0-9_-]{16,}|AIza[0-9A-Za-z_-]{20,}|ds_(?:live|test)_[A-Za-z0-9]{8,}|gh[pousr]_[A-Za-z0-9]{20,}|xox[abp]-[A-Za-z0-9-]{10,}|AKIA[0-9A-Z]{16})\b/g, replace: "[SECRET]" },
+  { kind: "credential", re: /\b(password|passwd|pwd|secret|token|api[_-]?key)(\s*[:=]\s*)\S+/gi, replace: (_m, k, sep) => `${k}${sep}[SECRET]` },
+  { kind: "credential", re: /(?<=[Bb]earer\s)[A-Za-z0-9._-]{12,}/g, replace: "[SECRET]" },
+  { kind: "email", re: /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/g, replace: "[EMAIL]" },
+  { kind: "wallet", re: /\b0x[a-fA-F0-9]{40}\b/g, replace: "[WALLET]" },
+  { kind: "wallet", re: /\b(?:bc1|[13])[a-zA-HJ-NP-Z0-9]{25,59}\b/g, replace: "[WALLET]", test: (m) => /\d/.test(m) && /[a-z]/.test(m) },
+  { kind: "wallet", re: /\b[1-9A-HJ-NP-Za-km-z]{32,44}\b/g, replace: "[WALLET]", test: (m) => /\d/.test(m) && /[a-z]/.test(m) && /[A-Z]/.test(m) },
+  { kind: "account_id", re: /\bdid:(?:key|web|pkh|ethr|dsi):[A-Za-z0-9:._%-]+/g, replace: "[ACCOUNT]" },
+  { kind: "account_id", re: /\b(?:acct|cus|org|usr|acc|user)_[A-Za-z0-9]{6,}\b/g, replace: "[ACCOUNT]" },
+  { kind: "account_id", re: /\b[A-Z]{2}\d{2}(?: ?[A-Z0-9]{4}){3,7}(?: ?[A-Z0-9]{1,3})?\b/g, replace: "[IBAN]" },
+  { kind: "account_id", re: /\b(?:\d[ -]?){13,19}\b/g, replace: "[CARD]", test: luhn },
+  { kind: "phone", re: /(?:\+\d{1,3}[\s.-]?)?(?:\(\d{2,4}\)[\s.-]?|\d{2,4}[\s.-])\d{3,4}[\s.-]\d{3,4}\b/g, replace: "[PHONE]", test: (m) => m.replace(/\D/g, "").length >= 9 },
+  { kind: "phone", re: /\+\d{9,14}\b/g, replace: "[PHONE]" },
+  { kind: "ip_address", re: /\b(?:(?:25[0-5]|2[0-4]\d|1?\d?\d)\.){3}(?:25[0-5]|2[0-4]\d|1?\d?\d)\b/g, replace: "[IP]" },
+  { kind: "confidential_id", re: /\b[a-z0-9-]+(?:\.[a-z0-9-]+)*\.(?:internal|corp|local|lan|intranet)\b/gi, replace: "[INTERNAL_HOST]" },
+  { kind: "confidential_id", re: /\b[A-Z][A-Z0-9]{1,9}-\d{2,6}\b/g, replace: "[TICKET]", test: (m) => !/^(?:SHA|ISO|RFC|CVE|COVID|UTF|MD|AES|RSA|HTTP|TLS|IEEE|IEC|EN|DIN|ECMA|PEP|GPT|BLAKE|ES|IPV|X|H|F|MIG|SU|B|A|C|E|ASTM|NIST|SP|GB|JIS|BS|NFPA|OWASP)-/i.test(m) },
+  { kind: "url_personal", re: /\bhttps?:\/\/[^\s)"'<>]+/g, replace: (m) => {
+    try {
+      const u = new URL(m);
+      const personal = u.search || u.username || /\/(?:users?|u|profile|account|me|home|~)[/\w.-]*/i.test(u.pathname);
+      return personal ? `${u.protocol}//${u.host}/[PATH]` : m;
+    } catch {
+      return m;
+    }
+  }, test: (m) => /[?@]|\/(?:users?|u|profile|account|me|home|~)\b/i.test(m) },
+  { kind: "name", re: /\b([Mm]y name is|[Ii] am called|[Ii]'m called|[Cc]all me|[Ss]igned,?|[Rr]egards,?|[Cc]heers,?|[Tt]hanks,?)\s+[A-Z][a-z]+(?:\s+[A-Z][a-z]+)?/g, replace: (_m, lead) => `${lead} [NAME]` },
+  { kind: "name", re: /\b([Ii]'m|[Ii] am|[Tt]his is|[Ii]t's)\s+[A-Z][a-z]+(?:\s+[A-Z][a-z]+)?(?=[\s,.;:!?()]|$)/g, replace: (m, lead) => /\s(?:Not|Sorry|Here|Using|Trying|Working|Looking|Getting|Also|Just|Still|Now|So|Very|Really|Afraid|Unable|On|In|At|From|With|Back|Done|Happy|Glad|Sure|Stuck|Confused|English|French|German|Spanish|Italian|Slovenian|American|British)\b/.test(m) ? m : `${lead} [NAME]` },
+  { kind: "name", re: /\b(Mr|Mrs|Ms|Miss|Dr|Prof)\.?\s+[A-Z][a-z]+(?:\s+[A-Z][a-z]+)?/g, replace: "[PERSON]" },
+  { kind: "address", re: /\b\d{1,5}\s+(?:[A-Z][a-z]+\s){1,3}(?:Street|St|Road|Rd|Avenue|Ave|Lane|Ln|Drive|Dr|Boulevard|Blvd|Way|Court|Ct|Place|Pl|Terrace|Close|Ulica|Cesta|Strasse|Straße)\b\.?/g, replace: "[ADDRESS]" },
+  { kind: "address", re: /\b[A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2}\b/g, replace: "[POSTCODE]" },
+  { kind: "precise_location", re: /-?\d{1,3}\.\d{3,}\s*,\s*-?\d{1,3}\.\d{3,}/g, replace: "[LOCATION]" },
+  { kind: "exact_date", re: new RegExp(`\\b(\\d{1,2})(?:st|nd|rd|th)?\\s+(${MONTHS})\\s+(\\d{4})\\b`, "g"), replace: (_m, _d, mon, y) => `${mon} ${y}` },
+  { kind: "exact_date", re: new RegExp(`\\b(${MONTHS})\\s+(\\d{1,2})(?:st|nd|rd|th)?,?\\s+(\\d{4})\\b`, "g"), replace: (_m, mon, _d, y) => `${mon} ${y}` },
+  { kind: "exact_date", re: /\b(\d{4})-(\d{2})-(\d{2})(?:[T ][\d:.]+Z?)?\b/g, replace: (_m, y, mo) => `${y}-${mo}` },
+  { kind: "exact_amount", re: /([$€£¥])\s?(\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d{4,}(?:\.\d+)?)/g, replace: (_m, sym, num) => roundAmount(sym, num) }
+];
+var QUASI = [
+  { kind: "medical_history", re: /\b(?:i|my (?:son|daughter|wife|husband|partner|mother|father|mum|mom|dad|child))\s+(?:was|am|have been|has been|got|have|has)\s+(?:diagnosed|prescribed|treated|hospitali[sz]ed)|\bmy (?:diagnosis|prescription|medication|therapist|symptoms|condition|blood test|mri|scan results)\b/i, risk: 0.6 },
+  { kind: "private_relationship", re: /\bmy (?:wife|husband|partner|girlfriend|boyfriend|ex|son|daughter|kids?|children|mother|father|mum|mom|dad|brother|sister|boss|manager|landlord|neighbou?r|colleague|client|patient|lawyer|doctor)\b/i, risk: 0.2 },
+  { kind: "age", re: /\bi(?:'m| am)\s+(?:a\s+)?\d{1,3}(?:[- ]years?[- ]old|\b)/i, risk: 0.3 },
+  { kind: "employer", re: /\bi (?:work|worked) (?:at|for) [A-Z][\w&.-]+/i, risk: 0.35 },
+  { kind: "home_location", re: /\bi (?:live|lived|am based|'m based) in [A-Z][\w-]+/i, risk: 0.25 },
+  { kind: "user_preference", re: /\bi (?:prefer|like|love|hate|dislike|always want|would rather)\b/i, risk: 0.5 },
+  { kind: "confidential_marker", re: /\b(?:confidential|internal only|do not share|under nda|proprietary|not for distribution)\b/i, risk: 0.6 }
+];
+var escape2 = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+function depersonalise(input2, opts = {}) {
+  let text = input2;
+  const removed = {};
+  const bump = (k) => removed[k] = (removed[k] ?? 0) + 1;
+  for (const r of RULES) {
+    text = text.replace(r.re, (m, ...g) => {
+      if (r.test && !r.test(m)) return m;
+      const out = typeof r.replace === "string" ? r.replace : r.replace(m, ...g.filter((x) => typeof x === "string" || x === void 0));
+      if (out !== m) bump(r.kind);
+      return out;
+    });
+  }
+  for (const term of (opts.privateTerms ?? []).filter((t) => t.trim().length >= 2).sort((a, b) => b.length - a.length)) {
+    text = text.replace(new RegExp(`\\b${escape2(term.trim())}\\b`, "gi"), () => (bump("private_term"), "[PRIVATE]"));
+  }
+  const quasi = QUASI.filter((q) => q.re.test(text));
+  const placeholders = Object.values(removed).reduce((a, b) => a + b, 0);
+  let keep = quasi.reduce((p, q) => p * (1 - q.risk), 1);
+  keep *= 1 - Math.min(0.2, Math.max(0, placeholders - 3) * 0.01);
+  const risk = Math.round((1 - keep) * 1e3) / 1e3;
+  const threshold = opts.threshold ?? REIDENTIFICATION_THRESHOLD;
+  const kinds = quasi.map((q) => q.kind);
+  let reason;
+  if (kinds.includes("user_preference")) reason = "personal preference: kept in local memory, not exported";
+  else if (kinds.includes("confidential_marker")) reason = "marked confidential: belongs with a private knowledge provider";
+  else if (risk > threshold) reason = `re-identification risk ${risk} exceeds ${threshold} (${kinds.join(", ") || "too many identifiers"})`;
+  return { text, removed, quasi: kinds, risk, blocked: !!reason, reason };
+}
+function depersonaliseFields(fields, opts = {}) {
+  const out = {};
+  const removed = {};
+  const quasi = /* @__PURE__ */ new Set();
+  let keep = 1;
+  let reason;
+  for (const [k, v] of Object.entries(fields)) {
+    if (v === void 0) continue;
+    const r = depersonalise(v, opts);
+    out[k] = r.text;
+    for (const [kind, n] of Object.entries(r.removed)) removed[kind] = (removed[kind] ?? 0) + n;
+    r.quasi.forEach((q) => quasi.add(q));
+    keep *= 1 - r.risk;
+    reason ??= r.reason;
+  }
+  const risk = Math.round((1 - keep) * 1e3) / 1e3;
+  const threshold = opts.threshold ?? REIDENTIFICATION_THRESHOLD;
+  if (!reason && risk > threshold) reason = `re-identification risk ${risk} exceeds ${threshold}`;
+  return { fields: out, report: { text: "", removed, quasi: [...quasi], risk, blocked: !!reason, reason } };
+}
+
+// ../learning/src/claims.ts
+var STOP2 = new Set("a an the of to in on at for and or but is are was were be been being it its this that these those with by as from into than then so such not no do does did has have had can could should would will may might must".split(" "));
+var CURRENT_YEAR = (/* @__PURE__ */ new Date()).getUTCFullYear();
+
+// ../learning/src/extract.ts
+function inferType(i) {
+  if (i.type) return i.type;
+  if (i.tool?.passed) return "TOOL_VERIFIED_RESULT";
+  if (/```|\bfunction\b|\bdef \w+\(|=>|;\s*$/m.test(i.correction)) return "CODE_FIX";
+  if (i.answer && /\b(?:definitely|certainly|100%|guaranteed|without doubt)\b/i.test(i.answer)) return "CALIBRATION_ERROR";
+  if (/\bcounter-?example\b|\bfails (?:for|when)\b/i.test(i.correction)) return "COUNTEREXAMPLE";
+  if (/^\s*(?:\d+[.)]|step \d|first,)/im.test(i.correction)) return "PROCEDURE";
+  if (/\bdataset\b|\bsource:|\bapi\b.*\bendpoint\b/i.test(i.correction) && /https?:\/\//.test(i.correction)) return "NEW_DATA_SOURCE";
+  return i.answer ? "CORRECTION" : "NEW_FACT";
+}
+function questionCore(question) {
+  const sentences = question.split(/(?<=[.?!])\s+|\n+/).map((x) => x.trim()).filter(Boolean);
+  const asks = sentences.filter((x) => x.endsWith("?"));
+  const kept = (asks.length ? asks : sentences).filter((x) => !/^(?:hi|hello|hey|thanks|thank you|dear)\b[^?]*$/i.test(x));
+  return (kept.length ? kept : sentences).join(" ").replace(/^(?:hi|hello|hey)[,!.\s]+/i, "");
+}
+var FILLER = /\b(?:please|can you|could you|would you|tell me|explain|i need|i want|help me|what is|what's|how do i|how to|hey|hi|thanks)\b/gi;
+function taskPattern(question) {
+  const first = questionCore(question).split(/(?<=[.?!])\s+/)[0] ?? question;
+  return first.replace(FILLER, " ").replace(/\[[A-Z_]+\]/g, " ").replace(/\b\d+(?:[.,]\d+)?\b/g, "N").replace(/[^\p{L}\p{N}\s\-+*/^=.]/gu, " ").replace(/\s+/g, " ").trim().split(" ").slice(0, 16).join(" ").toLowerCase();
+}
+function inferProbe(i, question, correction) {
+  if (i.expected) return { prompt: question, expected: i.expected, match: i.match ?? (/^[-+]?\d*\.?\d+$/.test(i.expected.trim()) ? "numeric" : "contains") };
+  const plain = correction.replace(/(\d),(\d{3})/g, "$1$2");
+  const eq = /=\s*([-+]?\d*\.?\d+)/.exec(plain);
+  if (eq) return { prompt: question, expected: eq[1], match: "numeric" };
+  const nums = plain.match(/[-+]?\d*\.?\d+/g);
+  if (nums?.length === 1) return { prompt: question, expected: nums[0], match: "numeric" };
+  return void 0;
+}
+async function extractLearningObject(i, contributorDid2, gate = {}, now = /* @__PURE__ */ new Date()) {
+  const { fields, report } = depersonaliseFields(
+    { question: i.question, answer: i.answer, correction: i.correction, tool_output: i.tool?.output, expected: i.expected },
+    gate
+  );
+  if (report.blocked) return { ok: false, report, state: "EXTRACTED" };
+  const type = inferType(i);
+  if (!LEARNING_OBJECT_TYPES.includes(type)) throw new Error(`unknown type ${type}`);
+  const probe = inferProbe({ ...i, expected: fields.expected }, questionCore(fields.question), fields.correction);
+  const failure2 = fields.answer ? fields.answer.split(/(?<=[.?!])\s+/)[0].slice(0, 240) : void 0;
+  const knowledge = fields.tool_output && i.tool?.passed ? `${fields.correction}
+
+Verified with ${i.tool.name}: ${fields.tool_output.slice(0, 400)}` : fields.correction;
+  const draft = {
+    id: "",
+    type,
+    domain: (i.domain ?? "general").toLowerCase().replace(/[^a-z0-9._-]/g, ""),
+    task_pattern: taskPattern(fields.question),
+    delta: {
+      ...failure2 ? { model_failure: `answered: ${failure2}` } : {},
+      corrective_knowledge: knowledge.slice(0, 4e3),
+      ...probe ? { probes: [probe] } : {}
+    },
+    provenance: {
+      origin: i.tool?.passed ? "tool" : i.generator_model ? "model" : "human",
+      contributor_did: contributorDid2,
+      // Proves authorship later without revealing the source: only the device can recompute it.
+      source_hash: await sha256Hex2(`${i.question}\0${i.answer ?? ""}\0${i.correction}`),
+      ...i.generator_model ? { generator_model: i.generator_model } : {},
+      created_at: now.toISOString()
+    },
+    privacy: { personal_data: false, reidentification_risk: report.risk, ...Object.keys(report.removed).length ? { removed: report.removed } : {} },
+    license: i.license ?? { training_allowed: true, spdx: "CC-BY-4.0" }
+  };
+  return { ok: true, object: { ...draft, id: await contentId("lo", draft) }, report, state: "DEPERSONALISED" };
+}
+
 // src/cli.ts
 var env = process.env;
 var dir = env.DSI_HOME ?? join2(homedir(), ".dsi");
@@ -37131,6 +37384,8 @@ async function main() {
       await runStdio(h);
       return;
     }
+    case "learn":
+      return learn(args);
     default:
       console.log(readHelp());
   }
@@ -37141,7 +37396,68 @@ function readHelp() {
   dsi login ds_live_...           dsi ask "question"          dsi chat
   dsi remember "fact" [#tag]      dsi memory [list|forget <id>|search <q>]
   dsi prefs [set <k> <v>|unset <k>]   keys: mode privacy maxCostUsd reasoningLevel style language notes
-  dsi proxy [--port 8788]         dsi mcp   (claude mcp add dsi -- dsi mcp)`;
+  dsi proxy [--port 8788]         dsi mcp   (claude mcp add dsi -- dsi mcp)
+  dsi learn --question "..." --correction "..." [--answer "..."] [--domain d] [--expected x]
+            [--tool name --passed] [--private "Acme,Jane"] [--submit]      dsi learn status`;
+}
+function flag(args, name) {
+  const i = args.indexOf(`--${name}`);
+  return i >= 0 && i + 1 < args.length && !args[i + 1].startsWith("--") ? args[i + 1] : void 0;
+}
+async function learn(args) {
+  const c = await config2();
+  const call = async (path, body) => {
+    if (!c.apiKey) throw new Error("no API key: run `dsi login ds_live_...`");
+    const r2 = await fetch(`${c.router}/api/learning${path}`, {
+      method: body === void 0 ? "GET" : "POST",
+      headers: { authorization: `Bearer ${c.apiKey}`, "content-type": "application/json" },
+      body: body === void 0 ? void 0 : JSON.stringify(body)
+    });
+    const j = await r2.json();
+    if (!r2.ok) throw new Error(j?.error?.message ?? `HTTP ${r2.status}`);
+    return j;
+  };
+  if (args[0] === "status") {
+    const me = await call("/me");
+    console.log(`contributor ${me.contributor_did}`);
+    console.log(`PAI earned: ${me.rewards.total_paid} (verify ${me.rewards.verify}, improvement ${me.rewards.improve}, usage ${me.rewards.usage}; deferred ${me.rewards.deferred})`);
+    for (const o of me.objects) console.log(`${o.id.slice(0, 18)}\u2026  ${o.state.padEnd(16)} ${o.domain}  novelty ${o.novelty}${o.reasons.length ? `  (${o.reasons[0]})` : ""}`);
+    return;
+  }
+  const question = flag(args, "question");
+  const correction = flag(args, "correction");
+  if (!question || !correction) throw new Error('usage: dsi learn --question "..." --correction "..." [--answer "..."] [--submit]');
+  const submit = args.includes("--submit");
+  const saved = await new LocalFile(join2(dir, "config.json"), {}).read().catch(() => ({}));
+  const privateTerms = [...saved.privateTerms ?? [], ...flag(args, "private")?.split(",") ?? [], ...env.DSI_PRIVATE_TERMS?.split(",") ?? []].map((t) => t.trim()).filter(Boolean);
+  const tool = flag(args, "tool");
+  const interaction = {
+    question,
+    correction,
+    answer: flag(args, "answer"),
+    domain: flag(args, "domain") ?? classifyDomain(question) ?? "general",
+    expected: flag(args, "expected"),
+    ...tool ? { tool: { name: tool, passed: args.includes("--passed"), output: flag(args, "tool-output") } } : {}
+  };
+  const did = submit ? (await call("/me")).contributor_did : "did:dsi:preview";
+  const ex = await extractLearningObject(interaction, did, { privateTerms });
+  if (!ex.ok) {
+    console.log(`Not exported: ${ex.report.reason}. Nothing left this device.`);
+    return;
+  }
+  const removed = Object.entries(ex.report.removed).map(([k, n]) => `${n} ${k}`).join(", ");
+  console.log(`This is everything that would leave your device${removed ? ` (removed: ${removed})` : ""}; re-identification risk ${ex.report.risk}:
+`);
+  console.log(JSON.stringify(ex.object, null, 2));
+  if (!submit) {
+    console.log("\nDry run. Add --submit to send it and earn PAI if it is verified, novel and fills a model gap.");
+    return;
+  }
+  const r = await call("/submit", { object: ex.object });
+  console.log(`
+${r.state} \xB7 ${r.pool} \xB7 novelty ${r.novelty.score} (${r.novelty.band})${r.model_gap !== void 0 ? ` \xB7 model gap ${r.model_gap}` : ""}`);
+  if (r.reward) console.log(`Earned ${r.reward.pai} PAI (${r.reward.status}, from the ${r.reward.source.replace("_", " ")}).`);
+  for (const why of r.reasons) console.log(`  \xB7 ${why}`);
 }
 main().catch((e) => {
   console.error(`dsi: ${e instanceof Error ? e.message : e}`);

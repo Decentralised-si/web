@@ -1,8 +1,8 @@
 # Decentralised Super Intelligence
 
-**How Decentralised.si routes every question to the right intelligence, privately, and pays everyone who powers it**
+**How Decentralised.si routes every question to the right intelligence, privately, and pays everyone who powers it or makes it smarter**
 
-*Whitepaper v0.2 · 26 September 2026 · Decentralised.si*
+*Whitepaper v0.3 · 28 September 2026 · Decentralised.si*
 
 ---
 
@@ -10,9 +10,9 @@
 
 Intelligence is becoming a utility, but today it is dispensed by a handful of vendors, each with its own API, its own prices, and a complete view of everything its users ask. Meanwhile millions of GPUs sit idle in homes, labs and data centres, and capable open-weight models are free to run.
 
-Decentralised.si is the routing layer between applications and intelligence. Applications keep the SDK and code they already have and change one base URL. A **harness** on the user's device keeps their memory and preferences, and **DSI Synapse**, an optional router on the device, can choose between local models, the user's own keys and the network. **DSI Axon**, a **blind router** in the network, picks, for each conversation, the cheapest provider that is capable, fast and private enough: the user's own commercial API accounts, or an open network of independent GPU operators. The router works without reading the query. Anyone can join the network by running one container next to an open-source model server, and is paid in **PAI**, a token capped at 10B. Its emission falls over time and as the network grows, a share of every fee is burned, and staking it unlocks access to the most capable ("novel") intelligence.
+Decentralised.si is the routing layer between applications and intelligence. Applications keep the SDK and code they already have and change one base URL. A **harness** on the user's device keeps their memory and preferences, and **DSI Synapse**, an optional router on the device, can choose between local models, the user's own keys and the network. **DSI Axon**, a **blind router** in the network, picks, for each conversation, the cheapest provider that is capable, fast and private enough: the user's own commercial API accounts, or an open network of independent GPU operators. The router works without reading the query. Anyone can join the network by running one container next to an open-source model server, and is paid in **PAI**, a token capped at 10B. Its emission falls over time and as the network grows, a share of every fee is burned, and staking it unlocks access to the most capable ("novel") intelligence. Users also earn PAI by **adding knowledge**. Through the **Learning Fabric**, a correction a user makes becomes a de-personalised learning object on their device. The network proves the object is novel, validates it, trains it into a small adapter, and pays the contributor in three stages: a little at verification, more once the model measurably improves, and a royalty while the improved model is used.
 
-This paper describes the architecture, the privacy model, the provider network, and the PAI economics. It also states which parts run today and which are on the roadmap.
+This paper describes the architecture, the privacy model, the provider network, the PAI economics and the Learning Fabric. It also states which parts run today and which are on the roadmap.
 
 ---
 
@@ -27,6 +27,7 @@ This paper describes the architecture, the privacy model, the provider network, 
 7. **Common knowledge gets cheaper; novel intelligence is earned.** Commodity answers fall in price every year. Frontier reasoning is rationed by stake, not by who you are.
 8. **No provider is load-bearing.** Conversation state lives with the client, so any provider (or model family, or vendor) can fail between turns or mid-answer without interrupting the conversation.
 9. **Supply follows usage.** PAI has a hard cap of 10B. Reward emission halves every two years and shrinks as the network grows. The investors-and-founders allocation unlocks only as real network fees accumulate, and fees paid in PAI and slashing burn supply.
+10. **Pay for knowledge, not data.** Users can opt in to teach the network. Only a de-personalised lesson leaves the device, never the conversation, and rewards follow verified novelty, measured model improvement and real usage, not submission volume.
 
 ---
 
@@ -44,6 +45,7 @@ This paper describes the architecture, the privacy model, the provider network, 
 | **DSI Axon** (the blind router) | Edge, stateless | Canonical translation, capability gate, scoring, session sharding, failover, stream translation, identity stripping | Implemented |
 | **Provider markets** | Vendors / operators | A: customer's own commercial keys (BYOK). B: community and specialist nodes | Implemented |
 | **Verification** | Router + (phase 2) verifiers | Structural checks, canary prompts, reputation, slashing | Canaries implemented; verifier market phase 2 |
+| **Learning Fabric** | Device (extraction, privacy gate) + router (novelty, validation, rewards) + trainers | Turns user corrections into verified delta knowledge, trains adapters, pays contributors | Implemented; adapter serving on the roadmap |
 | **PAI settlement** | Off-chain ledger → chain | Work metering, epoch emission, burn, staking, bonds | Ledger + reference contract implemented; mainnet not launched |
 
 ### 2.1 Request lifecycle
@@ -378,7 +380,7 @@ Hard cap: **10,000,000,000 PAI**. Only 500M will exist at genesis. Another 500M 
 |---|---|---|---|
 | Investors and founders | 9,000,000,000 | 90% | Locked; minted in ten tranches as cumulative network fees pass milestones (§9.2) |
 | Network rewards | 500,000,000 | 5% | Minted per epoch for verified work only; never pre-minted |
-| Ecosystem treasury | 150,000,000 | 1.5% | Grants, audits, public goods |
+| Ecosystem treasury | 150,000,000 | 1.5% | Grants, audits, public goods; 50M of it is earmarked as the Learning Fabric's incentive pool (§10.8) |
 | Contributors | 150,000,000 | 1.5% | 4-year vesting |
 | Community | 120,000,000 | 1.2% | Early users and early node operators |
 | Liquidity | 80,000,000 | 0.8% | Market making |
@@ -400,7 +402,7 @@ The 9B investors-and-founders allocation is not minted at genesis. It is release
 | 9 | $500M | 8.1B | year 8.5 |
 | 10 | $1B | 9.0B | not reached within 10 years |
 
-Cumulative fees are reported by the metering oracle (the settler role), which later moves to a verifier quorum (§12). The reported figure can only increase, and a tranche can never be minted twice. Fees are real payments, and 30% of every fee paid in PAI is burned, so inflating volume to force an unlock costs the payer real money. Until the settler role moves to a verifier quorum, the reported figure is trusted: the contract does not check it against on-chain payments, so the settler appointed by the project's founders could in principle unlock tranches early. Every report and unlock is logged on-chain (`FeesReported`, `InvestorTrancheUnlocked`).
+Cumulative fees are reported by the metering oracle (the settler role), which later moves to a verifier quorum (§13). The reported figure can only increase, and a tranche can never be minted twice. Fees are real payments, and 30% of every fee paid in PAI is burned, so inflating volume to force an unlock costs the payer real money. Until the settler role moves to a verifier quorum, the reported figure is trusted: the contract does not check it against on-chain payments, so the settler appointed by the project's founders could in principle unlock tranches early. Every report and unlock is logged on-chain (`FeesReported`, `InvestorTrancheUnlocked`).
 
 ### 9.3 Emission falls over time and as the network grows
 
@@ -466,6 +468,8 @@ Stake also sets a daily quota (for L3, 500k tokens per 10,000 PAI staked). Unsta
 | Provider (L2 / L3) | 100 / 1,000 PAI bond | Same, higher multipliers | Model substitution (50%) |
 | Verifier (phase 2) | 5,000 PAI stake | 20% pool, by verification work | False attestation (10%) |
 | Relay / edge router (phase 2) | Run an access-layer edge | 10% pool, by relayed work | Tampering, downtime |
+| Knowledge contributor | None (`dsi learn`) | R_verify, R_improve and usage royalties (§10.7) | Nothing to slash; invalidated objects lower domain reputation |
+| Knowledge validator | 5,000 PAI stake (the verifier role) | Verification work in the 20% verifier pool (phase 2) | False attestation (10%) |
 | Consumer | None for common knowledge | Cheaper answers over time | n/a |
 
 ### 9.7 The contract
@@ -474,7 +478,209 @@ Stake also sets a daily quota (for L3, 500k tokens per 10,000 PAI staked). Unsta
 
 ---
 
-## 10. Security and economic attacks
+## 10. The Learning Fabric: earn PAI by adding knowledge
+
+Serving answers is one way to earn PAI. The other is to make the network's models better. The **Learning Fabric** (protocol DIP-Learn v1) turns what users teach the network into small, verified pieces of **delta knowledge**. It trains them into lightweight adapters on top of existing open models, measures whether the models improved, and pays the people whose knowledge caused the improvement.
+
+The network does not pay for prompts, conversations or data volume. It pays for knowledge that is verified, new to the network, fills a measured gap in a model and turns out to be useful:
+
+`value ≈ verified novelty × model capability gap × measured model improvement × downstream usage`
+
+Pasting a thousand chat logs earns nothing. One correction that fixes something every model in the network gets wrong can keep earning for as long as the improved model is in use.
+
+### 10.1 From a correction to a reward
+
+```mermaid
+flowchart TD
+  U[Your interaction<br/>question · model answer · your correction] --> X[Local extractor<br/>on your device]
+  X --> G{De-personalisation gate<br/>on your device}
+  G -->|risk too high, a preference,<br/>or confidential| K[Stays local<br/>memory / private provider]
+  G -->|minimum generalisable delta| LO[Learning object<br/>content-addressed lo:hash]
+  LO --> N[Proof of Novelty]
+  N --> V[Claim-by-claim validation<br/>tools · sources · validators]
+  V --> Q[Quality, bias and provenance vector]
+  Q --> MG[Model gap test]
+  MG -->|R_verify| W1[(PAI: small, immediate)]
+  MG --> P[Delta knowledge package]
+  P --> T[LoRA / QLoRA adapter<br/>on the base model]
+  T --> B[Hidden benchmark<br/>target gain minus regressions]
+  B --> C[Canary 1% → 5% → 20% → 50% → 100%]
+  C -->|R_improve| W2[(PAI: after measured uplift)]
+  C --> S[Serving: verified useful usage]
+  S -->|R_usage| W3[(PAI: ongoing royalty)]
+```
+
+*Figure 3. The Learning Fabric pipeline. Everything above the learning object runs on the user's device.*
+
+1. **You teach.** When a model gets something wrong, you give the correction, a counterexample, a procedure, a code fix or a tool-verified result. `dsi learn` in the harness does this from the command line.
+2. **Your device extracts the lesson.** The extractor keeps only the atomic lesson: the task pattern, what the model got wrong, the correct knowledge, and probe questions with checkable answers. The conversation itself is never exported.
+3. **The network proves it is new, checks it is true, and measures the gap.** It checks novelty against everything it already holds, validates each claim on its own, and asks the current base model the probe questions. If the knowledge is verified and fills a gap, you receive **R_verify** at once.
+4. **The network trains on it.** Verified objects in a domain are packaged together and trained into a small adapter. The adapter goes live only if a hidden benchmark shows a net gain and a staged canary confirms it on live traffic. The package's improvement pool is then split among its contributors as **R_improve**.
+5. **You keep earning while it is used.** A share of the inference fees the improved model earns from verified useful answers flows back to its contributors as **R_usage**.
+
+### 10.2 What you can contribute
+
+The unit is a **learning object**, never a conversation. Supported types: new fact, correction, counterexample, model failure, procedure, tool-verified result, code fix, calibration error, robustness case and new data source.
+
+```json
+{
+  "id": "lo:3f9c…",
+  "type": "CORRECTION",
+  "domain": "finance.quant.derivatives",
+  "task_pattern": "how does discrete monitoring affect barrier option prices",
+  "delta": {
+    "model_failure": "answered: treat it like continuous monitoring",
+    "corrective_knowledge": "Discrete monitoring lowers the probability of crossing the barrier …",
+    "probes": [{ "prompt": "…", "expected": "0.5826", "match": "contains" }]
+  },
+  "provenance": { "origin": "human", "contributor_did": "did:dsi:…", "source_hash": "…" },
+  "privacy": { "personal_data": false, "reidentification_risk": 0 },
+  "license": { "training_allowed": true, "spdx": "CC-BY-4.0" }
+}
+```
+
+The `id` is the SHA-256 of the object's canonical form, so any mirror can host it and anyone can check it. The `contributor_did` is a one-way pseudonym of your account: rewards reach you, but the object does not identify you. The `source_hash` lets your device prove later that the lesson came from you, without revealing the source.
+
+### 10.3 Privacy: raw personal information stays on your device
+
+The de-personalisation gate runs **on the device**, before anything is shown or sent. It removes or generalises:
+
+- names, emails, phone numbers and addresses
+- precise locations, IP addresses, account and wallet ids, card numbers and IBANs
+- credentials and keys, internal host names and ticket ids
+- exact dates (generalised to the month) and large exact amounts (rounded to two significant figures)
+- any terms you list as private, such as your company or your project's code name
+
+Some things it cannot safely rewrite: personal medical history, private relationships, your age, employer or home town. These raise the **re-identification risk**. Above **0.05** the export is refused, and nothing leaves the device. Personal preferences ("I prefer…") always stay in local memory, and material marked confidential belongs with a private knowledge provider. Neither is exported.
+
+The router runs the same gate again. It rejects any object the gate would still change, any object whose id is not its content hash, and any object carrying someone else's pseudonym. Without `--submit`, `dsi learn` prints exactly what would leave your device and sends nothing.
+
+### 10.4 Proof of Novelty
+
+Novelty does not mean "the text is different". It means the contribution closes a gap that the current model, the training pool, the knowledge graph and the benchmarks do not already cover:
+
+`N = 0.20·semantic + 0.20·factual + 0.25·capability + 0.20·behavioural + 0.15·benchmark_gap`
+
+| Component | Measured against |
+|---|---|
+| Semantic | Nearest existing learning objects in the domain (embedding similarity) |
+| Factual | Whether each atomic claim is already in the knowledge graph |
+| Capability | The model's measured score on this task (capability map or gap test) |
+| Behavioural | Whether this failure mode has been reported before |
+| Benchmark gap | How well existing benchmarks cover this task pattern |
+
+A score below 0.20 counts as a duplicate and earns nothing. From 0.20 to 0.50 is low novelty, up to 0.80 useful, and above 0.80 high. **The first valid contributor to a cluster of similar knowledge gets full novelty credit.** A near-copy (similarity ≥ 0.90) keeps only (1 − similarity) of its score, and each later member of a cluster gets half the credit of the one before. Copying someone else's correction therefore earns almost nothing. Each novelty proof is hashed and signed; anchoring it on a chain is optional.
+
+### 10.5 Validation: agreement is not truth
+
+Each contribution is split into atomic claims, and every claim is tagged with an epistemic type: deterministic, empirical, current fact, historical, causal, prediction, interpretive, normative or preference. The type decides how a claim can be validated. Predictions stay unresolved until their outcome is known. Normative and interpretive claims are stored as perspectives, not as truths.
+
+Evidence is ranked by method:
+
+| Priority | Method | Strength of one independent source |
+|---|---|---|
+| 1 | Deterministic tool (calculator, compiler, test suite) | 0.99 |
+| 2 | Primary or authoritative source | 0.90 |
+| 3 | Independent structured data; qualified human review | 0.85 |
+| 4 | Knowledge graph | 0.75 |
+| 5 | Independent specialist model | 0.65 |
+| 6 | Agreement between general models | 0.55 |
+
+Evidence is counted by **source root**: ten articles copied from one source count as one source. Evidence from models alone can never lift a claim above 0.80, so it can never pass the truth gate. The contributor cannot validate their own contribution, and a model family cannot validate text it generated. The router runs a deterministic arithmetic checker itself. Other evidence comes from validators, who must stake **5,000 PAI** (the verifier role in §9.6), and, until the verifier market opens, from the reference operator.
+
+Bias is kept as a vector, not folded into one truth score: source concentration, selection risk, viewpoint concentration, evaluator bias, geographic gaps and model-family monoculture. Majority opinion is not truth, minority opinion is not bias, and agreement is not validation. For contested claims, the claim, the counterclaim and the evidence for each are all kept.
+
+**Admission gates** for positive training: truth ≥ 0.90, provenance ≥ 0.70, re-identification risk ≤ 0.05, a licence that allows training, and novelty ≥ 0.20. An uncertain object goes to the provisional pool until validators resolve it. An object shown to be false but useful as a negative example (a counterexample or a model failure) goes to the adversarial pool. Only the verified pool is used for positive factual training.
+
+Knowledge is also **placed** where it belongs. Stable concepts and skills are trained into adapters, and procedural corrections become adapter updates. Volatile current facts go to retrieval, not into weights. Preferences stay in local memory.
+
+### 10.6 Model gap and delta knowledge
+
+The router asks the current base model each probe several times, and again in paraphrased form. The result is an accuracy gap, a robustness gap and, when the model states a confidence, a calibration gap. A model that already answers correctly leaves little to learn, so the object's training value is low. A model that fails consistently has a high gap.
+
+`DK = Truth × Novelty × Provenance × Independence × ModelGap × DomainRelevance`
+
+DK is the value an object has before training. It weights the object inside its package, but it is not the final payout.
+
+Verified objects in a domain are grouped into a content-addressed **delta knowledge package** (`dkp:hash`). A package holds training units built from the corrective knowledge, validation units, and hidden test units. Only hashes of the hidden units are published; the units themselves stay with the benchmark service. The package also carries a Merkle root over its learning objects. A reference trainer (`packages/learning/trainer`, PyTorch and PEFT) trains a LoRA or QLoRA adapter on the package. The base model is never retrained. The candidate is then scored against the hidden benchmark:
+
+`Improvement = TargetGain − 1·GeneralRegression − 2·BiasRegression − 1·CalibrationRegression − 4·SafetyRegression`
+
+A candidate goes to canary only if Improvement is above 0.01 and safety regression is at most 0.005. The canary serves 1%, then 5%, 20%, 50% and 100% of matching traffic, with at least 200 samples at each stage. It rolls back automatically if quality drops by more than 2 points, the failure rate rises by more than 1 point, bias worsens, or p95 latency grows by more than 25%. A package that is rejected or rolled back returns its objects to the pool, where they can be packaged again.
+
+### 10.7 How you are paid
+
+`R_total = R_verify + R_improve + R_usage`
+
+**R_verify: small and immediate.** It is paid when your object is verified and its gap is measured. Without probes, the gap is estimated from the capability map:
+
+`R_verify = min(1, 1 PAI × Truth × Novelty × ModelGap × Provenance)`
+
+| Truth | Novelty | Model gap | Provenance | R_verify |
+|---|---|---|---|---|
+| 0.99 | 0.90 | 0.90 | 0.95 | 0.76 PAI |
+| 0.98 | 0.90 | 0.85 | 0.95 | 0.71 PAI |
+| 0.95 | 0.60 | 0.70 | 0.85 | 0.34 PAI |
+| 0.92 | 0.30 | 0.40 | 0.80 | 0.09 PAI |
+| 0.99 | 0.90 | 0.03 | 0.95 | 0.03 PAI: the model already knew it |
+| 0.99 | 0.15 | 0.90 | 0.95 | 0: duplicate, rejected at the gate |
+
+**R_improve: paid after measured uplift.** When a package's adapter survives its canary, the package gets an improvement pool of **250 PAI per point** of net improvement, capped at 25,000 PAI. There is no pool unless the candidate beats its baseline. The pool is split by attribution weight:
+
+`W_i = VerifiedDeltaContribution_i / Σ VerifiedDeltaContribution`
+
+VerifiedDeltaContribution starts from the object's DK. When the benchmark runs leave-one-out ablations, it is blended with the object's measured marginal gain. Weights halve every 90 epochs once the knowledge is superseded, and fall to zero when the adapter is retired. Every improvement payment carries a **Proof of Useful Learning** record that links the novelty proof, the validation proof, the model gap, the measured improvement and the canary's live usage value. A payment with any of the five proofs missing is not made.
+
+| Net improvement | 0.5 pt | 1 pt | 2 pts | 6 pts | 10 pts |
+|---|---|---|---|---|---|
+| Package improvement pool | 125 PAI | 250 PAI | 500 PAI | 1,500 PAI | 2,500 PAI |
+
+**R_usage: an ongoing royalty.** **8%** of the inference fees an improved model earns goes to its training contributors (the policy range is 5–10%), split by the same weights. Only fees from **verified useful usage** count: tasks that succeeded, accepted answers, verifier passes, and measured falls in retries and escalations compared with the base model. Raw request volume does not count, and popularity is not validation.
+
+**Worked example.** A correction scores truth 0.98, novelty 0.90, model gap 0.85 and provenance 0.95. It pays **0.71 PAI** at once. Its package lifts the target benchmark by 6 points net, which creates a 1,500 PAI improvement pool. The correction's attribution weight is 8%, so it earns **120 PAI**. The improved model then takes 100,000 PAI in inference fees with a usage value of 0.76 (90% of tasks succeed, and retries and escalations fall). The royalty pool is 100,000 × 0.76 × 8% = 6,080 PAI, and 8% of it is **486.40 PAI**. In total the correction earns about **607 PAI**. These figures come from `packages/pai`. They illustrate the formulas and are not a forecast: actual rewards depend on the budgets below and on real revenue.
+
+### 10.8 Where the PAI comes from
+
+No PAI is minted per submission. Learning rewards come from three bounded sources:
+
+| Source | Size | Pays |
+|---|---|---|
+| Learning incentive pool | 50M PAI earmarked from the 150M ecosystem treasury (§9.1), which is already minted at genesis. At most 0.1% of what remains can be released per epoch: 50,000 PAI on day one, about 34,700 after a year of full use | R_verify and R_improve |
+| Training bounties | Funded by whoever publishes a capability gap | 10% of the bounty spread over its target examples as a higher verification reward; 90% as the improvement pool of the package that closes the gap |
+| Usage royalties | 8% of the inference fees of improved models (verified useful usage only) | R_usage |
+
+When an epoch's budget is used up, further rewards are **deferred, not minted**, and paid from the next epoch's budget. The target split of contributor economics is 10% for verification, 40% for measured improvement and 50% for downstream usage. It is a starting policy, not a fixed law. Most of the value therefore arrives only after the knowledge has been shown to help.
+
+**Training bounties** let whoever runs a model publish a weakness, for example "barrier options, 100 examples, 5,000 PAI". Matching contributions then earn up to **5 PAI** each at verification, and the adapter that closes the gap shares the remaining 4,500. The public **capability gap map** (`GET /api/learning/gaps`) lists measured weaknesses, weakest first, with their open bounties, so contributors can work where the network is weakest.
+
+### 10.9 Keeping it honest
+
+| Attack | Defence |
+|---|---|
+| Duplicate or reworded submissions | Semantic deduplication; first valid contributor takes the novelty credit; near-copies score (1 − similarity) |
+| AI-generated spam and fake corrections | Truth gate needs non-model evidence; deterministic checks; tiny immediate rewards; the large rewards wait for measured uplift |
+| Sybil accounts | Rewards follow verified improvement, not submission count; per-epoch submission limits that grow only with a verified track record |
+| Colluding or self-serving validators | Validators stake 5,000 PAI; contributor ≠ validator; independent source roots; one model family cannot validate its own output |
+| Copied datasets | Claims already in the knowledge graph score zero factual novelty; semantic deduplication against every stored object |
+| Benchmark gaming | Hidden test units are never published (only their hashes); probes are never used as training prompts; regressions are subtracted; live canary |
+| Privacy leaks | Gate on the device and again at the router; the risk threshold refuses export; the conversation never leaves the device |
+
+Contributor **reputation** is tracked per domain from verified, rejected and later-invalidated objects, and from the uplift and usage they produced. It sets review priority and submission limits. It never makes a claim more likely to be true.
+
+### 10.10 Try it
+
+```sh
+dsi learn --question "What is 37 * 41?" --answer "1337" --correction "37 * 41 = 1517." --domain mathematics.arithmetic
+# prints exactly what would leave your device, and sends nothing
+dsi learn --question "…" --correction "…" --private "Acme,Jane" --submit
+dsi learn status          # rewards (verify / improvement / usage) and your objects
+```
+
+The API is `POST /api/learning/submit`, `GET /api/learning/me`, `GET /api/learning/gaps`, `GET /api/learning/bounties` and `GET /api/learning/objects/:id`. Novelty proofs and package manifests are public at `GET /api/learning/proofs/:id` and `GET /api/learning/packages/:id`, and contributor totals by pseudonym at `GET /api/learning/contributors/:did/rewards`.
+
+---
+
+## 11. Security and economic attacks
 
 | Attack | Defence |
 |---|---|
@@ -488,10 +694,11 @@ Stake also sets a daily quota (for L3, 500k tokens per 10,000 PAI staked). Unsta
 | Faking fee volume to unlock investor tranches | Fees are real payments with 30% of PAI fees burned; cumulative fees only go up and each tranche mints once; the reporting role (a trusted settler until then) moves to a verifier quorum |
 | Wash trading to farm emission | Emission damped by network size; fees partly burned; paying yourself costs more than it earns once fees are burned |
 | Prompt injection from a malicious node | Responses are data to the client; the harness never grants a provider tool access |
+| Farming learning rewards (spam, duplicates, fake corrections, benchmark gaming) | First-valid novelty credit, a truth gate that model agreement cannot pass, staked validators, hidden benchmarks, and most of the reward paid only after measured uplift and usage (§10.9) |
 
 ---
 
-## 11. Scalability and efficiency
+## 12. Scalability and efficiency
 
 - **Stateless edge router.** No per-user state. Session affinity comes from hashing, not from a table, so the router scales horizontally on a global edge (Cloudflare Workers today).
 - **No buffering.** Streams are translated event by event, with failover only before the first byte.
@@ -502,19 +709,19 @@ Stake also sets a daily quota (for L3, 500k tokens per 10,000 PAI staked). Unsta
 
 ---
 
-## 12. Governance
+## 13. Governance
 
 At launch the project's founders hold the contract's owner role and operate the reference router. The legal entity that holds these roles will be named before any token launch. Governance is handed over in stages:
 
 - the settler role (the metering oracle) moves to a verifier quorum
 - the slasher role moves to verifier consensus with an appeal window
-- off-chain parameters (stake bases) move to PAI-weighted governance with a time lock; the reward split and burn rate are fixed in the reference contract, and changing them requires a new, audited contract approved by that governance
+- off-chain parameters (stake bases, and the Learning Fabric's reward base, improvement pool rate, royalty rate within 5–10% and epoch release share) move to PAI-weighted governance with a time lock; the reward split and burn rate are fixed in the reference contract, and changing them requires a new, audited contract approved by that governance
 
 Emission constants, the hard cap and the investors-and-founders unlock milestones are immutable.
 
 ---
 
-## 13. Status
+## 14. Status
 
 | Component | Status |
 |---|---|
@@ -528,6 +735,9 @@ Emission constants, the hard cap and the investors-and-founders unlock milestone
 | `dsi-node` + Docker Compose; permissionless registration, heartbeats, signed requests | **Implemented** in this release |
 | Canaries, reputation, probation, suspension | **Implemented** in this release |
 | PAI off-chain ledger: staking, stake-gated L2/L3, work metering, daily settlement | **Implemented** in this release |
+| Learning Fabric (`packages/learning`): on-device extraction and privacy gate (`dsi learn`), Proof of Novelty, claim validation with a deterministic checker, staked-validator attestation, model gap test, delta packages, canary control, attribution, PoUL records, R_verify / R_improve / R_usage on the off-chain ledger, bounties and the capability gap map | **Implemented** in this release |
+| Reference delta trainer (LoRA / QLoRA, PEFT) | **Implemented** in this release; runs outside the router |
+| Serving delta adapters on network nodes; automatic canary routing and usage metering for them | Roadmap: canary and usage results are reported by the reference operator until then |
 | PAI Solidity contract with tests | **Reference, unaudited, not deployed** |
 | Verifier and relay markets | Phase 2 |
 | Anonymous credit, OHTTP relays, TEE nodes | Roadmap |
@@ -535,7 +745,7 @@ Emission constants, the hard cap and the investors-and-founders unlock milestone
 
 ---
 
-## 14. Get started
+## 15. Get started
 
 **Use it.** Create a key at [decentralised.si/dashboard](/dashboard) and change one base URL:
 
@@ -554,6 +764,13 @@ dsi chat
 claude mcp add dsi -- dsi mcp     # the same memory in Claude Code
 ```
 
+**Teach it and earn PAI.** When a model gets something wrong, turn your correction into delta knowledge (§10):
+
+```sh
+dsi learn --question "What is 37 * 41?" --answer "1337" --correction "37 * 41 = 1517."            # dry run: shows what would leave your device
+dsi learn --question "What is 37 * 41?" --answer "1337" --correction "37 * 41 = 1517." --submit   # verify, measure the gap, earn
+```
+
 **Supply intelligence.** See §8.1. Then run `docker compose exec dsi-node node /app/dsi-node.mjs earnings`.
 
 ---
@@ -565,8 +782,9 @@ claude mcp add dsi -- dsi mcp     # the same memory in Claude Code
 - **Unaudited, undeployed contract.** `PAI.sol` has not been audited or deployed. Rewards are recorded on an off-chain ledger operated by the project; a bug, a migration or an operator error could change recorded balances.
 - **Regulatory.** A token with these features may be treated as a security or a regulated crypto-asset in some jurisdictions. That could delay, restrict or prevent issuance, or change the design described here.
 - **Adoption.** Emission, burn and unlock timings depend on network usage. If fees stay low, tranches may never unlock, and rewards may be worth little or nothing.
-- **Technical.** Routing, canaries and privacy measures are preview software. Providers can read the requests they serve (§6), and the network can suffer outages or attacks (§10).
-- **Governance.** The project's founders hold the contract owner role at launch, and no legal entity has been named yet (§12). The move to PAI-weighted governance is planned, not guaranteed.
+- **Technical.** Routing, canaries and privacy measures are preview software. Providers can read the requests they serve (§6), and the network can suffer outages or attacks (§11).
+- **Learning rewards.** Until the verifier market and adapter serving launch, the reference operator validates non-deterministic claims and reports benchmark, canary and usage results, so improvement and usage rewards depend on that operator (§10, §14). The privacy gate is pattern-based: it can miss an unusual identifier, so review what `dsi learn` shows before submitting. The 50M incentive pool is finite and released at most 0.1% of the remainder per epoch.
+- **Governance.** The project's founders hold the contract owner role at launch, and no legal entity has been named yet (§13). The move to PAI-weighted governance is planned, not guaranteed.
 
 ---
 

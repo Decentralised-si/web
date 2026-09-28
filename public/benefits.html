@@ -104,7 +104,7 @@ footer a{color:var(--muted)}
 .grid2 pre{white-space:pre-wrap;overflow-wrap:anywhere}
 
 /* benefits page */
-.big{font:700 clamp(40px,6vw,64px)/1 ui-sans-serif,system-ui;letter-spacing:-.03em;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.big{font:700 clamp(34px,4.6vw,52px)/1.05 ui-sans-serif,system-ui;letter-spacing:-.03em;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
 .stats{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));margin:22px 0 6px}
 .stats .card p{margin:6px 0 0;color:var(--muted);font-size:14.5px}
 table.cost td:nth-child(1){white-space:normal}
@@ -159,9 +159,9 @@ table.lv td:first-child{white-space:nowrap}
     <h1>Pay frontier prices <em>only</em> for frontier questions.</h1>
     <p class="lead">For developers building AI-native apps over an API (<a href="#integrate">see how to integrate</a>). Keep your Anthropic, OpenAI or Gemini SDK and change one base URL. DSI Axon, the blind router, sends each request to the cheapest provider that is good enough for it: an open model on the network for everyday requests, a frontier model for the hard ones.</p>
     <div class="stats">
-      <div class="card"><div class="big">133×</div><p>what a flagship model (Claude Fable 5.1 or GPT-6 Astra) costs per request, compared with a community node on the network, at list prices.</p></div>
-      <div class="card"><div class="big">87%</div><p>saved against sending everything to Claude Opus 5.5, when 70% of requests are easy, 20% medium and 10% hard (the example below; set your own mix).</p></div>
-      <div class="card"><div class="big">$0</div><p>routing fee when you bring your own vendor keys. The network's open models are billed at their listed cost, with no markup.</p></div>
+      <div class="card"><div class="big">133× cheaper</div><p>A community node on Decentralised.si answers a request for 1/133 of what a flagship model (Claude Fable 5.1 or GPT-6 Astra) charges, at list prices.</p></div>
+      <div class="card"><div class="big">87% lower bill</div><p>than sending everything to Claude Opus 5.5, when 70% of requests are easy, 20% medium and 10% hard: $2,123 instead of $16,000 for a million requests (set your own mix below).</p></div>
+      <div class="card"><div class="big">$0 fee</div><p>for routing when you bring your own vendor keys. The network's open models are billed at their listed cost, with no markup.</p></div>
     </div>
   </div>
 </header>
@@ -266,7 +266,7 @@ const res = await ai.models.generateContent({ model: "gemini-2.5-pro", contents:
   <h2>List prices, side by side</h2>
   <p class="muted">Standard API prices in US dollars per million tokens, as published by each vendor on 28 September 2026 (no batch, cache or volume discounts). The cost column is for one million requests of 1,500 input and 500 output tokens, a typical chat or agent step.</p>
   <div class="tbl"><table class="cost">
-    <thead><tr><th>Model</th><th class="n">Input / 1M</th><th class="n">Output / 1M</th><th class="n">1M requests</th><th class="n">vs node</th><th></th></tr></thead>
+    <thead><tr><th>Model</th><th class="n">Input / 1M</th><th class="n">Output / 1M</th><th class="n">1M requests</th><th class="n">Costs × node price</th><th></th></tr></thead>
     <tbody>
       <tr><td>Claude Fable 5.1<span class="vendor">Anthropic</span></td><td class="n">$10.00</td><td class="n">$50.00</td><td class="n"><b>$40,000</b></td><td class="n">133.3×</td><td style="width:22%"><div class="bar" style="width:29.6%"></div></td></tr>
       <tr><td>GPT-6 Astra<span class="vendor">OpenAI</span></td><td class="n">$10.00</td><td class="n">$50.00</td><td class="n"><b>$40,000</b></td><td class="n">133.3×</td><td style="width:22%"><div class="bar" style="width:29.6%"></div></td></tr>

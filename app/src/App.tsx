@@ -239,7 +239,7 @@ export function App({ config }: { config: Config }) {
                 <IconWallet />
                 <span>Credits &amp; wallet</span>
               </a>
-              <a role="menuitem" href="mailto:yousef@clanz.com">
+              <a role="menuitem" href="https://github.com/Decentralised-si" target="_blank" rel="noopener">
                 <IconHelp />
                 <span>Get help</span>
               </a>

@@ -1,35 +1,41 @@
 :root {
-  --bg: #f7f6f2;
+  /* the same palette as decentralised.si (public/index.html): blue from the logo, violet as the second hue */
+  --bg: #f6f5f1;
   --side: #efede6;
   --panel: #ffffff;
-  --ink: #1d1f23;
-  --muted: #62666f;
-  --line: #e2dfd6;
-  --accent: #1f6f5c;
+  --ink: #15171b;
+  --muted: #5b616c;
+  --line: #e1ded6;
+  --accent: #2257e6;
+  --accent-soft: #e3eafe;
   --accent-ink: #ffffff;
+  --a2: #7a3fe0;
+  --grad: linear-gradient(120deg, #16b5ff, #2257e6 45%, #8a3ffc);
   --user: #e9e6dd;
   --code: #f0eee8;
-  --bad: #b42318;
+  --bad: #d4380d;
   --warn: #a2521b;
-  --ok: #1f6f5c;
+  --ok: #1f7a55;
   --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #17181b;
-    --side: #1f2024;
-    --panel: #232428;
-    --ink: #ececef;
-    --muted: #a1a4ad;
-    --line: #34363c;
-    --accent: #4cc3a0;
-    --accent-ink: #0b1a15;
-    --user: #2d2f35;
-    --code: #2a2c31;
-    --bad: #f07167;
+    --bg: #0f1114;
+    --side: #14171b;
+    --panel: #1a1e24;
+    --ink: #eceef1;
+    --muted: #9aa1ad;
+    --line: #282e37;
+    --accent: #4da3ff;
+    --accent-soft: #12203d;
+    --accent-ink: #020716;
+    --a2: #b18cff;
+    --user: #242a33;
+    --code: #14171c;
+    --bad: #ff6b5a;
     --warn: #e0a060;
-    --ok: #4cc3a0;
+    --ok: #4cc38a;
     color-scheme: dark;
   }
 }
@@ -111,9 +117,14 @@ button:disabled {
 }
 button.primary,
 .button.primary {
-  background: var(--accent);
-  color: var(--accent-ink);
-  border-color: var(--accent);
+  background: var(--grad);
+  color: #fff;
+  border-color: transparent;
+}
+button.primary:hover:not(:disabled),
+.button.primary:hover {
+  filter: brightness(1.08);
+  border-color: transparent;
 }
 button.danger {
   color: var(--bad);
@@ -242,9 +253,25 @@ label.check {
   letter-spacing: -0.01em;
   text-decoration: none;
   color: var(--ink);
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
 }
-.brand span,
-.brand-lg span {
+.brand .logo {
+  width: 26px;
+  height: 26px;
+}
+.brand-lg .logo {
+  width: 34px;
+  height: 34px;
+}
+.brand .logo,
+.brand-lg .logo {
+  border-radius: 7px;
+  flex: none;
+}
+.brand .tld,
+.brand-lg .tld {
   color: var(--accent);
 }
 .brand-lg {
@@ -824,16 +851,16 @@ kbd {
   color: #fff;
 }
 .tone0 .model-art {
-  background: #c96a4a;
+  background: #2257e6;
 }
 .tone1 .model-art {
-  background: #6a7fc9;
+  background: #7a3fe0;
 }
 .tone2 .model-art {
-  background: #3f8f76;
+  background: #1a8fd6;
 }
 .tone3 .model-art {
-  background: #b58a2e;
+  background: #c96a4a;
 }
 .model-card h3 {
   margin: 4px 0 0;

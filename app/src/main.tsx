@@ -13,7 +13,10 @@ function Unconfigured({ error }: { error?: string }) {
     <div className="center">
       <div className="card narrow">
         <div className="brand-lg">
-          Decentralised<span>.si</span>
+          <img className="logo" src="/brand/logo-96.png" alt="" width={34} height={34} />
+          <span>
+            Decentralised<span className="tld">.si</span>
+          </span>
         </div>
         <p className="muted">{error ? "The Decentralised.si service did not respond. Please try again in a moment." : "Sign-in is temporarily unavailable. Developers can still use the API with a ds_ key."}</p>
         <p>
@@ -34,7 +37,7 @@ loadConfig()
           appId={cfg.privyAppId}
           config={{
             loginMethods: ["email", "google", "apple", "github", "wallet"],
-            appearance: { theme: dark ? "dark" : "light", accentColor: dark ? "#4cc3a0" : "#1f6f5c", walletChainType: "ethereum-and-solana", landingHeader: "Sign in to Decentralised.si" },
+            appearance: { theme: dark ? "dark" : "light", accentColor: dark ? "#4da3ff" : "#2257e6", logo: `${location.origin}/brand/logo-96.png`, walletChainType: "ethereum-and-solana", landingHeader: "Sign in to Decentralised.si" },
             // Every user gets a self-custodial wallet (EVM + Solana) to pay for AI with crypto.
             embeddedWallets: { ethereum: { createOnLogin: "users-without-wallets" }, solana: { createOnLogin: "users-without-wallets" } },
           }}

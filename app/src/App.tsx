@@ -96,7 +96,10 @@ export function App({ config }: { config: Config }) {
       <div className="center">
         <div className="card narrow login">
           <div className="brand-lg">
-            Decentralised<span>.si</span>
+            <img className="logo" src="/brand/logo-96.png" alt="" width={34} height={34} />
+            <span>
+              Decentralised<span className="tld">.si</span>
+            </span>
           </div>
           <h1>Every AI model. Private. Paid in crypto.</h1>
           <p className="muted">Sign in with email, Google, Apple, GitHub or your wallet. You get a self-custodial wallet for paying with crypto; your conversations stay in this browser.</p>
@@ -146,7 +149,10 @@ export function App({ config }: { config: Config }) {
       <aside className="sidebar">
         <div className="side-top">
           <a className="brand" href="#/chat">
-            Decentralised<span>.si</span>
+            <img className="logo" src="/brand/logo-96.png" alt="" width={26} height={26} />
+            <span>
+              Decentralised<span className="tld">.si</span>
+            </span>
           </a>
           <button className="icon only-mobile" aria-label="Close menu" onClick={() => setMenu(false)}>
             ✕

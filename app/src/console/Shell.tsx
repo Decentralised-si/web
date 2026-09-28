@@ -175,7 +175,10 @@ export function ConsoleShell({ page, arg, role, session, org, config, switchOrg,
       <aside className="sidebar">
         <div className="side-top">
           <a className="brand" href="#/console/dashboard">
-            Decentralised<span>.si</span> <span className="muted small">Console</span>
+            <img className="logo" src="/brand/logo-96.png" alt="" width={26} height={26} />
+            <span>
+              Decentralised<span className="tld">.si</span> <span className="muted small">Console</span>
+            </span>
           </a>
           <button className="icon only-mobile" aria-label="Close menu" onClick={() => setMenu(false)}>
             ✕

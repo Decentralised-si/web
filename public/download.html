@@ -170,6 +170,7 @@ footer a{color:var(--muted)}
     <a data-t="aarch64-unknown-linux-musl" href="https://github.com/Decentralised-si/Smart-LLM-Router/releases/latest/download/synapse-aarch64-unknown-linux-musl.tar.gz"><b>Linux · arm64</b><span>synapse-aarch64-unknown-linux-musl.tar.gz</span></a>
     <a data-t="x86_64-pc-windows-msvc" href="https://github.com/Decentralised-si/Smart-LLM-Router/releases/latest/download/synapse-x86_64-pc-windows-msvc.zip"><b>Windows · x64</b><span>synapse-x86_64-pc-windows-msvc.zip</span></a>
   </div>
+  <p class="note" id="mac-blocked"><b>macOS says “synapse” Not Opened (“Apple could not verify…”)?</b> macOS blocks programs downloaded with a browser until they are notarized by Apple, which our macOS builds are not yet. Use the one-line installer above, which is not affected. Or check the download against <a href="https://github.com/Decentralised-si/Smart-LLM-Router/releases/latest/download/SHA256SUMS">SHA256SUMS</a> and clear the browser's download flag: <code>xattr -dr com.apple.quarantine ~/Downloads/synapse-aarch64-apple-darwin</code> (Intel Macs: <code>synapse-x86_64-apple-darwin</code>).</p>
   <div class="grid2">
     <div>
       <h3>macOS / Linux, by hand</h3>

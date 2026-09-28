@@ -126,7 +126,7 @@ section.alt{background:var(--bg2)}
 pre{font:13.5px/1.6 var(--mono);background:var(--code);border:1px solid var(--line);border-radius:12px;padding:18px;overflow-x:auto;margin:0}
 pre .c{color:var(--muted)}
 pre mark{background:var(--accent-soft);color:var(--accent);border-radius:3px;padding:0 2px}
-code{font-family:var(--mono);font-size:.92em}
+code{font-family:var(--mono);font-size:.92em;overflow-wrap:break-word}
 .tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
 .tabs button{font:600 13px var(--mono);background:none;border:1px solid var(--line);color:var(--muted);border-radius:8px;padding:6px 11px;cursor:pointer}
 .tabs button[aria-selected="true"]{color:var(--ink);border-color:var(--accent);background:var(--panel)}
@@ -252,7 +252,7 @@ footer a{color:var(--muted)}
     <h2>A router for intelligence, running where your data lives.</h2>
     <p class="sub">Before any model sees a request, Synapse decides what kind of intelligence it needs, how much, who should supply it, and how much of your context may leave the device. The first three steps typically take under a millisecond and never touch the network.</p>
     <div class="howsteps">
-      <div class="card"><span class="n">1</span><h3>Understand</h3><p>Classifies the domain on a taxonomy (<code>finance.quant.derivatives</code> → <code>finance</code> → <code>general</code>) and estimates difficulty, freshness and tool needs from the request's structure.</p></div>
+      <div class="card"><span class="n">1</span><h3>Understand</h3><p>Classifies the domain on a taxonomy (<code>finance.<wbr>quant.<wbr>derivatives</code> → <code>finance</code> → <code>general</code>) and estimates difficulty, freshness and tool needs from the request's structure.</p></div>
       <div class="card"><span class="n">2</span><h3>Protect</h3><p>Replaces emails, phone numbers, wallets, accounts, IPs and tagged names with placeholders. It also trims context to what this expert needs. The mapping never leaves the device.</p></div>
       <div class="card"><span class="n">3</span><h3>Choose</h3><p>Scores every expert on domain fit, predicted quality, latency, price, reliability, tools, cache affinity and privacy. Anything below the quality floor is out, however cheap.</p></div>
       <div class="card"><span class="n">4</span><h3>Stream &amp; guard</h3><p>Streams the answer. It starts a backup if the first token is late, and continues on another expert if one fails mid-answer. Cancelling stops all paid work.</p></div>

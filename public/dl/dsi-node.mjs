@@ -270,19 +270,21 @@ var CapabilityCompatibilityEngine = class {
 };
 
 // ../pai/src/index.ts
-var MAX_SUPPLY = 1e9;
 var GENESIS_MS = Date.UTC(2026, 8, 26);
 var ALLOCATION = {
-  networkRewards: 0.5,
-  ecosystemTreasury: 0.15,
-  contributors: 0.15,
-  community: 0.12,
-  liquidity: 0.08
+  /** Minted per epoch for verified work only. */
+  networkRewards: 5e8,
+  ecosystemTreasury: 15e7,
+  contributors: 15e7,
+  community: 12e7,
+  liquidity: 8e7,
+  /** Locked: minted in tranches as cumulative network fees pass INVESTOR_UNLOCKS milestones. */
+  investorsAndFounders: 9e9
 };
-var NETWORK_REWARD_POOL = MAX_SUPPLY * ALLOCATION.networkRewards;
+var NETWORK_REWARD_POOL = ALLOCATION.networkRewards;
 var HALVING_EPOCHS = 730;
 var INITIAL_EPOCH_EMISSION = NETWORK_REWARD_POOL * (1 - 2 ** (-1 / HALVING_EPOCHS));
-var GENESIS_SUPPLY = MAX_SUPPLY * (1 - ALLOCATION.networkRewards);
+var GENESIS_SUPPLY = ALLOCATION.ecosystemTreasury + ALLOCATION.contributors + ALLOCATION.community + ALLOCATION.liquidity;
 
 // ../core/src/router.ts
 var engine = new CapabilityCompatibilityEngine();

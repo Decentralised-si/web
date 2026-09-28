@@ -26,7 +26,7 @@ This paper describes the architecture, the privacy model, the provider network, 
 6. **Anyone can supply intelligence.** One command turns a GPU and an open model into a paid network node. Rewards follow verified work, not capital.
 7. **Common knowledge gets cheaper; novel intelligence is earned.** Commodity answers fall in price every year. Frontier reasoning is rationed by stake, not by who you are.
 8. **No provider is load-bearing.** Conversation state lives with the client, so any provider (or model family, or vendor) can fail between turns or mid-answer without interrupting the conversation.
-9. **Scarce by design.** PAI has a hard cap. Emission halves every two years and shrinks as the network grows, and fees and slashing burn supply. Growth makes the token scarcer, not diluted.
+9. **Supply follows usage.** PAI has a hard cap of 10B. Reward emission halves every two years and shrinks as the network grows. The investors-and-founders allocation unlocks only as real network fees accumulate, and fees and slashing burn supply.
 
 ---
 
@@ -371,17 +371,37 @@ Consumers pay for network inference in credit or PAI. Nodes earn epoch emission 
 
 ### 9.1 Supply and allocation
 
-Hard cap: **1,000,000,000 PAI**. Only half exists at genesis; the other half can only be minted as rewards for verified work.
+Hard cap: **10,000,000,000 PAI**. Only 500M exists at genesis. Another 500M can only be minted as rewards for verified work. The remaining 9B belongs to private investors and founders; it is locked and minted only as network usage grows (§9.2).
 
-| Allocation | Share | Notes |
-|---|---|---|
-| Network rewards | 50% | Minted per epoch for verified work only; never pre-minted |
-| Ecosystem treasury | 15% | Grants, audits, public goods |
-| Contributors | 15% | 4-year vesting |
-| Community | 12% | Early users and early node operators |
-| Liquidity | 8% | Market making |
+| Allocation | PAI | Share | Notes |
+|---|---|---|---|
+| Investors and founders | 9,000,000,000 | 90% | Locked; minted in ten tranches as cumulative network fees pass milestones (§9.2) |
+| Network rewards | 500,000,000 | 5% | Minted per epoch for verified work only; never pre-minted |
+| Ecosystem treasury | 150,000,000 | 1.5% | Grants, audits, public goods |
+| Contributors | 150,000,000 | 1.5% | 4-year vesting |
+| Community | 120,000,000 | 1.2% | Early users and early node operators |
+| Liquidity | 80,000,000 | 0.8% | Market making |
 
-### 9.2 Emission falls over time and as the network grows
+### 9.2 Investors and founders unlock as volume grows
+
+The 9B investors-and-founders allocation is not minted at genesis. It is released in ten tranches of **900M PAI**. Each tranche is minted once, when the network's cumulative fees reach its milestone. Time alone unlocks nothing: supply for investors and founders grows only as paying usage does.
+
+| Tranche | Cumulative network fees | Unlocked in total | In the Figure 2 scenario |
+|---|---|---|---|
+| 1 | $1M | 900M | year 1.8 |
+| 2 | $2.5M | 1.8B | year 2.3 |
+| 3 | $5M | 2.7B | year 2.5 |
+| 4 | $10M | 3.6B | year 2.8 |
+| 5 | $25M | 4.5B | year 3.1 |
+| 6 | $50M | 5.4B | year 3.5 |
+| 7 | $100M | 6.3B | year 4.1 |
+| 8 | $250M | 7.2B | year 5.7 |
+| 9 | $500M | 8.1B | year 8.5 |
+| 10 | $1B | 9.0B | not reached within 10 years |
+
+Cumulative fees are reported by the metering oracle (the settler role), which later moves to a verifier quorum (§12). The reported figure can only increase, and a tranche can never be minted twice. Fees are real payments, and 30% of fee value is burned, so inflating volume to force an unlock costs the payer real money.
+
+### 9.3 Emission falls over time and as the network grows
 
 An epoch is one day. Epoch emission is
 
@@ -403,15 +423,15 @@ Damping values: 1.0 at N = 0, 0.71 at 10k, 0.50 at 30k, 0.30 at 100k, 0.10 at 1M
 
 Each epoch's emission is split **70% to providers, 20% to verifiers and 10% to relays**, pro rata to verified work within each role. A role that did no work in an epoch receives nothing, and that share is not minted.
 
-### 9.3 Burn and deflation
+### 9.4 Burn
 
-**30% of every fee** paid in PAI is burned, and slashed stake is burned. Emission falls with time and growth while burn rises with usage, so net issuance turns negative as the network succeeds.
+**30% of every fee** paid in PAI is burned, and slashed stake is burned. Reward emission falls with time and growth while burn rises with usage, so between tranche unlocks net issuance turns negative as the network succeeds.
 
 ![PAI supply projection](whitepaper/supply.svg)
 
-*Figure 2. One adoption scenario, not a forecast. The network grows along an S-curve to 1M participants and network fees to $250k/day, and the PAI price tracks usage as the square root of fee growth from $0.10. Supply rises from the 500M genesis allocation, peaks at ~691M around year 2.7 when burn overtakes emission, and declines to ~587M by year 10.*
+*Figure 2. One adoption scenario, not a forecast, generated from `packages/pai`. The network grows along an S-curve to 1M participants and network fees to $250k/day, and the PAI price tracks usage as the square root of fee growth from $0.10. Supply starts at the 500M genesis allocation. It steps up by 900M each time cumulative fees pass an investors-and-founders milestone: nine of the ten tranches unlock within ten years, and supply reaches ~8.7B. Fee burn overtakes reward emission around year 2.7, so supply falls slowly between unlocks.*
 
-### 9.4 Common knowledge gets cheaper; novel intelligence requires stake
+### 9.5 Common knowledge gets cheaper; novel intelligence requires stake
 
 **Common knowledge (L0–L1).** The network price multiplier falls **35% per year** and with the fourth root of capacity growth, with a floor at 5% of the launch price. With serving capacity growing 16×, the multiplier is ×0.33 after one year and ×0.06 after five.
 
@@ -437,7 +457,7 @@ Each epoch's emission is split **70% to providers, 20% to verifiers and 10% to r
 
 Stake also sets a daily quota (for L3, 500k tokens per 10,000 PAI staked). Unstaking unbonds over 7 days. Commercial frontier models reached through a customer's own keys are not stake-gated, because the customer already pays that vendor.
 
-### 9.5 Roles and who secures the network
+### 9.6 Roles and who secures the network
 
 | Role | Requirement | Earns | Can be slashed for |
 |---|---|---|---|
@@ -447,9 +467,9 @@ Stake also sets a daily quota (for L3, 500k tokens per 10,000 PAI staked). Unsta
 | Relay / edge router (phase 2) | Run an access-layer edge | 10% pool, by relayed work | Tampering, downtime |
 | Consumer | None for common knowledge | Cheaper answers over time | n/a |
 
-### 9.6 The contract
+### 9.7 The contract
 
-`contracts/src/PAI.sol` is the reference ERC-20 in the Smart-LLM-Router repository, to be opened for public review before any deployment. It implements the capped supply, genesis allocations, epoch settlement with the emission and damping formula, the 30% fee burn, staking with 7-day unbonding, and slashing by burn. Its Foundry test suite covers allocation, halving and damping parity with the TypeScript model, pro-rata settlement, single settlement per epoch, fee burn, staking, slashing and the reward cap. Until an audited contract is deployed, the router runs the same economics on an off-chain ledger, settled daily and exposed at `/api/network`.
+`contracts/src/PAI.sol` is the reference ERC-20 in the Smart-LLM-Router repository, to be opened for public review before any deployment. It implements the 10B capped supply, genesis allocations, the investors-and-founders tranches unlocked by reported cumulative fees, epoch settlement with the emission and damping formula, the 30% fee burn, staking with 7-day unbonding, and slashing by burn. Its Foundry test suite covers allocation, tranche unlocking (milestones only, never twice, never above the cap), halving and damping parity with the TypeScript model, pro-rata settlement, single settlement per epoch, fee burn, staking, slashing and the reward cap. Until an audited contract is deployed, the router runs the same economics on an off-chain ledger, settled daily and exposed at `/api/network`.
 
 ---
 
@@ -464,6 +484,7 @@ Stake also sets a daily quota (for L3, 500k tokens per 10,000 PAI staked). Unsta
 | Node tries to profile users | Identity stripping; session sharding across operators; TEE nodes for strict privacy (roadmap) |
 | Router operator profiles users | No content logging; hash-only receipts; memory on device; anonymous credit and OHTTP relays (roadmap) |
 | BYOK key theft | Envelope encryption with AAD binding; decrypted only in the outbound call; redaction; never sent to nodes |
+| Faking fee volume to unlock investor tranches | Fees are real payments with 30% burned; cumulative fees only go up and each tranche mints once; the reporting role moves to a verifier quorum |
 | Wash trading to farm emission | Emission damped by network size; fees partly burned; paying yourself costs more than it earns once fees are burned |
 | Prompt injection from a malicious node | Responses are data to the client; the harness never grants a provider tool access |
 
@@ -488,7 +509,7 @@ At launch the Decentralised.si foundation holds the contract's owner role and op
 - the slasher role moves to verifier consensus with an appeal window
 - parameter changes (reward split, burn rate, stake bases) move to PAI-weighted governance with a time lock
 
-Emission constants and the hard cap are immutable.
+Emission constants, the hard cap and the investors-and-founders unlock milestones are immutable.
 
 ---
 

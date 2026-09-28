@@ -2,11 +2,11 @@
 #   irm https://decentralised.si/install/synapse.ps1 | iex
 # Options (environment variables): SYNAPSE_VERSION (default latest), SYNAPSE_INSTALL_DIR
 # (default %LOCALAPPDATA%\synapse), SYNAPSE_NO_INIT=1 to skip creating %USERPROFILE%\.synapse config files.
-# Source: https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/synapse
+# Source: https://github.com/Decentralised-si/DSI-Synapse
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
 
-$repo = 'Decentralised-si/Smart-LLM-Router'
+$repo = 'Decentralised-si/DSI-Synapse'
 $version = if ($env:SYNAPSE_VERSION) { $env:SYNAPSE_VERSION } elseif ($env:OIFD_VERSION) { $env:OIFD_VERSION } else { 'latest' }
 $dir = if ($env:SYNAPSE_INSTALL_DIR) { $env:SYNAPSE_INSTALL_DIR } else { Join-Path $env:LOCALAPPDATA 'synapse' }
 

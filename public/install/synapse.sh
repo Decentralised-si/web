@@ -5,10 +5,10 @@
 #   SYNAPSE_VERSION=synapse-v0.2.2     install a specific release (default: latest)
 #   SYNAPSE_INSTALL_DIR=/usr/local/bin   install location (default: ~/.local/bin)
 #   SYNAPSE_NO_INIT=1               do not create ~/.synapse config files
-# Source: https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/synapse
+# Source: https://github.com/Decentralised-si/DSI-Synapse
 set -eu
 
-REPO="Decentralised-si/Smart-LLM-Router"
+REPO="Decentralised-si/DSI-Synapse"
 VERSION="${SYNAPSE_VERSION:-${OIFD_VERSION:-latest}}"
 INSTALL_DIR="${SYNAPSE_INSTALL_DIR:-${OIFD_INSTALL_DIR:-$HOME/.local/bin}}"
 

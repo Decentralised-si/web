@@ -267,7 +267,7 @@ Multi-vendor gateways that retry on another API already exist, and they solve pa
 
 ### 7.5 Why this works without relying on any one LLM
 
-The claims above follow from five invariants of the design. Each is checked by the test suite in the Smart-LLM-Router repository (`apps/gateway/test/continuity.test.ts` and the SDK compatibility suites), with real Anthropic, OpenAI, Gemini and MCP client SDKs on one side and providers speaking each vendor's wire format on the other.
+The claims above follow from five invariants of the design. Each is checked by the test suite in the DSI-AXON repository (`apps/gateway/test/continuity.test.ts` and the SDK compatibility suites), with real Anthropic, OpenAI, Gemini and MCP client SDKs on one side and providers speaking each vendor's wire format on the other.
 
 **I1 · Providers are stateless with respect to the conversation.** Everything a provider needs is in the request, and nothing it holds is needed later (§7.1).
 *So:* removing any provider removes no conversation state. The only thing at risk is the partial output of the turn in flight, which Axon holds.
@@ -470,7 +470,7 @@ Stake also sets a daily quota (for L3, 500k tokens per 10,000 PAI staked). Unsta
 
 ### 9.7 The contract
 
-`contracts/src/PAI.sol` is the reference ERC-20 in the Smart-LLM-Router repository, to be opened for public review before any deployment. It implements the 10B capped supply, genesis allocations, the investors-and-founders tranches unlocked by reported cumulative fees, epoch settlement with the emission and damping formula, the 30% fee burn, staking with 7-day unbonding, and slashing by burn. Its Foundry test suite covers allocation, tranche unlocking (milestones only, never twice, never above the cap), halving and damping parity with the TypeScript model, pro-rata settlement, single settlement per epoch, fee burn, staking, slashing and the reward cap. Until an audited contract is deployed, the router runs the same economics on an off-chain ledger, settled daily and exposed at `/api/network`.
+`contracts/src/PAI.sol` is the reference ERC-20 in the DSI-AXON repository, to be opened for public review before any deployment. It implements the 10B capped supply, genesis allocations, the investors-and-founders tranches unlocked by reported cumulative fees, epoch settlement with the emission and damping formula, the 30% fee burn, staking with 7-day unbonding, and slashing by burn. Its Foundry test suite covers allocation, tranche unlocking (milestones only, never twice, never above the cap), halving and damping parity with the TypeScript model, pro-rata settlement, single settlement per epoch, fee burn, staking, slashing and the reward cap. Until an audited contract is deployed, the router runs the same economics on an off-chain ledger, settled daily and exposed at `/api/network`.
 
 ---
 

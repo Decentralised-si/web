@@ -187,8 +187,8 @@ footer a{color:var(--muted)}
     </ul>
     <p class="lead">This page explains each of those decisions and links to the code that makes it.</p>
     <div class="ctas">
-      <a class="btn primary" href="https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/synapse"><svg class="gh"><use href="#gh"/></svg> Synapse on GitHub</a>
-      <a class="btn" href="https://github.com/Decentralised-si/Smart-LLM-Router"><svg class="gh"><use href="#gh"/></svg> Smart-LLM-Router</a>
+      <a class="btn primary" href="https://github.com/Decentralised-si/DSI-Synapse"><svg class="gh"><use href="#gh"/></svg> Synapse on GitHub</a>
+      <a class="btn" href="https://github.com/Decentralised-si/DSI-AXON"><svg class="gh"><use href="#gh"/></svg> DSI-AXON</a>
       <a class="btn" href="/download">Download for your laptop</a>
     </div>
   </div>
@@ -271,18 +271,18 @@ footer a{color:var(--muted)}
       </div>
     </div>
   </div>
-  <p class="src">Code: <a href="https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/synapse">synapse/</a> (layer 1) · <a href="https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/apps/gateway">apps/gateway</a> and <a href="https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/packages/node">packages/node</a> (layer 2) · <a href="https://github.com/Decentralised-si/Smart-LLM-Router/blob/main/synapse/src/future.rs">synapse/src/future.rs</a> (layer 3 interfaces)</p>
+  <p class="src">Code: <a href="https://github.com/Decentralised-si/DSI-Synapse">DSI-Synapse</a> (layer 1) · <a href="https://github.com/Decentralised-si/DSI-AXON/tree/main/apps/gateway">apps/gateway</a> and <a href="https://github.com/Decentralised-si/DSI-AXON/tree/main/packages/node">packages/node</a> (layer 2) · <a href="https://github.com/Decentralised-si/DSI-Synapse/blob/main/src/future.rs">src/future.rs</a> (layer 3 interfaces)</p>
 
   <h3>Inside Synapse</h3>
   <div class="tbl"><table>
     <thead><tr><th>Module</th><th>Responsibility</th></tr></thead>
     <tbody>
-      <tr><td><a href="https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/synapse/src/router"><code>router/</code></a></td><td>Classification, difficulty, planning, scoring, escalation ladder, stop rules, synthesis</td></tr>
-      <tr><td><a href="https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/synapse/src/context"><code>context/</code></a></td><td>Pseudonymisation, per-provider context compilation, local memory, context deltas</td></tr>
-      <tr><td><a href="https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/synapse/src/providers"><code>providers/</code></a></td><td>Adapter trait; OpenAI-compatible, Ollama and simulated adapters; registry; health probes</td></tr>
-      <tr><td><a href="https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/synapse/src/streams"><code>streams/</code></a></td><td>Execution: streaming, hedging, fallback, mid-stream continuation, cancellation</td></tr>
-      <tr><td><a href="https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/synapse/src/storage"><code>storage/</code></a></td><td>In-memory route cache, SQLite writer thread, outcomes and feedback</td></tr>
-      <tr><td><a href="https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/synapse/src/api"><code>api/</code></a></td><td>Local HTTP API with server-sent events</td></tr>
+      <tr><td><a href="https://github.com/Decentralised-si/DSI-Synapse/tree/main/src/router"><code>router/</code></a></td><td>Classification, difficulty, planning, scoring, escalation ladder, stop rules, synthesis</td></tr>
+      <tr><td><a href="https://github.com/Decentralised-si/DSI-Synapse/tree/main/src/context"><code>context/</code></a></td><td>Pseudonymisation, per-provider context compilation, local memory, context deltas</td></tr>
+      <tr><td><a href="https://github.com/Decentralised-si/DSI-Synapse/tree/main/src/providers"><code>providers/</code></a></td><td>Adapter trait; OpenAI-compatible, Ollama and simulated adapters; registry; health probes</td></tr>
+      <tr><td><a href="https://github.com/Decentralised-si/DSI-Synapse/tree/main/src/streams"><code>streams/</code></a></td><td>Execution: streaming, hedging, fallback, mid-stream continuation, cancellation</td></tr>
+      <tr><td><a href="https://github.com/Decentralised-si/DSI-Synapse/tree/main/src/storage"><code>storage/</code></a></td><td>In-memory route cache, SQLite writer thread, outcomes and feedback</td></tr>
+      <tr><td><a href="https://github.com/Decentralised-si/DSI-Synapse/tree/main/src/api"><code>api/</code></a></td><td>Local HTTP API with server-sent events</td></tr>
     </tbody>
   </table></div>
 </section>
@@ -312,7 +312,7 @@ event: token    " volatility"
 <span class="c">   …</span>
 event: final    {"state": "COMPLETED", "provider": "quant-local", "ttfi_ms": 163, "cost": 0.000058, "escalated": false,
                  "stop_reason": "confident", "hedged": false, "fallbacks": 0, ...}</pre>
-  <p class="src">Code: <a href="https://github.com/Decentralised-si/Smart-LLM-Router/blob/main/synapse/src/router/mod.rs">router/mod.rs</a> (fast path) · <a href="https://github.com/Decentralised-si/Smart-LLM-Router/blob/main/synapse/src/streams/manager.rs">streams/manager.rs</a> (execution) · <a href="https://github.com/Decentralised-si/Smart-LLM-Router/blob/main/synapse/src/models/outcome.rs">models/outcome.rs</a> (states)</p>
+  <p class="src">Code: <a href="https://github.com/Decentralised-si/DSI-Synapse/blob/main/src/router/mod.rs">router/mod.rs</a> (fast path) · <a href="https://github.com/Decentralised-si/DSI-Synapse/blob/main/src/streams/manager.rs">streams/manager.rs</a> (execution) · <a href="https://github.com/Decentralised-si/DSI-Synapse/blob/main/src/models/outcome.rs">models/outcome.rs</a> (states)</p>
 </section>
 
 <section id="understand">
@@ -349,7 +349,7 @@ finance.quant.derivatives → finance.quant → finance → general</div>
     </tbody>
   </table></div>
   <p>Difficulty moves the bar. Harder tasks raise the quality target, and the gap between strong and weak models widens: a provider's predicted quality is pulled down more on hard and extreme tasks.</p>
-  <p class="src">Code: <a href="https://github.com/Decentralised-si/Smart-LLM-Router/blob/main/synapse/src/router/taxonomy.rs">taxonomy.rs</a> · <a href="https://github.com/Decentralised-si/Smart-LLM-Router/blob/main/synapse/src/router/classify.rs">classify.rs</a> · <a href="https://github.com/Decentralised-si/Smart-LLM-Router/blob/main/synapse/src/router/difficulty.rs">difficulty.rs</a> · <a href="https://github.com/Decentralised-si/Smart-LLM-Router/blob/main/synapse/src/router/planner.rs">planner.rs</a></p>
+  <p class="src">Code: <a href="https://github.com/Decentralised-si/DSI-Synapse/blob/main/src/router/taxonomy.rs">taxonomy.rs</a> · <a href="https://github.com/Decentralised-si/DSI-Synapse/blob/main/src/router/classify.rs">classify.rs</a> · <a href="https://github.com/Decentralised-si/DSI-Synapse/blob/main/src/router/difficulty.rs">difficulty.rs</a> · <a href="https://github.com/Decentralised-si/DSI-Synapse/blob/main/src/router/planner.rs">planner.rs</a></p>
 </section>
 
 <section id="choose">
@@ -386,7 +386,7 @@ finance.quant.derivatives → finance.quant → finance → general</div>
   <p><b>Soft constraints</b> exclude it unless nothing else qualifies: predicted quality below the floor, over budget, or too slow for the deadline. If every provider fails a soft constraint, the best reachable one answers and the task is marked <code>DEGRADED</code>, with the reason.</p>
   <p>When the ideal provider is unavailable, the explanation says so. For example: <code>quant-local is offline (best match for finance.quant.derivatives); falling back to general-local</code>.</p>
   <p><code>POST /v1/route</code> returns the whole decision without running a model: the task vector, every candidate's components and reasons, the weights, and the timings.</p>
-  <p class="src">Code: <a href="https://github.com/Decentralised-si/Smart-LLM-Router/blob/main/synapse/src/router/scorer.rs">scorer.rs</a> · <a href="https://github.com/Decentralised-si/Smart-LLM-Router/blob/main/synapse/src/api/inspect.rs">api/inspect.rs</a></p>
+  <p class="src">Code: <a href="https://github.com/Decentralised-si/DSI-Synapse/blob/main/src/router/scorer.rs">scorer.rs</a> · <a href="https://github.com/Decentralised-si/DSI-Synapse/blob/main/src/api/inspect.rs">api/inspect.rs</a></p>
 </section>
 
 <section id="privacy">
@@ -427,7 +427,7 @@ Email me at you@example.com and analyse this option position.
     <li>Fits the rest into that provider's context window, truncating long items head-and-tail.</li>
   </ol>
   <p>A cardiology note does not travel with an options question.</p>
-  <p class="src">Code: <a href="https://github.com/Decentralised-si/Smart-LLM-Router/blob/main/synapse/src/context/privacy.rs">privacy.rs</a> · <a href="https://github.com/Decentralised-si/Smart-LLM-Router/blob/main/synapse/src/context/compiler.rs">compiler.rs</a> · <a href="https://github.com/Decentralised-si/Smart-LLM-Router/blob/main/synapse/src/context/memory.rs">memory.rs</a></p>
+  <p class="src">Code: <a href="https://github.com/Decentralised-si/DSI-Synapse/blob/main/src/context/privacy.rs">privacy.rs</a> · <a href="https://github.com/Decentralised-si/DSI-Synapse/blob/main/src/context/compiler.rs">compiler.rs</a> · <a href="https://github.com/Decentralised-si/DSI-Synapse/blob/main/src/context/memory.rs">memory.rs</a></p>
 </section>
 
 <section id="reliability">
@@ -465,7 +465,7 @@ Email me at you@example.com and analyse this option position.
   <p>Health comes from two sources: background probes and real traffic. A refused connection marks a provider offline at once, and offline providers never receive interactive traffic.</p>
   <h3>Cancellation</h3>
   <p><code>DELETE /v1/tasks/:id</code> stops everything: it aborts every provider request, stops escalation, closes the stream and records <code>CANCELLED</code>. Closing the connection does the same, so abandoned work never keeps consuming paid tokens.</p>
-  <p class="src">Code: <a href="https://github.com/Decentralised-si/Smart-LLM-Router/blob/main/synapse/src/streams/manager.rs">streams/manager.rs</a> · <a href="https://github.com/Decentralised-si/Smart-LLM-Router/blob/main/synapse/src/providers/health.rs">providers/health.rs</a> · <a href="https://github.com/Decentralised-si/Smart-LLM-Router/blob/main/synapse/src/streams/cancellation.rs">streams/cancellation.rs</a></p>
+  <p class="src">Code: <a href="https://github.com/Decentralised-si/DSI-Synapse/blob/main/src/streams/manager.rs">streams/manager.rs</a> · <a href="https://github.com/Decentralised-si/DSI-Synapse/blob/main/src/providers/health.rs">providers/health.rs</a> · <a href="https://github.com/Decentralised-si/DSI-Synapse/blob/main/src/streams/cancellation.rs">streams/cancellation.rs</a></p>
 </section>
 
 <section id="escalation">
@@ -490,7 +490,7 @@ Email me at you@example.com and analyse this option position.
   <p>The second opinion is chosen for <b>diversity</b>, not similarity: a different provider, preferably from a different model family, and with a different specialty when the question spans domains. Two copies of the same model agreeing is not evidence.</p>
   <p>When there are two answers, the most credible one is kept (quality × completeness × confidence). Alternatively, they are merged deterministically or by a configured synthesis model.</p>
   <p>The client sees a <code>deepening</code> status, then a new segment, then the result. The <code>maximum</code> mode always takes the R4 step.</p>
-  <p class="src">Code: <a href="https://github.com/Decentralised-si/Smart-LLM-Router/blob/main/synapse/src/router/escalation.rs">escalation.rs</a> · <a href="https://github.com/Decentralised-si/Smart-LLM-Router/blob/main/synapse/src/router/stop.rs">stop.rs</a> · <a href="https://github.com/Decentralised-si/Smart-LLM-Router/blob/main/synapse/src/router/synthesis.rs">synthesis.rs</a></p>
+  <p class="src">Code: <a href="https://github.com/Decentralised-si/DSI-Synapse/blob/main/src/router/escalation.rs">escalation.rs</a> · <a href="https://github.com/Decentralised-si/DSI-Synapse/blob/main/src/router/stop.rs">stop.rs</a> · <a href="https://github.com/Decentralised-si/DSI-Synapse/blob/main/src/router/synthesis.rs">synthesis.rs</a></p>
 </section>
 
 <section id="learning">
@@ -512,7 +512,7 @@ Email me at you@example.com and analyse this option position.
   PRIMARY KEY (provider_id, domain)
 );</pre>
   <p>Each task is also persisted as an inspectable record: classification, plan, attempts, events, timing, cost and state. It never contains the prompt or the privacy mapping. Prompts are not logged unless you switch on <code>logging.log_prompts</code>.</p>
-  <p class="src">Code: <a href="https://github.com/Decentralised-si/Smart-LLM-Router/blob/main/synapse/src/storage/cache.rs">storage/cache.rs</a> · <a href="https://github.com/Decentralised-si/Smart-LLM-Router/blob/main/synapse/src/storage/sqlite.rs">storage/sqlite.rs</a> · <a href="https://github.com/Decentralised-si/Smart-LLM-Router/blob/main/synapse/src/storage/outcomes.rs">storage/outcomes.rs</a></p>
+  <p class="src">Code: <a href="https://github.com/Decentralised-si/DSI-Synapse/blob/main/src/storage/cache.rs">storage/cache.rs</a> · <a href="https://github.com/Decentralised-si/DSI-Synapse/blob/main/src/storage/sqlite.rs">storage/sqlite.rs</a> · <a href="https://github.com/Decentralised-si/DSI-Synapse/blob/main/src/storage/outcomes.rs">storage/outcomes.rs</a></p>
 </section>
 
 <section id="gateway">
@@ -526,7 +526,7 @@ Email me at you@example.com and analyse this option position.
     <div class="card"><h3 style="margin-top:0">Open provider network</h3><p class="muted">Anyone can run <code>dsi-node</code> next to an open-weight model (<a href="/node">set one up with Docker</a>; see it on the <a href="/network">live map</a>). The router probes it, signs its traffic and checks it with canaries. Operators earn PAI for verified work.</p></div>
   </div>
   <p>The two fit together naturally. Axon speaks the OpenAI-compatible API, so Synapse can use it as one more provider, next to your local models and your own keys. Synapse then decides when Axon is the right expert, and your memory and privacy mapping stay on your machine.</p>
-  <p class="src">Code: <a href="https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/apps/gateway">apps/gateway</a> · <a href="https://github.com/Decentralised-si/Smart-LLM-Router/blob/main/packages/core/src/router.ts">packages/core/src/router.ts</a> · <a href="https://github.com/Decentralised-si/Smart-LLM-Router/blob/main/packages/core/src/continuity.ts">continuity.ts</a> · <a href="https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/packages/node">packages/node</a> · <a href="https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/packages/harness">packages/harness</a> · <a href="/whitepaper">whitepaper</a></p>
+  <p class="src">Code: <a href="https://github.com/Decentralised-si/DSI-AXON/tree/main/apps/gateway">apps/gateway</a> · <a href="https://github.com/Decentralised-si/DSI-AXON/blob/main/packages/core/src/router.ts">packages/core/src/router.ts</a> · <a href="https://github.com/Decentralised-si/DSI-AXON/blob/main/packages/core/src/continuity.ts">continuity.ts</a> · <a href="https://github.com/Decentralised-si/DSI-AXON/tree/main/packages/node">packages/node</a> · <a href="https://github.com/Decentralised-si/DSI-AXON/tree/main/packages/harness">packages/harness</a> · <a href="/whitepaper">whitepaper</a></p>
 </section>
 
 <section id="performance">
@@ -558,14 +558,14 @@ Email me at you@example.com and analyse this option position.
   <div class="tbl"><table>
     <thead><tr><th>Component</th><th>Where</th><th>Status</th></tr></thead>
     <tbody>
-      <tr><td>DSI Synapse, the local router (Rust)</td><td><a href="https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/synapse"><code>synapse/</code></a></td><td><span class="pill impl">preview</span> tested; <a href="/download">binaries for macOS, Linux, Windows</a></td></tr>
-      <tr><td>DSI Axon, the hosted blind router: APIs, limits, billing</td><td><a href="https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/apps/gateway"><code>apps/gateway</code></a>, <code>packages/core</code></td><td><span class="pill live">live</span></td></tr>
+      <tr><td>DSI Synapse, the local router (Rust)</td><td><a href="https://github.com/Decentralised-si/DSI-Synapse"><code>DSI-Synapse</code></a></td><td><span class="pill impl">preview</span> tested; <a href="/download">binaries for macOS, Linux, Windows</a></td></tr>
+      <tr><td>DSI Axon, the hosted blind router: APIs, limits, billing</td><td><a href="https://github.com/Decentralised-si/DSI-AXON/tree/main/apps/gateway"><code>apps/gateway</code></a>, <code>packages/core</code></td><td><span class="pill live">live</span></td></tr>
       <tr><td>Chat app, console, wallet</td><td><a href="https://github.com/Decentralised-si/web"><code>web</code></a></td><td><span class="pill live">live</span></td></tr>
-      <tr><td>dsi harness (local memory, MCP server)</td><td><a href="https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/packages/harness"><code>packages/harness</code></a></td><td><span class="pill impl">implemented</span> <a href="/dl/dsi.mjs">download</a></td></tr>
+      <tr><td>dsi harness (local memory, MCP server)</td><td><a href="https://github.com/Decentralised-si/DSI-AXON/tree/main/packages/harness"><code>packages/harness</code></a></td><td><span class="pill impl">implemented</span> <a href="/dl/dsi.mjs">download</a></td></tr>
       <tr><td>Live network map (by city)</td><td><a href="/network"><code>/network</code></a>, <code>/api/network/map</code></td><td><span class="pill live">live</span></td></tr>
-      <tr><td>dsi-node provider agent</td><td><a href="https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/packages/node"><code>packages/node</code></a></td><td><span class="pill impl">implemented</span> <a href="/dl/dsi-node.mjs">download</a></td></tr>
+      <tr><td>dsi-node provider agent</td><td><a href="https://github.com/Decentralised-si/DSI-AXON/tree/main/packages/node"><code>packages/node</code></a></td><td><span class="pill impl">implemented</span> <a href="/dl/dsi-node.mjs">download</a></td></tr>
       <tr><td>PAI ledger</td><td><code>packages/pai</code></td><td><span class="pill impl">off-chain</span></td></tr>
-      <tr><td>PAI contract</td><td><a href="https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/contracts"><code>contracts/</code></a></td><td><span class="pill iface">reference, unaudited, not deployed</span></td></tr>
+      <tr><td>PAI contract</td><td><a href="https://github.com/Decentralised-si/DSI-AXON/tree/main/contracts"><code>contracts/</code></a></td><td><span class="pill iface">reference, unaudited, not deployed</span></td></tr>
       <tr><td>R3 tools / retrieval, R5 verifier</td><td><code>synapse/src/future.rs</code></td><td><span class="pill iface">interfaces</span></td></tr>
       <tr><td>Global discovery, shared reputation, settlement, TEE nodes</td><td>—</td><td><span class="pill road">roadmap</span></td></tr>
     </tbody>
@@ -580,8 +580,8 @@ Email me at you@example.com and analyse this option position.
 irm https://decentralised.si/install/synapse.ps1 | iex          <span class="c"># Windows PowerShell</span>
 synapse</pre>
   <p>Or build from source with a Rust toolchain (Docker works too). The default configuration uses three simulated experts, so no GPU or API key is required to see routing work.</p>
-<pre>git clone https://github.com/Decentralised-si/Smart-LLM-Router
-cd Smart-LLM-Router/synapse
+<pre>git clone https://github.com/Decentralised-si/DSI-Synapse
+cd DSI-Synapse
 cargo run --release                       <span class="c"># listens on 127.0.0.1:7766</span>
 
 curl -N localhost:7766/v1/ask -H 'Content-Type: application/json' \
@@ -604,10 +604,11 @@ cargo run --release --bin benchmark       <span class="c"># overhead, TTFI, cost
     expected_quality: 0.95</pre>
   <p>The daemon binds to <code>127.0.0.1</code> and refuses any other address unless an API token is set. Provider keys are read from environment variables named in the config, never written into it.</p>
   <div class="repos">
-    <a class="card repo" href="https://github.com/Decentralised-si/Smart-LLM-Router"><h4><svg class="gh"><use href="#gh"/></svg> Decentralised-si/Smart-LLM-Router</h4><p>DSI Synapse (Rust), DSI Axon (TypeScript), dsi-node, the dsi harness, the PAI ledger and contract, and the whitepaper.</p><code>synapse/ · apps/gateway · packages/* · contracts/</code></a>
+    <a class="card repo" href="https://github.com/Decentralised-si/DSI-Synapse"><h4><svg class="gh"><use href="#gh"/></svg> Decentralised-si/DSI-Synapse</h4><p>DSI Synapse, the router on your device (Rust): tests, benchmark, Docker image and release builds.</p><code>src/ · tests/ · config/</code></a>
+    <a class="card repo" href="https://github.com/Decentralised-si/DSI-AXON"><h4><svg class="gh"><use href="#gh"/></svg> Decentralised-si/DSI-AXON</h4><p>DSI Axon, the blind router (TypeScript), dsi-node, the dsi harness, the PAI ledger and contract, and the whitepaper.</p><code>apps/gateway · packages/* · contracts/</code></a>
     <a class="card repo" href="https://github.com/Decentralised-si/web"><h4><svg class="gh"><use href="#gh"/></svg> Decentralised-si/web</h4><p>This website, the chat app, the console and the wallet (React + Privy on Cloudflare).</p><code>public/ · app/ · src/</code></a>
   </div>
-  <p>Issues and pull requests are welcome in both repositories. Good first areas are a learned difficulty estimator, a local embedding classifier, new provider adapters, and the R3 and R5 rungs.</p>
+  <p>Issues and pull requests are welcome in all three repositories. Good first areas are a learned difficulty estimator, a local embedding classifier, new provider adapters, and the R3 and R5 rungs.</p>
 </section>
 
   </article>
@@ -626,7 +627,7 @@ cargo run --release --bin benchmark       <span class="c"># overhead, TTFI, cost
       <a href="/ai">Network</a>
       <a href="/whitepaper">Whitepaper</a>
       <a href="/app#/console/docs">API docs</a>
-      <a href="https://github.com/Decentralised-si/Smart-LLM-Router">GitHub · router</a>
+      <a href="https://github.com/Decentralised-si/DSI-AXON">GitHub · router</a>
       <a href="https://github.com/Decentralised-si/web">GitHub · web</a>
       <a href="https://research.innovation.net/atlas/sphere/" target="_blank" rel="noopener">How did we get here</a>
       <a href="/privacy">Privacy</a>

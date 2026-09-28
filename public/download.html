@@ -126,7 +126,7 @@ footer a{color:var(--muted)}
       <div class="cmd"><code id="det-cmd">curl -fsSL https://decentralised.si/install/synapse.sh | sh</code><button type="button" data-copy="det-cmd">Copy</button></div>
       <p class="muted" style="font-size:14px;margin:8px 0 0">The installer:</p>
       <ul class="muted" style="font-size:14px;margin:4px 0 0">
-        <li>downloads the build for your system from <a href="https://github.com/Decentralised-si/Smart-LLM-Router/releases/latest">GitHub Releases</a>;</li>
+        <li>downloads the build for your system from <a href="https://github.com/Decentralised-si/DSI-Synapse/releases/latest">GitHub Releases</a>;</li>
         <li>verifies its SHA-256 checksum;</li>
         <li>installs it without administrator rights;</li>
         <li>creates starter config files.</li>
@@ -167,15 +167,15 @@ footer a{color:var(--muted)}
 
 <section id="manual">
   <h2>Direct downloads</h2>
-  <p class="muted">Each archive contains the <code>synapse</code> binary, the README and example configs. Checksums are in <a href="https://github.com/Decentralised-si/Smart-LLM-Router/releases/latest/download/SHA256SUMS">SHA256SUMS</a>.</p>
+  <p class="muted">Each archive contains the <code>synapse</code> binary, the README and example configs. Checksums are in <a href="https://github.com/Decentralised-si/DSI-Synapse/releases/latest/download/SHA256SUMS">SHA256SUMS</a>.</p>
   <div class="plat" id="plat">
-    <a data-t="aarch64-apple-darwin" href="https://github.com/Decentralised-si/Smart-LLM-Router/releases/latest/download/synapse-aarch64-apple-darwin.tar.gz"><b>macOS · Apple silicon</b><span>synapse-aarch64-apple-darwin.tar.gz</span></a>
-    <a data-t="x86_64-apple-darwin" href="https://github.com/Decentralised-si/Smart-LLM-Router/releases/latest/download/synapse-x86_64-apple-darwin.tar.gz"><b>macOS · Intel</b><span>synapse-x86_64-apple-darwin.tar.gz</span></a>
-    <a data-t="x86_64-unknown-linux-musl" href="https://github.com/Decentralised-si/Smart-LLM-Router/releases/latest/download/synapse-x86_64-unknown-linux-musl.tar.gz"><b>Linux · x86_64</b><span>synapse-x86_64-unknown-linux-musl.tar.gz</span></a>
-    <a data-t="aarch64-unknown-linux-musl" href="https://github.com/Decentralised-si/Smart-LLM-Router/releases/latest/download/synapse-aarch64-unknown-linux-musl.tar.gz"><b>Linux · arm64</b><span>synapse-aarch64-unknown-linux-musl.tar.gz</span></a>
-    <a data-t="x86_64-pc-windows-msvc" href="https://github.com/Decentralised-si/Smart-LLM-Router/releases/latest/download/synapse-x86_64-pc-windows-msvc.zip"><b>Windows · x64</b><span>synapse-x86_64-pc-windows-msvc.zip</span></a>
+    <a data-t="aarch64-apple-darwin" href="https://github.com/Decentralised-si/DSI-Synapse/releases/latest/download/synapse-aarch64-apple-darwin.tar.gz"><b>macOS · Apple silicon</b><span>synapse-aarch64-apple-darwin.tar.gz</span></a>
+    <a data-t="x86_64-apple-darwin" href="https://github.com/Decentralised-si/DSI-Synapse/releases/latest/download/synapse-x86_64-apple-darwin.tar.gz"><b>macOS · Intel</b><span>synapse-x86_64-apple-darwin.tar.gz</span></a>
+    <a data-t="x86_64-unknown-linux-musl" href="https://github.com/Decentralised-si/DSI-Synapse/releases/latest/download/synapse-x86_64-unknown-linux-musl.tar.gz"><b>Linux · x86_64</b><span>synapse-x86_64-unknown-linux-musl.tar.gz</span></a>
+    <a data-t="aarch64-unknown-linux-musl" href="https://github.com/Decentralised-si/DSI-Synapse/releases/latest/download/synapse-aarch64-unknown-linux-musl.tar.gz"><b>Linux · arm64</b><span>synapse-aarch64-unknown-linux-musl.tar.gz</span></a>
+    <a data-t="x86_64-pc-windows-msvc" href="https://github.com/Decentralised-si/DSI-Synapse/releases/latest/download/synapse-x86_64-pc-windows-msvc.zip"><b>Windows · x64</b><span>synapse-x86_64-pc-windows-msvc.zip</span></a>
   </div>
-  <p class="note" id="mac-blocked"><b>macOS says “synapse” Not Opened (“Apple could not verify…”)?</b> macOS blocks programs downloaded with a browser until they are notarized by Apple, which our macOS builds are not yet. Use the one-line installer above, which is not affected. Or check the download against <a href="https://github.com/Decentralised-si/Smart-LLM-Router/releases/latest/download/SHA256SUMS">SHA256SUMS</a> and clear the browser's download flag: <code>xattr -dr com.apple.quarantine ~/Downloads/synapse-aarch64-apple-darwin</code> (Intel Macs: <code>synapse-x86_64-apple-darwin</code>).</p>
+  <p class="note" id="mac-blocked"><b>macOS says “synapse” Not Opened (“Apple could not verify…”)?</b> macOS blocks programs downloaded with a browser until they are notarized by Apple, which our macOS builds are not yet. Use the one-line installer above, which is not affected. Or check the download against <a href="https://github.com/Decentralised-si/DSI-Synapse/releases/latest/download/SHA256SUMS">SHA256SUMS</a> and clear the browser's download flag: <code>xattr -dr com.apple.quarantine ~/Downloads/synapse-aarch64-apple-darwin</code> (Intel Macs: <code>synapse-x86_64-apple-darwin</code>).</p>
   <div class="grid2">
     <div>
       <h3>macOS / Linux, by hand</h3>
@@ -199,7 +199,7 @@ move .\synapse-x86_64-pc-windows-msvc\synapse.exe $env:LOCALAPPDATA\synapse\
 <pre>shasum -a 256 synapse-aarch64-apple-darwin.tar.gz        <span class="c"># macOS</span>
 sha256sum synapse-x86_64-unknown-linux-musl.tar.gz      <span class="c"># Linux</span>
 Get-FileHash synapse-x86_64-pc-windows-msvc.zip         <span class="c"># Windows PowerShell</span></pre>
-  <p class="muted">Compare the output with the matching line in <code>SHA256SUMS</code>. Every release is built from the public source by <a href="https://github.com/Decentralised-si/Smart-LLM-Router/blob/main/.github/workflows/synapse-release.yml">this GitHub Actions workflow</a>, and all releases are listed on the <a href="https://github.com/Decentralised-si/Smart-LLM-Router/releases">releases page</a>.</p>
+  <p class="muted">Compare the output with the matching line in <code>SHA256SUMS</code>. Every release is built from the public source by <a href="https://github.com/Decentralised-si/DSI-Synapse/blob/main/.github/workflows/release.yml">this GitHub Actions workflow</a>, and all releases are listed on the <a href="https://github.com/Decentralised-si/DSI-Synapse/releases">releases page</a>.</p>
 </section>
 
 <section id="first-run">
@@ -251,7 +251,7 @@ Get-FileHash synapse-x86_64-pc-windows-msvc.zip         <span class="c"># Window
     </div>
   </div>
   <h3>Specialist nodes from the network</h3>
-  <p class="muted" style="font-size:14.5px">Add this to <code>~/.synapse/router.yaml</code> and set <code>DSI_API_KEY</code>. Synapse then reads the network's public directory every 30 seconds and adds each specialist node as a provider, with its declared expertise, such as the <a href="https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/nodes/expert">law and accounting nodes</a>. The routing decision is still made on your machine.</p>
+  <p class="muted" style="font-size:14.5px">Add this to <code>~/.synapse/router.yaml</code> and set <code>DSI_API_KEY</code>. Synapse then reads the network's public directory every 30 seconds and adds each specialist node as a provider, with its declared expertise, such as the <a href="https://github.com/Decentralised-si/DSI-AXON/tree/main/nodes/expert">law and accounting nodes</a>. The routing decision is still made on your machine.</p>
 <pre>discovery:
   network:
     gateway: https://api.decentralised.si
@@ -338,14 +338,14 @@ Remove-Item -Recurse $env:LOCALAPPDATA\synapse, $HOME\.synapse</pre>
     </div>
     <div>
       <h3>Build from source or use Docker</h3>
-<pre>git clone https://github.com/Decentralised-si/Smart-LLM-Router
-cd Smart-LLM-Router/synapse
+<pre>git clone https://github.com/Decentralised-si/DSI-Synapse
+cd DSI-Synapse
 cargo run --release
 
 docker build -f docker/Dockerfile -t synapse .</pre>
     </div>
   </div>
-  <p class="note"><b>Preview release.</b> Synapse is new: it has passed 36 automated tests and the acceptance demos, but it has not had wide use yet. Binaries are not code-signed. Please report problems on <a href="https://github.com/Decentralised-si/Smart-LLM-Router/issues">GitHub Issues</a>.</p>
+  <p class="note"><b>Preview release.</b> Synapse is new: it has passed 36 automated tests and the acceptance demos, but it has not had wide use yet. Binaries are not code-signed. Please report problems on <a href="https://github.com/Decentralised-si/DSI-Synapse/issues">GitHub Issues</a>.</p>
 </section>
 
 </main>
@@ -363,7 +363,7 @@ docker build -f docker/Dockerfile -t synapse .</pre>
       <a href="/ai">Network</a>
       <a href="/whitepaper">Whitepaper</a>
       <a href="/app#/console/docs">API docs</a>
-      <a href="https://github.com/Decentralised-si/Smart-LLM-Router">GitHub · router</a>
+      <a href="https://github.com/Decentralised-si/DSI-AXON">GitHub · router</a>
       <a href="https://github.com/Decentralised-si/web">GitHub · web</a>
       <a href="https://research.innovation.net/atlas/sphere/" target="_blank" rel="noopener">How did we get here</a>
       <a href="/privacy">Privacy</a>

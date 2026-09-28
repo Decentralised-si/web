@@ -2,7 +2,7 @@
 
 Landing page, migration guide and customer dashboard for [Decentralised.si](https://decentralised.si), the routing layer between applications and intelligence.
 
-Static site served by Cloudflare Workers static assets on `decentralised.si`. The dashboard talks to the Smart LLM Router API at `https://api.decentralised.si` (see the `Decentralised-si/Smart-LLM-Router` repo).
+Static site served by Cloudflare Workers static assets on `decentralised.si`. The dashboard talks to the DSI Axon API at `https://api.decentralised.si` (see the [`Decentralised-si/DSI-AXON`](https://github.com/Decentralised-si/DSI-AXON) repo; the router for your device is [`Decentralised-si/DSI-Synapse`](https://github.com/Decentralised-si/DSI-Synapse)).
 
 | Path | Content |
 |---|---|

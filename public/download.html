@@ -118,7 +118,7 @@ footer a{color:var(--muted)}
       <span class="tag" id="det-tag">Your platform</span>
       <h2 id="det-name" style="margin-bottom:4px">macOS, Linux or Windows</h2>
       <p class="muted" id="det-hint">Run this in a terminal:</p>
-      <div class="cmd"><code id="det-cmd">curl -fsSL https://decentralise.si/install/synapse.sh | sh</code><button type="button" data-copy="det-cmd">Copy</button></div>
+      <div class="cmd"><code id="det-cmd">curl -fsSL https://decentralised.si/install/synapse.sh | sh</code><button type="button" data-copy="det-cmd">Copy</button></div>
       <p class="muted" style="font-size:14px;margin:8px 0 0">The installer:</p>
       <ul class="muted" style="font-size:14px;margin:4px 0 0">
         <li>downloads the build for your system from <a href="https://github.com/Decentralised-si/Smart-LLM-Router/releases/latest">GitHub Releases</a>;</li>
@@ -143,18 +143,18 @@ footer a{color:var(--muted)}
 
   <div data-pane="mac">
     <p>Open <b>Terminal</b> (Applications → Utilities) and run:</p>
-    <div class="cmd"><code id="c-mac">curl -fsSL https://decentralise.si/install/synapse.sh | sh</code><button type="button" data-copy="c-mac">Copy</button></div>
+    <div class="cmd"><code id="c-mac">curl -fsSL https://decentralised.si/install/synapse.sh | sh</code><button type="button" data-copy="c-mac">Copy</button></div>
     <p class="muted">This works on Apple silicon (M1–M4) and Intel Macs; the right build is picked automatically. It installs to <code>~/.local/bin/synapse</code>. If that folder isn't on your PATH yet, the installer prints the one line to add it.</p>
     <p class="muted">You can also use <code>SYNAPSE_INSTALL_DIR=/usr/local/bin</code> for a system-wide install (that may ask for your password), or <code>SYNAPSE_VERSION=synapse-v0.1.1</code> to pin a version.</p>
   </div>
   <div data-pane="linux" hidden>
     <p>In a terminal:</p>
-    <div class="cmd"><code id="c-linux">curl -fsSL https://decentralise.si/install/synapse.sh | sh</code><button type="button" data-copy="c-linux">Copy</button></div>
-    <p class="muted">These are static binaries for x86_64 and arm64 (Raspberry Pi 4/5 with a 64-bit OS, Graviton, Ampere), so any distribution works with no dependencies. No <code>curl</code>? The installer also works with <code>wget -qO- https://decentralise.si/install/synapse.sh | sh</code>.</p>
+    <div class="cmd"><code id="c-linux">curl -fsSL https://decentralised.si/install/synapse.sh | sh</code><button type="button" data-copy="c-linux">Copy</button></div>
+    <p class="muted">These are static binaries for x86_64 and arm64 (Raspberry Pi 4/5 with a 64-bit OS, Graviton, Ampere), so any distribution works with no dependencies. No <code>curl</code>? The installer also works with <code>wget -qO- https://decentralised.si/install/synapse.sh | sh</code>.</p>
   </div>
   <div data-pane="win" hidden>
     <p>Open <b>PowerShell</b> (Start → type “PowerShell”) and run:</p>
-    <div class="cmd"><code id="c-win">irm https://decentralise.si/install/synapse.ps1 | iex</code><button type="button" data-copy="c-win">Copy</button></div>
+    <div class="cmd"><code id="c-win">irm https://decentralised.si/install/synapse.ps1 | iex</code><button type="button" data-copy="c-win">Copy</button></div>
     <p class="muted">It installs to <code>%LOCALAPPDATA%\synapse\synapse.exe</code> and adds that folder to your user PATH, with no administrator rights needed. Open a new terminal afterwards. On Windows on ARM, the x64 build runs under emulation.</p>
   </div>
   <p class="note ok">Prefer to read before you run? The scripts are short and commented: <a href="/install/synapse.sh">synapse.sh</a> · <a href="/install/synapse.ps1">synapse.ps1</a>.</p>
@@ -235,7 +235,7 @@ Get-FileHash synapse-x86_64-pc-windows-msvc.zip         <span class="c"># Window
       <p class="muted" style="font-size:14.5px">Works with llama.cpp, vLLM, LM Studio, hosted APIs, or the Decentralised.si gateway. The key comes from an environment variable and is never written into the file.</p>
 <pre>  - id: dsi-gateway
     adapter: openai
-    endpoint: https://api.decentralise.si/openai/v1
+    endpoint: https://api.decentralised.si/openai/v1
     model: auto
     api_key_env: DSI_API_KEY
     local: false
@@ -248,7 +248,7 @@ Get-FileHash synapse-x86_64-pc-windows-msvc.zip         <span class="c"># Window
   <p class="muted" style="font-size:14.5px">Add this to <code>~/.synapse/router.yaml</code> and set <code>DSI_API_KEY</code>. Synapse then reads the network's public directory every 30 seconds and adds each specialist node as a provider, with its declared expertise, such as the <a href="https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/nodes/expert">law and accounting nodes</a>. The routing decision is still made on your machine.</p>
 <pre>discovery:
   network:
-    gateway: https://api.decentralise.si
+    gateway: https://api.decentralised.si
     api_key_env: DSI_API_KEY
 hedging:
   skip_modes: [deep]      # quality-first: wait for the specialist</pre>
@@ -389,7 +389,7 @@ docker build -f docker/Dockerfile -t synapse .</pre>
     tag.textContent = "Detected: Windows";
     name.textContent = "Windows (x64)";
     hint.textContent = "Run this in PowerShell:";
-    cmd.textContent = "irm https://decentralise.si/install/synapse.ps1 | iex";
+    cmd.textContent = "irm https://decentralised.si/install/synapse.ps1 | iex";
     pick("x86_64-pc-windows-msvc");
   } else if (os === "linux") {
     setTab("linux");

@@ -684,9 +684,9 @@ function levels() {
   return out;
 }
 async function node(publicUrl) {
-  if (!env.DSI_API_KEY) throw new Error("DSI_API_KEY is required (create one at https://decentralise.si/app/#/console/keys)");
+  if (!env.DSI_API_KEY) throw new Error("DSI_API_KEY is required (create one at https://decentralised.si/app/#/console/keys)");
   return new ProviderNode({
-    router: env.DSI_ROUTER ?? "https://api.decentralise.si",
+    router: env.DSI_ROUTER ?? "https://api.decentralised.si",
     apiKey: env.DSI_API_KEY,
     llmBaseUrl: env.LLM_BASE_URL ?? "http://localhost:11434/v1",
     llmApiKey: env.LLM_API_KEY,

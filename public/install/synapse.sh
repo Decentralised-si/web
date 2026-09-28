@@ -1,6 +1,6 @@
 #!/bin/sh
 # Installs Synapse, the Decentralised.si local router, on macOS or Linux.
-#   curl -fsSL https://decentralise.si/install/synapse.sh | sh
+#   curl -fsSL https://decentralised.si/install/synapse.sh | sh
 # Options (environment variables):
 #   SYNAPSE_VERSION=synapse-v0.1.1     install a specific release (default: latest)
 #   SYNAPSE_INSTALL_DIR=/usr/local/bin   install location (default: ~/.local/bin)
@@ -20,7 +20,7 @@ arch=$(uname -m)
 case "$os" in
   Darwin) os_part="apple-darwin" ;;
   Linux) os_part="unknown-linux-musl" ;;
-  *) fail "unsupported OS '$os'. On Windows run in PowerShell: irm https://decentralise.si/install/synapse.ps1 | iex" ;;
+  *) fail "unsupported OS '$os'. On Windows run in PowerShell: irm https://decentralised.si/install/synapse.ps1 | iex" ;;
 esac
 case "$arch" in
   x86_64 | amd64) arch_part="x86_64" ;;
@@ -87,4 +87,4 @@ case ":$PATH:" in
 esac
 say ""
 say "Chat and watch routing live:  run 'synapse', then open http://127.0.0.1:7766/"
-say "Guide: https://decentralise.si/download#first-run"
+say "Guide: https://decentralised.si/download#first-run"

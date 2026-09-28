@@ -1,5 +1,5 @@
 # Installs Synapse, the Decentralised.si local router, on Windows.
-#   irm https://decentralise.si/install/synapse.ps1 | iex
+#   irm https://decentralised.si/install/synapse.ps1 | iex
 # Options (environment variables): SYNAPSE_VERSION (default latest), SYNAPSE_INSTALL_DIR
 # (default %LOCALAPPDATA%\synapse), SYNAPSE_NO_INIT=1 to skip creating %USERPROFILE%\.synapse config files.
 # Source: https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/synapse
@@ -50,4 +50,4 @@ if (-not ($userPath -split ';' | Where-Object { $_ -eq $dir })) {
 if ($env:SYNAPSE_NO_INIT -ne '1') { & $exe init }
 Write-Host ''
 Write-Host "Chat and watch routing live:  run 'synapse', then open http://127.0.0.1:7766/"
-Write-Host "Guide: https://decentralise.si/download#first-run"
+Write-Host "Guide: https://decentralised.si/download#first-run"

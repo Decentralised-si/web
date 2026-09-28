@@ -1,7 +1,7 @@
 # Run an open-source model at home and serve it to the Decentralised.si network.
-# Full guide (hardware → model, macOS, GPUs): https://decentralise.si/node
+# Full guide (hardware → model, macOS, GPUs): https://decentralised.si/node
 #
-#   curl -fsSLO https://decentralise.si/dl/docker-compose.yml
+#   curl -fsSLO https://decentralised.si/dl/docker-compose.yml
 #   DSI_API_KEY=ds_live_... DSI_MODEL=qwen2.5:7b docker compose up -d
 #
 # NVIDIA GPU: also download docker-compose.gpu.yml and add  -f docker-compose.yml -f docker-compose.gpu.yml
@@ -44,11 +44,11 @@ services:
 
   dsi-node:
     image: node:22-alpine
-    command: sh -c "wget -qO /app/dsi-node.mjs https://decentralise.si/dl/dsi-node.mjs && node /app/dsi-node.mjs up"
+    command: sh -c "wget -qO /app/dsi-node.mjs https://decentralised.si/dl/dsi-node.mjs && node /app/dsi-node.mjs up"
     working_dir: /app
     environment:
-      DSI_API_KEY: ${DSI_API_KEY:?set DSI_API_KEY to your ds_ key from https://decentralise.si/app/#/console/keys}
-      DSI_ROUTER: ${DSI_ROUTER:-https://api.decentralise.si}
+      DSI_API_KEY: ${DSI_API_KEY:?set DSI_API_KEY to your ds_ key from https://decentralised.si/app/#/console/keys}
+      DSI_ROUTER: ${DSI_ROUTER:-https://api.decentralised.si}
       LLM_BASE_URL: ${LLM_BASE_URL:-http://ollama:11434/v1}
       DSI_MODELS: ${DSI_MODEL:-qwen2.5:7b}
       CLOUDFLARED_METRICS: http://cloudflared:2000

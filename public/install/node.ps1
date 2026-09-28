@@ -1,7 +1,7 @@
 # Decentralised.si: turn this Windows computer into a network node, and unlock free network chat.
 #
-#   irm https://decentralise.si/install/node.ps1 | iex
-#   & ([scriptblock]::Create((irm https://decentralise.si/install/node.ps1))) -Uninstall
+#   irm https://decentralised.si/install/node.ps1 | iex
+#   & ([scriptblock]::Create((irm https://decentralised.si/install/node.ps1))) -Uninstall
 #
 # 1. asks for your API key (create one at https://decentralised.si/app/#/console/keys)
 # 2. picks an open model that fits this computer's memory and installs it with Ollama
@@ -12,7 +12,7 @@ param([switch]$Uninstall)
 $ErrorActionPreference = "Stop"
 $ProgressPreference = "SilentlyContinue"
 
-$Base = if ($env:DSI_BASE_URL) { $env:DSI_BASE_URL } else { "https://decentralise.si" }
+$Base = if ($env:DSI_BASE_URL) { $env:DSI_BASE_URL } else { "https://decentralised.si" }
 $Home_ = Join-Path $env:LOCALAPPDATA "dsi"
 $Bin = Join-Path $Home_ "bin"
 $Port = if ($env:PORT) { $env:PORT } else { "8787" }
@@ -114,7 +114,7 @@ $expected = ((Invoke-WebRequest "$Base/dl/SHA256SUMS" -UseBasicParsing).Content 
 if ((Sha256 $Mjs) -ne $expected) { Die "dsi-node.mjs failed its checksum" }
 
 # ---------------------------------------------------------------- settings + launcher
-$router = if ($env:DSI_ROUTER) { $env:DSI_ROUTER } else { "https://api.decentralise.si" }
+$router = if ($env:DSI_ROUTER) { $env:DSI_ROUTER } else { "https://api.decentralised.si" }
 $pause = if ($env:DSI_PAUSE_ON_BATTERY) { $env:DSI_PAUSE_ON_BATTERY } else { "1" }
 @"
 DSI_API_KEY=$Key

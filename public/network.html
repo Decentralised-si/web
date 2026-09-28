@@ -187,7 +187,7 @@ footer a{color:var(--muted)}
     <b>Locations</b> are city-level: they come from Cloudflare's geolocation of each node's IP, rounded to about 10 km. Operators can opt out, and those nodes count only as "location hidden". Node names, addresses and operators are never shown.
     <b>Requests and tokens</b> are what nodes served through the router in the last 60 minutes; requests per minute uses the last complete minute.
     <b>Projected PAI</b> is today's provider reward pool (70% of the daily emission) shared by each city's portion of today's verified work so far. It is final only when the day's epoch is settled. PAI is currently an off-chain ledger, and no token has been issued.
-    Data: <a href="https://api.decentralise.si/api/network/map">/api/network/map</a> (public JSON) · source on <a href="https://github.com/Decentralised-si/Smart-LLM-Router/blob/main/apps/gateway/src/network-api.ts">GitHub</a>.
+    Data: <a href="https://api.decentralised.si/api/network/map">/api/network/map</a> (public JSON) · source on <a href="https://github.com/Decentralised-si/Smart-LLM-Router/blob/main/apps/gateway/src/network-api.ts">GitHub</a>.
   </p>
 </main>
 
@@ -207,7 +207,7 @@ footer a{color:var(--muted)}
 (() => {
   const host = location.hostname.replace(/^www\./, "");
   const override = /^(localhost|127\.0\.0\.1)$/.test(host) && new URLSearchParams(location.search).get("api");
-  const API = override || (["decentralise.si", "decentralised.si", "decentralised.ai", "decentralise.ai"].includes(host) ? `https://api.${host}` : "https://api.decentralise.si");
+  const API = override || (["decentralise.si", "decentralised.si", "decentralised.ai", "decentralise.ai"].includes(host) ? `https://api.${host}` : "https://api.decentralised.si");
   const $ = (id) => document.getElementById(id);
   const nf = new Intl.NumberFormat("en", { maximumFractionDigits: 1 });
   const compact = new Intl.NumberFormat("en", { notation: "compact", maximumFractionDigits: 1 });

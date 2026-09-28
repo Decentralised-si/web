@@ -1,8 +1,8 @@
 #!/bin/sh
 # Decentralised.si: turn this computer into a network node, and unlock free network chat.
 #
-#   curl -fsSL https://decentralise.si/install/node.sh | sh
-#   curl -fsSL https://decentralise.si/install/node.sh | sh -s -- --uninstall
+#   curl -fsSL https://decentralised.si/install/node.sh | sh
+#   curl -fsSL https://decentralised.si/install/node.sh | sh -s -- --uninstall
 #
 # What it does (macOS and Linux):
 #   1. asks for your API key (create one at https://decentralised.si/app/#/console/keys)
@@ -16,7 +16,7 @@
 # Settings: DSI_API_KEY, DSI_MODEL (e.g. qwen2.5:7b), DSI_HOME, DSI_NO_SERVICE=1, DSI_BASE_URL.
 set -eu
 
-BASE="${DSI_BASE_URL:-https://decentralise.si}"
+BASE="${DSI_BASE_URL:-https://decentralised.si}"
 DSI_HOME="${DSI_HOME:-$HOME/.dsi}"
 PORT="${PORT:-8787}"
 OS=$(uname -s)
@@ -150,7 +150,7 @@ rm -f "$DSI_HOME/SHA256SUMS"
 umask 077
 cat >"$DSI_HOME/node.env" <<EOF
 DSI_API_KEY=$KEY
-DSI_ROUTER=${DSI_ROUTER:-https://api.decentralise.si}
+DSI_ROUTER=${DSI_ROUTER:-https://api.decentralised.si}
 DSI_MODELS=$MODEL
 NODE_NAME=laptop-$(hostname | cut -d. -f1)
 PORT=$PORT

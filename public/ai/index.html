@@ -356,7 +356,7 @@ claude mcp add dsi -- dsi mcp   <span class="c"># same memory in Claude Code</sp
 
 <footer>
   <div class="wrap">
-    <div><b style="color:var(--ink)">Decentralised<span style="color:var(--accent)">.ai</span></b> · the open network behind <a href="https://decentralise.si/">Decentralised.si</a></div>
+    <div><b style="color:var(--ink)">Decentralised<span style="color:var(--accent)">.ai</span></b> · the open network behind <a href="https://decentralised.si/">Decentralised.si</a></div>
     <div class="links">
       <a href="/whitepaper">Whitepaper</a>
       <a href="/app/#/console/docs">Docs</a>
@@ -375,7 +375,7 @@ claude mcp add dsi -- dsi mcp   <span class="c"># same memory in Claude Code</sp
   const h = location.hostname.replace(/^www\./, "");
   const known = ["decentralised.ai", "decentralise.ai", "decentralised.si", "decentralise.si"];
   const host = known.includes(h) ? h : "decentralised.ai";
-  const apiHost = known.includes(h) ? "api." + h : "api.decentralise.si";
+  const apiHost = known.includes(h) ? "api." + h : "api.decentralised.si";
   document.querySelectorAll(".api").forEach((e) => (e.textContent = "api." + host));
   document.querySelectorAll(".host").forEach((e) => (e.textContent = host));
 
@@ -390,7 +390,7 @@ claude mcp add dsi -- dsi mcp   <span class="c"># same memory in Claude Code</sp
   const fmt = (n) => n >= 1e6 ? (n / 1e6).toFixed(2) + "M" : n >= 1e3 ? Math.round(n / 1e3) + "k" : String(Math.round(n));
   const set = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
   const load = (base) => fetch(base + "/api/network").then((r) => { if (!r.ok) throw 0; return r.json(); });
-  load("https://" + apiHost).catch(() => load("https://api.decentralise.si")).then((n) => {
+  load("https://" + apiHost).catch(() => load("https://api.decentralised.si")).then((n) => {
     set("s-status", "Live");
     set("s-epoch", n.epoch);
     set("s-nodes", String(n.nodes.routable));

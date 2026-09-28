@@ -141,11 +141,11 @@ footer a{color:var(--muted)}
   <div class="grid2">
     <div>
       <h3>macOS and Linux</h3>
-<pre>curl -fsSL https://decentralise.si/install/node.sh | sh</pre>
+<pre>curl -fsSL https://decentralised.si/install/node.sh | sh</pre>
     </div>
     <div>
       <h3>Windows (PowerShell)</h3>
-<pre>irm https://decentralise.si/install/node.ps1 | iex</pre>
+<pre>irm https://decentralised.si/install/node.ps1 | iex</pre>
     </div>
   </div>
   <div class="tbl">
@@ -159,7 +159,7 @@ footer a{color:var(--muted)}
       </tbody>
     </table>
   </div>
-  <p class="muted small">Then open <a href="/app">the app</a> and choose <b>Free — community nodes</b>. Free chats are answered on other people's computers, which see the text they answer (never who you are), so keep private details out of them. To choose a different model: <code>curl -fsSL https://decentralise.si/install/node.sh | DSI_MODEL=qwen2.5:7b sh</code>. To remove everything: <code>curl -fsSL https://decentralise.si/install/node.sh | sh -s -- --uninstall</code> (Windows: <code>&amp; ([scriptblock]::Create((irm https://decentralise.si/install/node.ps1))) -Uninstall</code>).</p>
+  <p class="muted small">Then open <a href="/app">the app</a> and choose <b>Free — community nodes</b>. Free chats are answered on other people's computers, which see the text they answer (never who you are), so keep private details out of them. To choose a different model: <code>curl -fsSL https://decentralised.si/install/node.sh | DSI_MODEL=qwen2.5:7b sh</code>. To remove everything: <code>curl -fsSL https://decentralised.si/install/node.sh | sh -s -- --uninstall</code> (Windows: <code>&amp; ([scriptblock]::Create((irm https://decentralised.si/install/node.ps1))) -Uninstall</code>).</p>
 </section>
 
 <section id="models">
@@ -200,8 +200,8 @@ footer a{color:var(--muted)}
   <div data-pane="nvidia">
     <p>First install the <a href="https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html">NVIDIA Container Toolkit</a> so containers can use the GPU (check with <code>nvidia-smi</code>). Then:</p>
 <pre>mkdir dsi-node &amp;&amp; cd dsi-node
-curl -fsSLO https://decentralise.si/dl/docker-compose.yml
-curl -fsSLO https://decentralise.si/dl/docker-compose.gpu.yml
+curl -fsSLO https://decentralised.si/dl/docker-compose.yml
+curl -fsSLO https://decentralised.si/dl/docker-compose.gpu.yml
 
 export DSI_API_KEY=ds_live_...          <span class="c"># your key</span>
 export DSI_MODEL=<mark class="m">qwen2.5:7b</mark>
@@ -210,8 +210,8 @@ docker compose -f docker-compose.yml -f docker-compose.gpu.yml up -d</pre>
   <div data-pane="win" hidden>
     <p>Use Docker Desktop with the WSL 2 backend and an up-to-date NVIDIA driver; GPU support is built in. In <b>PowerShell</b>:</p>
 <pre>mkdir dsi-node; cd dsi-node
-curl.exe -fsSLO https://decentralise.si/dl/docker-compose.yml
-curl.exe -fsSLO https://decentralise.si/dl/docker-compose.gpu.yml
+curl.exe -fsSLO https://decentralised.si/dl/docker-compose.yml
+curl.exe -fsSLO https://decentralised.si/dl/docker-compose.gpu.yml
 
 $env:DSI_API_KEY = "ds_live_..."        <span class="c"># your key</span>
 $env:DSI_MODEL = "<mark class="m">qwen2.5:7b</mark>"
@@ -226,7 +226,7 @@ ollama pull <mark class="m">qwen2.5:7b</mark>
 
 <span class="c"># 2. tunnel + node agent</span>
 mkdir dsi-node &amp;&amp; cd dsi-node
-curl -fsSLO https://decentralise.si/dl/docker-compose.yml
+curl -fsSLO https://decentralised.si/dl/docker-compose.yml
 export DSI_API_KEY=ds_live_...
 export DSI_MODEL=<mark class="m">qwen2.5:7b</mark>
 export LLM_BASE_URL=http://host.docker.internal:11434/v1
@@ -236,8 +236,8 @@ docker compose up -d --no-deps cloudflared dsi-node</pre>
   <div data-pane="amd" hidden>
     <p>This is for ROCm-supported Radeon and Instinct cards on Linux:</p>
 <pre>mkdir dsi-node &amp;&amp; cd dsi-node
-curl -fsSLO https://decentralise.si/dl/docker-compose.yml
-curl -fsSLO https://decentralise.si/dl/docker-compose.rocm.yml
+curl -fsSLO https://decentralised.si/dl/docker-compose.yml
+curl -fsSLO https://decentralised.si/dl/docker-compose.rocm.yml
 
 export DSI_API_KEY=ds_live_...
 export DSI_MODEL=<mark class="m">qwen2.5:7b</mark>
@@ -246,7 +246,7 @@ docker compose -f docker-compose.yml -f docker-compose.rocm.yml up -d</pre>
   <div data-pane="cpu" hidden>
     <p>Any machine with Docker works. Pick a small model (≤ 4 GB): CPUs manage a few tokens per second, which is fine for short answers.</p>
 <pre>mkdir dsi-node &amp;&amp; cd dsi-node
-curl -fsSLO https://decentralise.si/dl/docker-compose.yml
+curl -fsSLO https://decentralised.si/dl/docker-compose.yml
 export DSI_API_KEY=ds_live_...
 export DSI_MODEL=<mark class="m">qwen2.5:7b</mark>
 docker compose up -d</pre>

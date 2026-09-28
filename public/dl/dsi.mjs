@@ -37041,11 +37041,11 @@ var env = process.env;
 var dir = env.DSI_HOME ?? join2(homedir(), ".dsi");
 async function config2() {
   const saved = await new LocalFile(join2(dir, "config.json"), {}).read().catch(() => ({}));
-  return { apiKey: env.DSI_API_KEY ?? saved.apiKey, router: env.DSI_ROUTER ?? saved.router ?? "https://api.decentralise.si" };
+  return { apiKey: env.DSI_API_KEY ?? saved.apiKey, router: env.DSI_ROUTER ?? saved.router ?? "https://api.decentralised.si" };
 }
 async function harness() {
   const c = await config2();
-  if (!c.apiKey) throw new Error("no API key: run `dsi login ds_live_...` (get one at https://decentralise.si/app/#/console/keys)");
+  if (!c.apiKey) throw new Error("no API key: run `dsi login ds_live_...` (get one at https://decentralised.si/app/#/console/keys)");
   return { h: new Harness({ router: c.router, apiKey: c.apiKey, dir, passphrase: env.DSI_PASSPHRASE }), c };
 }
 async function main() {
@@ -37055,7 +37055,7 @@ async function main() {
       if (!args[0]?.startsWith("ds_")) throw new Error("usage: dsi login ds_live_...");
       const { mkdirSync: mkdirSync2 } = await import("node:fs");
       mkdirSync2(dir, { recursive: true });
-      await new LocalFile(join2(dir, "config.json"), {}).write({ apiKey: args[0], router: env.DSI_ROUTER ?? "https://api.decentralise.si" });
+      await new LocalFile(join2(dir, "config.json"), {}).write({ apiKey: args[0], router: env.DSI_ROUTER ?? "https://api.decentralised.si" });
       console.log(`Saved to ${join2(dir, "config.json")} (mode 600).`);
       return;
     }

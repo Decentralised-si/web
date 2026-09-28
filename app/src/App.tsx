@@ -31,6 +31,9 @@ export function App({ config }: { config: Config }) {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [error, setError] = useState<string>();
   const [menu, setMenu] = useState(false);
+  // A new, unsaved chat keeps the "#/chat" route after its first message (the id is written with
+  // replaceState), so "New chat" needs its own key to start a fresh conversation.
+  const [newChat, setNewChat] = useState(0);
 
   useEffect(() => {
     const on = () => setRoute(parseRoute());
@@ -139,7 +142,13 @@ export function App({ config }: { config: Config }) {
             ✕
           </button>
         </div>
-        <button className="new-chat" onClick={() => nav("#/chat")}>
+        <button
+          className="new-chat"
+          onClick={() => {
+            setNewChat((n) => n + 1);
+            nav("#/chat");
+          }}
+        >
           + New chat
         </button>
         <div className="convos" role="list">
@@ -181,7 +190,7 @@ export function App({ config }: { config: Config }) {
         <button className="icon menu-btn only-mobile" aria-label="Open menu" onClick={() => setMenu(true)}>
           ☰
         </button>
-        <Chat key={`${org}:${route.id ?? "new"}`} id={route.id} onSaved={refreshConversations} config={config} />
+        <Chat key={`${org}:${route.id ?? `new-${newChat}`}`} id={route.id} onSaved={refreshConversations} config={config} />
       </main>
     </div>
   );

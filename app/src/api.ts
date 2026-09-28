@@ -1,3 +1,4 @@
+import { classifyDomain } from "./domain";
 /** API client for the Decentralised.si router, authenticated with the Privy session. */
 
 const DOMAINS = ["decentralised.si", "decentralise.si", "decentralise.ai", "decentralised.ai"];
@@ -87,6 +88,12 @@ export interface StreamMeta {
 }
 
 /** Stream a chat completion; calls onDelta for every text chunk. */
+/** Domain of the latest user message, classified on this device (see domain.ts). */
+function domainHint(messages: ChatMessage[]): string | undefined {
+  const last = [...messages].reverse().find((m) => m.role === "user");
+  return last && typeof last.content === "string" ? classifyDomain(last.content) : undefined;
+}
+
 export async function streamChat(opts: {
   messages: ChatMessage[];
   model: string;
@@ -103,6 +110,7 @@ export async function streamChat(opts: {
       "x-decentralise-mode": opts.mode,
       "x-decentralise-session": opts.session,
       ...(opts.affinity ? { "x-decentralise-affinity": opts.affinity } : {}),
+      ...(domainHint(opts.messages) ? { "x-decentralise-domain": domainHint(opts.messages)! } : {}),
     }),
     body: JSON.stringify({ model: opts.model, messages: opts.messages, stream: true, stream_options: { include_usage: true } }),
   });

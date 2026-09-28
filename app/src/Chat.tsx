@@ -17,6 +17,47 @@ function render(md: string) {
   return { __html: DOMPurify.sanitize(marked.parse(md, { async: false, gfm: true, breaks: true }) as string) };
 }
 
+/** Splits reasoning models' <think>…</think> blocks (possibly still streaming) from the answer. */
+function splitThinking(raw: string): { thinks: Array<{ text: string; open: boolean }>; answer: string } {
+  const thinks: Array<{ text: string; open: boolean }> = [];
+  let answer = "";
+  let rest = raw;
+  for (;;) {
+    const a = rest.indexOf("<think>");
+    if (a < 0) {
+      answer += rest;
+      break;
+    }
+    answer += rest.slice(0, a);
+    const b = rest.indexOf("</think>", a + 7);
+    if (b < 0) {
+      thinks.push({ text: rest.slice(a + 7).trim(), open: true });
+      break;
+    }
+    thinks.push({ text: rest.slice(a + 7, b).trim(), open: false });
+    rest = rest.slice(b + 8);
+  }
+  return { thinks, answer: answer.trimStart() };
+}
+
+function Assistant({ content, streaming }: { content: string; streaming: boolean }) {
+  const { thinks, answer } = splitThinking(content);
+  return (
+    <>
+      {thinks.map((t, i) => {
+        const knowledge = t.text.startsWith("Knowledge consulted by this node:");
+        return (
+          <details key={i} className="think" open={t.open}>
+            <summary>{knowledge ? "Knowledge the node consulted" : t.open ? "Reasoning…" : "Reasoning"}</summary>
+            <div className="think-text">{knowledge ? t.text.replace(/^Knowledge consulted by this node:\n?/, "") : t.text}</div>
+          </details>
+        );
+      })}
+      <div className="md" dangerouslySetInnerHTML={render(answer || (streaming ? "…" : ""))} />
+    </>
+  );
+}
+
 export function Chat({ id, onSaved, config }: { id?: string; onSaved: () => void; config: Config }) {
   const [conv, setConv] = useState<Conversation>();
   const [input, setInput] = useState("");
@@ -155,8 +196,13 @@ export function Chat({ id, onSaved, config }: { id?: string; onSaved: () => void
                 <div className="bubble">{m.content}</div>
               ) : (
                 <>
-                  <div className="md" dangerouslySetInnerHTML={render(m.content || (busy && i === conv!.messages.length - 1 ? "…" : ""))} />
+                  <Assistant content={m.content} streaming={busy && i === conv!.messages.length - 1} />
                   {m.error && <p className="err small">{m.error}</p>}
+                  {m.error && /no network credit|insufficient credit/i.test(m.error) && (
+                    <p className="note small">
+                      To keep chatting, <a href="#/wallet">add credit</a> or connect your own provider key in <a href="#/console/providers">Console → Providers</a>. Then send your message again.
+                    </p>
+                  )}
                   {m.meta?.model && (
                     <p className="fine muted">
                       {m.meta.model} · {m.meta.provider} · {m.meta.market}

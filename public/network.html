@@ -71,6 +71,31 @@ h2{font-size:15px;margin:0 0 12px;letter-spacing:-.005em}
 #map .city{cursor:pointer;stroke:var(--panel);stroke-width:1.5;fill-opacity:.85;transition:r .6s ease}
 #map .city.idle{fill-opacity:.35;stroke:var(--muted);stroke-width:1.5;stroke-dasharray:2 2}
 #map .city:focus{outline:none;stroke:var(--ink);stroke-width:2.5}
+.topic{margin-top:12px}
+.topic form{display:flex;gap:8px;flex-wrap:wrap}
+.topic input{flex:1 1 260px;min-width:0;font:inherit;font-size:16px;padding:10px 14px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+.topic input:focus{outline:2px solid var(--accent);outline-offset:1px}
+.topic .hint{color:var(--muted);font-size:12.5px;margin:8px 0 0}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.chip{font:inherit;font-size:13px;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;padding:4px 11px;cursor:pointer}
+.chip:hover,.chip[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.chip small{color:var(--muted);margin-left:4px}
+.verdict{margin-top:12px;display:none}
+.verdict.on{display:block}
+.verdict .dom{display:inline-flex;align-items:center;gap:6px;font:600 14px var(--mono);background:var(--accent-soft);color:var(--accent);border-radius:8px;padding:4px 10px}
+.verdict .dom i{font-style:normal;color:var(--muted);font-weight:400}
+.verdict p{margin:8px 0 0}
+.hits{list-style:none;padding:0;margin:10px 0 0;display:grid;gap:6px}
+.hits li{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center;border:1px solid var(--line);border-radius:10px;padding:8px 12px;background:var(--bg);cursor:pointer}
+.hits li:hover{border-color:var(--accent)}
+.hits .fit{font:600 13px var(--mono);white-space:nowrap}
+.hits .why{color:var(--muted);font-size:12.5px}
+.fitbar{display:inline-block;width:60px;height:6px;border-radius:3px;background:var(--line);vertical-align:middle;margin-right:6px;overflow:hidden}
+.fitbar b{display:block;height:100%;background:var(--grad)}
+#map.filtering .c{opacity:.18;transition:opacity .3s}
+#map.filtering .c.hit{opacity:1}
+#map .ring{fill:none;stroke:var(--accent);stroke-width:2.5;pointer-events:none}
+#map .hitlabel{font:700 12px var(--mono);fill:var(--ink);paint-order:stroke;stroke:var(--panel);stroke-width:3px;pointer-events:none}
 #map .pulse{fill:none;stroke-width:2;pointer-events:none;animation:ping 1.4s ease-out forwards}
 @keyframes ping{from{opacity:.9;transform:scale(1)}to{opacity:0;transform:scale(3)}}
 @media (prefers-reduced-motion:reduce){#map .pulse{display:none}.live i{animation:none}#map .city{transition:none}}
@@ -148,6 +173,17 @@ footer a{color:var(--muted)}
     <div class="kpi"><b id="k-paid">—</b><span>PAI earned so far today</span> <small>projected</small></div>
   </div>
 
+  <section class="card topic" aria-labelledby="topic-h">
+    <h2 id="topic-h" style="margin:0 0 10px">Who on the network knows about…</h2>
+    <form id="topic-form" role="search">
+      <label class="sr" for="topic-q" style="position:absolute;left:-9999px">Topic or question</label>
+      <input id="topic-q" type="search" autocomplete="off" placeholder="Try &ldquo;director liability&rdquo;, &ldquo;journal entry for depreciation&rdquo; or &ldquo;crop rotation&rdquo;">
+      <button class="btn primary" type="submit">Find nodes</button>
+    </form>
+    <p class="hint">Your topic is classified <b>in this browser</b> with the same rules DSI apps use for routing hints; it is never sent to the network. The map then lights up the cities whose nodes declare that area of knowledge.</p>
+    <div class="chips" id="topic-domains" aria-label="Areas of knowledge on the network"></div>
+    <div class="verdict" id="topic-verdict" role="status" aria-live="polite"></div>
+  </section>
   <div class="card mapcard">
     <svg id="map" viewBox="0 0 960 500" role="img" aria-labelledby="map-title"><title id="map-title">World map of provider nodes by city</title></svg>
     <div class="legend" aria-hidden="true">
@@ -269,7 +305,7 @@ footer a{color:var(--muted)}
         <tr><td>PAI today (projected)</td><td>${compact.format(c.projected_pai_today)}</td></tr>
         <tr><td>Reputation</td><td>${nf.format(c.avg_reputation)}</td></tr>
       </table>
-      <div class="muted" style="margin-top:6px;font-size:12px">${esc(c.models.join(", "))}${lv ? " · " + lv : ""}</div>`;
+      <div class="muted" style="margin-top:6px;font-size:12px">${esc(c.models.join(", "))}${lv ? " · " + lv : ""}</div>${topicTip(c)}`;
     tip.hidden = false;
     const r = mapCard.getBoundingClientRect();
     let x, y;
@@ -301,6 +337,7 @@ footer a{color:var(--muted)}
       .classed("idle", (d) => d.routable === 0)
       .attr("fill", (d) => (d.routable ? levelColor(topLevel(d.levels)) : css("--muted")))
       .attr("r", radius);
+    applyTopic(all, radius);
     // A ring pulses from cities that served new requests since the last update.
     all.each(function (d) {
       const before = prev.get(d.id);
@@ -353,6 +390,117 @@ footer a{color:var(--muted)}
     $("k-paid").textContent = compact.format(t.projected_pai_today);
   }
 
+  // ---------- topic search ----------
+  // Classifier rules come from the router (/api/network/taxonomy) and run here, so the topic
+  // never leaves the browser. Matching mirrors the router's domainAdjustment().
+  let rules = [], topic = null, lastMap = null;
+  const fitOf = (domains, want) => {
+    let best = 0, how = "";
+    for (const [d, comp] of Object.entries(domains || {})) {
+      const f = d === want ? 1 : want.startsWith(d + ".") ? 0.85 : d.startsWith(want + ".") ? 0.7 : 0;
+      if (f * comp > best) (best = f * comp), (how = d === want ? "exact" : want.startsWith(d + ".") ? `broader: ${d}` : `specialist: ${d}`);
+    }
+    return { fit: best, how };
+  };
+  function classify(text) {
+    const scores = new Map();
+    for (const r of rules) scores.set(r.domain, (text.match(r.re) || []).length);
+    let best, bestScore = 0;
+    for (const [d, n] of scores) {
+      const total = n + (d.includes(".") ? 0 : [...scores].filter(([x]) => x.startsWith(d + ".")).reduce((a, [, m]) => a + m, 0));
+      if (total > bestScore) (best = d), (bestScore = total);
+    }
+    if (!best) return { domain: undefined, scores };
+    const child = [...scores].filter(([x, n]) => x.startsWith(best + ".") && n > 0).sort((a, b) => b[1] - a[1])[0];
+    return { domain: child ? child[0] : best, scores };
+  }
+  const pretty = (d) => d.split(".").map((p) => p.replace(/_/g, " ")).join(" › ");
+  function matches(domain) {
+    if (!lastMap) return [];
+    return lastMap.cities.map((c) => {
+      const nodes = (c.node_list || []).map((n) => ({ ...n, ...fitOf(n.domains, domain) })).filter((n) => n.fit > 0).sort((a, b) => b.fit - a.fit);
+      return { c, nodes, fit: nodes[0]?.fit || 0 };
+    }).filter((m) => m.nodes.length).sort((a, b) => b.fit - a.fit || b.nodes.length - a.nodes.length);
+  }
+  function topicTip(c) {
+    if (!topic?.domain) return "";
+    const m = matches(topic.domain).find((x) => x.c.id === c.id);
+    if (!m) return `<div style="margin-top:6px;font-size:12px" class="muted">No node here declares ${esc(pretty(topic.domain))}.</div>`;
+    return `<div style="margin-top:6px;font-size:12px"><b>${m.nodes.length} node${m.nodes.length > 1 ? "s serve" : " serves"} ${esc(pretty(topic.domain))}</b>: ${m.nodes.map((n) => `${esc(n.how)} (${Math.round(n.fit * 100)}%)`).join(", ")}</div>`;
+  }
+  function applyTopic(all, radius) {
+    const on = !!topic?.domain;
+    svg.classed("filtering", on);
+    const hit = new Map(on ? matches(topic.domain).map((m) => [m.c.id, m]) : []);
+    all.classed("hit", (d) => hit.has(d.id));
+    all.selectAll("circle.ring, text.hitlabel").remove();
+    if (!on) return;
+    all.filter((d) => hit.has(d.id)).each(function (d) {
+      const m = hit.get(d.id), g = d3.select(this), r = radius(d);
+      g.append("circle").attr("class", "ring").attr("r", r + 4).attr("stroke-opacity", 0.35 + 0.65 * m.fit);
+      g.append("text").attr("class", "hitlabel").attr("x", r + 8).attr("y", 4).text(`${m.nodes.length} · ${Math.round(m.fit * 100)}%`);
+    });
+  }
+  function renderVerdict() {
+    const el = $("topic-verdict");
+    document.querySelectorAll("#topic-domains .chip").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.d === topic?.domain)));
+    if (!topic) return (el.className = "verdict"), (el.innerHTML = "");
+    el.className = "verdict on";
+    if (!topic.domain) {
+      el.innerHTML = `<p>No specific area of knowledge stands out in &ldquo;${esc(topic.q)}&rdquo;. The router would send it to generalist nodes. Pick an area above, or add a few more words.</p>`;
+      if (gCities) applyTopic(gCities.selectAll("g.c"), () => 0);
+      return;
+    }
+    const ms = matches(topic.domain);
+    const related = topic.scores ? [...topic.scores].filter(([d, n]) => n > 0 && d !== topic.domain).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([d]) => d) : [];
+    const n = ms.reduce((a, m) => a + m.nodes.length, 0);
+    el.innerHTML = `<span class="dom">${esc(pretty(topic.domain))} <i>${esc(topic.domain)}</i></span>
+      ${related.length ? `<span class="muted" style="font-size:13px;margin-left:6px">also mentions ${related.map((d) => esc(pretty(d))).join(", ")}</span>` : ""}
+      <p>${n ? `<b>${n} node${n > 1 ? "s" : ""}</b> in <b>${ms.length} ${ms.length > 1 ? "cities" : "city"}</b> ${n > 1 ? "serve" : "serves"} this area. Requests with this hint go to the best fit.` : `No node on the network declares this area yet, so requests go to generalist nodes. <a href="/node">Run an expert node →</a>`}</p>
+      ${n ? `<ul class="hits">${ms.map((m) => `<li data-c="${esc(m.c.id)}"><span><b>${esc(m.c.city || "Unknown")}</b> <span class="muted">${esc(regionName(m.c.country))}</span><br><span class="why">${m.nodes.map((x) => `${esc(x.how)} · ${esc(x.models.join(", "))}${x.routable ? "" : " · offline"}`).join("<br>")}</span></span><span class="fit"><span class="fitbar"><b style="width:${Math.round(m.fit * 100)}%"></b></span>${Math.round(m.fit * 100)}% fit · ${m.nodes.length} node${m.nodes.length > 1 ? "s" : ""}</span></li>`).join("")}</ul>` : ""}`;
+    el.querySelectorAll("li[data-c]").forEach((li) => li.addEventListener("click", () => {
+      const node = gCities && gCities.selectAll("g.c").filter((d) => d.id === li.dataset.c).select("circle.city").node();
+      if (node) { mapCard.scrollIntoView({ behavior: "smooth", block: "center" }); node.focus({ preventScroll: true }); }
+    }));
+    if (gCities) { const all = gCities.selectAll("g.c"); applyTopic(all, (d) => +all.filter((x) => x === d).select("circle.city").attr("r") || 6); }
+  }
+  function renderDomains() {
+    if (!lastMap) return;
+    const count = new Map();
+    for (const c of lastMap.cities) for (const n of c.node_list || []) for (const d of Object.keys(n.domains || {})) count.set(d, (count.get(d) || 0) + 1);
+    // Alphabetical by path, so sub-areas sit next to their parent (law, law › corporate, …).
+    const top = [...count].sort((a, b) => a[0].localeCompare(b[0]));
+    const html = top.map(([d, n]) => `<button type="button" class="chip" data-d="${esc(d)}" aria-pressed="${d === topic?.domain}">${esc(pretty(d))}<small>${n}</small></button>`).join("");
+    const box = $("topic-domains");
+    if (box.dataset.h !== html) { box.innerHTML = html; box.dataset.h = html; }
+  }
+  $("topic-domains").addEventListener("click", (e) => {
+    const b = e.target.closest(".chip"); if (!b) return;
+    topic = topic?.domain === b.dataset.d && !topic.q ? null : { q: "", domain: b.dataset.d };
+    $("topic-q").value = "";
+    history.replaceState(null, "", topic ? `#area=${encodeURIComponent(topic.domain)}` : location.pathname);
+    renderVerdict();
+  });
+  function search(q) {
+    q = q.trim();
+    if (!q) { topic = null; history.replaceState(null, "", location.pathname); return renderVerdict(); }
+    const { domain, scores } = classify(q);
+    topic = { q, domain, scores };
+    history.replaceState(null, "", `#q=${encodeURIComponent(q)}`);
+    renderVerdict();
+  }
+  $("topic-form").addEventListener("submit", (e) => { e.preventDefault(); search($("topic-q").value); });
+  let typing;
+  $("topic-q").addEventListener("input", (e) => { clearTimeout(typing); typing = setTimeout(() => search(e.target.value), 350); });
+  const rulesReady = fetch(`${API}/api/network/taxonomy`).then((r) => r.json()).then((t) => {
+    rules = t.domains.map((d) => ({ domain: d.domain, re: new RegExp(d.pattern, d.flags) }));
+  }).catch(() => { $("topic-verdict").className = "verdict on"; $("topic-verdict").textContent = "Couldn't load the classifier; you can still pick an area above."; });
+  function restoreFromHash() {
+    const h = new URLSearchParams(location.hash.slice(1));
+    if (h.get("q")) { $("topic-q").value = h.get("q"); rulesReady.then(() => search(h.get("q"))); }
+    else if (h.get("area")) { topic = { q: "", domain: h.get("area") }; renderVerdict(); }
+  }
+
   // ---------- polling ----------
   let lastOk = 0, delay = 5000, timer;
   const liveEl = $("live"), liveT = $("live-t");
@@ -372,10 +520,14 @@ footer a{color:var(--muted)}
       const d = await r.json();
       lastOk = Date.now();
       delay = 5000;
+      const first = !lastMap;
+      lastMap = d;
       fillKpis(d);
       fillTables(d);
+      renderDomains();
       if (d3) { if (!worldReady) await drawWorld(); drawCities(d.cities); drawSpark(d.series_requests_per_min); }
       $("empty").hidden = d.totals.nodes > 0;
+      if (first) restoreFromHash(); else if (topic) renderVerdict();
       liveT.textContent = `Live · epoch ${d.epoch}`;
     } catch {
       delay = Math.min(60000, delay * 2);

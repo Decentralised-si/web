@@ -59,6 +59,10 @@ body:not(.filming) .bars-cine.b{transform:translateY(100%)}
   transition:background .25s,box-shadow .25s,translate .25s,opacity .4s}
 .btn:hover:not(:disabled){background:var(--amber);translate:0 -1px;box-shadow:0 16px 50px -12px rgba(255,181,71,.65)}
 .btn:disabled{opacity:.3;cursor:progress}
+/* the gate's two ways in: watch the intro, or go straight to the application */
+.choice{display:flex;flex-wrap:wrap;justify-content:center;gap:12px}
+.btn.alt{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 1px var(--line)}
+.btn.alt:hover:not(:disabled){background:rgba(255,255,255,.08);box-shadow:inset 0 0 0 1px var(--ink);translate:0 -1px}
 .quiet{font-size:14px;color:var(--dim);min-height:44px;padding:10px 18px;border-radius:999px;transition:color .2s}
 .quiet:hover{color:var(--ink)}
 .loadline{position:fixed;top:0;left:0;right:0;height:2px;z-index:60;background:rgba(150,145,190,.1)}
@@ -204,8 +208,11 @@ body.no-webgl .nogl{display:block}
 <section class="gate bang" id="gate" aria-labelledby="gateTitle">
   <h1 id="gateTitle">Everything began as a single point.</h1>
   <div class="go">
-    <button class="btn" id="beginSound" type="button" disabled>Begin</button>
-    <button class="quiet" id="beginQuiet" type="button" disabled>Begin without sound</button>
+    <div class="choice" role="group" aria-label="Start with">
+      <button class="btn" id="beginSound" type="button" disabled>Intro</button>
+      <a class="btn alt" id="openApp" href="/app">Application</a>
+    </div>
+    <button class="quiet" id="beginQuiet" type="button" disabled>Intro without sound</button>
     <a class="quiet" href="/home">Skip intro</a>
   </div>
 </section>
@@ -1568,6 +1575,19 @@ function begin(withSound){
 }
 bS.addEventListener('click', function(){ begin(true); });
 bQ.addEventListener('click', function(){ begin(false); });
+/* Intro or Application: remember the choice, and offer the application first to people who took it last time */
+var bA = document.getElementById('openApp');
+function rememberStart(v){ try { localStorage.setItem('dsi_start', v); } catch(e){} }
+bS.addEventListener('click', function(){ rememberStart('intro'); });
+bQ.addEventListener('click', function(){ rememberStart('intro'); });
+bA.addEventListener('click', function(){ rememberStart('app'); });
+try {
+  if(localStorage.getItem('dsi_start') === 'app'){
+    bA.classList.remove('alt'); bS.classList.add('alt');
+    bA.parentNode.insertBefore(bA, bS);
+    bA.focus();
+  }
+} catch(e){}
 var fill = document.getElementById('loadfill'), ll = document.getElementById('loadline');
 
 var hasPointer = false;

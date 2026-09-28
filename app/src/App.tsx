@@ -4,6 +4,7 @@ import { api, setAccount, setTokenSource, type Config } from "./api";
 import { listConversations, setNamespace, type Conversation } from "./localdb";
 import { Chat } from "./Chat";
 import { ConsoleShell } from "./console/Shell";
+import { IconCheck, IconChevron, IconConsole, IconDownload, IconGauge, IconGear, IconHelp, IconInfo, IconLogout, IconMenu, IconNode, IconPanel, IconPlus, IconRight, IconUsers, IconWallet } from "./icons";
 
 export interface Session {
   user: { id: string; email?: string; wallets: Array<{ address: string; chain: string; type: string }> };
@@ -31,9 +32,26 @@ export function App({ config }: { config: Config }) {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [error, setError] = useState<string>();
   const [menu, setMenu] = useState(false);
+  const [userMenu, setUserMenu] = useState(false);
+  const [collapsed, setCollapsed] = useState(() => {
+    try {
+      return localStorage.getItem("dsi_side") === "closed";
+    } catch {
+      return false;
+    }
+  });
   // A new, unsaved chat keeps the "#/chat" route after its first message (the id is written with
   // replaceState), so "New chat" needs its own key to start a fresh conversation.
   const [newChat, setNewChat] = useState(0);
+
+  useEffect(() => {
+    if (!userMenu) return;
+    const close = (e: MouseEvent) => !(e.target as Element).closest?.(".c-foot") && setUserMenu(false);
+    const esc = (e: KeyboardEvent) => e.key === "Escape" && setUserMenu(false);
+    addEventListener("mousedown", close);
+    addEventListener("keydown", esc);
+    return () => (removeEventListener("mousedown", close), removeEventListener("keydown", esc));
+  }, [userMenu]);
 
   useEffect(() => {
     const on = () => setRoute(parseRoute());
@@ -94,20 +112,15 @@ export function App({ config }: { config: Config }) {
   if (!authenticated)
     return (
       <div className="center">
-        <div className="card narrow login">
-          <div className="brand-lg">
-            <img className="logo" src="/brand/logo-96.png" alt="" width={34} height={34} />
-            <span>
-              Decentralised<span className="tld">.si</span>
-            </span>
-          </div>
-          <h1>Every AI model. Private. Paid in crypto.</h1>
-          <p className="muted">Sign in with email, Google, Apple, GitHub or your wallet. You get a self-custodial wallet for paying with crypto; your conversations stay in this browser.</p>
+        <div className="c-login">
+          <img src="/brand/logo-96.png" alt="" width={48} height={48} />
+          <h1>Every AI model, routed for you.</h1>
+          <p className="muted">Sign in with email, Google, Apple, GitHub or a wallet. Your conversations stay in this browser.</p>
           <button className="primary big" onClick={() => login()}>
             Sign in
           </button>
           <p className="fine">
-            <a href="/">About</a> · <a href="/whitepaper">Whitepaper</a>
+            <a href="/home">About</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a>
           </p>
         </div>
       </div>
@@ -143,71 +156,151 @@ export function App({ config }: { config: Config }) {
     location.hash = hash;
     setMenu(false);
   };
+  const toggleSide = () =>
+    setCollapsed((c) => {
+      try {
+        localStorage.setItem("dsi_side", c ? "open" : "closed");
+      } catch {
+        /* private mode */
+      }
+      return !c;
+    });
+  const who = session.user.email ?? `${session.user.wallets[0]?.address.slice(0, 6)}…`;
+  const orgName = session.organizations.find((o) => o.id === org)?.name ?? "";
 
   return (
-    <div className={`shell ${menu ? "menu-open" : ""}`}>
-      <aside className="sidebar">
-        <div className="side-top">
-          <a className="brand" href="#/chat">
-            <img className="logo" src="/brand/logo-96.png" alt="" width={26} height={26} />
+    <div className={`c-shell ${menu ? "menu-open" : ""} ${collapsed ? "collapsed" : ""}`}>
+      <aside className="c-side" aria-label="Chats">
+        <div className="c-side-top">
+          <button className="c-icon" aria-label={collapsed ? "Open sidebar" : "Close sidebar"} onClick={() => (menu ? setMenu(false) : toggleSide())}>
+            <IconPanel />
+          </button>
+          <a className="c-brand" href="#/chat" onClick={() => setNewChat((n) => n + 1)}>
+            <img src="/brand/logo-96.png" alt="" width={24} height={24} />
             <span>
               Decentralised<span className="tld">.si</span>
             </span>
           </a>
-          <button className="icon only-mobile" aria-label="Close menu" onClick={() => setMenu(false)}>
-            ✕
-          </button>
         </div>
         <button
-          className="new-chat"
+          className={`c-row c-new ${route.view === "chat" && !route.id ? "on" : ""}`}
           onClick={() => {
             setNewChat((n) => n + 1);
             nav("#/chat");
           }}
         >
-          + New chat
+          <IconPlus />
+          <span>New chat</span>
         </button>
-        <div className="convos" role="list">
-          {conversations.length === 0 && <p className="muted small pad">Your conversations are stored in this browser only.</p>}
+        <nav className="c-links">
+          <a className="c-row" href="#/console/dashboard">
+            <IconConsole />
+            <span>Console</span>
+          </a>
+          <a className="c-row" href="#/console/credits">
+            <IconWallet />
+            <span>Credits &amp; wallet</span>
+          </a>
+          <a className="c-row" href="/node#laptop">
+            <IconNode />
+            <span>Run a node</span>
+          </a>
+        </nav>
+        <div className="c-label">Recents</div>
+        <div className="c-convos" role="list">
+          {conversations.length === 0 && <p className="c-empty">Chats are saved in this browser only.</p>}
           {conversations.map((c) => (
-            <a key={c.id} role="listitem" className={`convo ${route.view === "chat" && route.id === c.id ? "on" : ""}`} href={`#/chat/${c.id}`} onClick={() => setMenu(false)} title={c.title}>
+            <a key={c.id} role="listitem" className={`c-convo ${route.view === "chat" && route.id === c.id ? "on" : ""}`} href={`#/chat/${c.id}`} onClick={() => setMenu(false)} title={c.title}>
               {c.title}
             </a>
           ))}
         </div>
-        <nav className="side-nav">
-          <a href="#/console/dashboard">Console</a>
-          <a href="#/console/credits">Credits &amp; wallet</a>
-          <a href="#/console/terminal">Agent terminal</a>
-        </nav>
-        <div className="side-foot">
-          {session.organizations.length > 1 ? (
-            <select value={org} onChange={(e) => switchOrg(e.target.value)} aria-label="Organization">
-              {session.organizations.map((o) => (
-                <option key={o.id} value={o.id}>
-                  {o.name} ({o.role})
-                </option>
-              ))}
-            </select>
-          ) : (
-            <div className="small muted">{session.organizations[0]?.name}</div>
-          )}
-          <div className="who">
-            <span className="small" title={user?.id}>
-              {session.user.email ?? `${session.user.wallets[0]?.address.slice(0, 6)}…`}
+        <div className="c-foot">
+          <button className="c-user" onClick={() => setUserMenu((v) => !v)} aria-expanded={userMenu}>
+            <span className="c-avatar">{who.slice(0, 1).toUpperCase()}</span>
+            <span className="c-user-text">
+              <b>{who}</b>
+              <small>{orgName}</small>
             </span>
-            <button className="link" onClick={() => logout()}>
-              Sign out
-            </button>
-          </div>
+            <IconChevron />
+          </button>
+          {userMenu && (
+            <div className="c-pop c-user-menu" role="menu" onClick={() => setUserMenu(false)}>
+              <div className="c-pop-head">{who}</div>
+              <a role="menuitem" href="#/console/settings">
+                <IconGear />
+                <span>Settings</span>
+              </a>
+              <a role="menuitem" href="#/console/usage">
+                <IconGauge />
+                <span>Usage</span>
+              </a>
+              <a role="menuitem" href="#/console/credits">
+                <IconWallet />
+                <span>Credits &amp; wallet</span>
+              </a>
+              <a role="menuitem" href="mailto:yousef@clanz.com">
+                <IconHelp />
+                <span>Get help</span>
+              </a>
+              <hr />
+              <a role="menuitem" href="/node#laptop">
+                <IconNode />
+                <span>Run a node for free chat</span>
+              </a>
+              <a role="menuitem" href="/download">
+                <IconDownload />
+                <span>Get DSI Synapse</span>
+              </a>
+              <a role="menuitem" href="#/console/members">
+                <IconUsers />
+                <span>Invite your team</span>
+              </a>
+              <a role="menuitem" href="/home">
+                <IconInfo />
+                <span>Learn more</span>
+                <IconRight />
+              </a>
+              {session.organizations.length > 1 && (
+                <>
+                  <hr />
+                  <div className="c-pop-label">Organisation</div>
+                  {session.organizations.map((o) => (
+                    <button key={o.id} role="menuitem" onClick={() => switchOrg(o.id)}>
+                      <span className="c-sp" />
+                      <span>{o.name}</span>
+                      {o.id === org && <IconCheck />}
+                    </button>
+                  ))}
+                </>
+              )}
+              <hr />
+              <button role="menuitem" onClick={() => logout()}>
+                <IconLogout />
+                <span>Log out</span>
+              </button>
+            </div>
+          )}
         </div>
       </aside>
-      <main className="main">
-        <button className="icon menu-btn only-mobile" aria-label="Open menu" onClick={() => setMenu(true)}>
-          ☰
+      <div className="c-scrim" onClick={() => setMenu(false)} />
+      <main className="c-main">
+        <button className="c-icon c-menu-btn" aria-label="Open menu" onClick={() => setMenu(true)}>
+          <IconMenu />
         </button>
-        <Chat key={`${org}:${route.id ?? `new-${newChat}`}`} id={route.id} onSaved={refreshConversations} config={config} />
+        {collapsed && (
+          <button className="c-icon c-open-btn" aria-label="Open sidebar" onClick={toggleSide}>
+            <IconPanel />
+          </button>
+        )}
+        <Chat key={`${org}:${route.id ?? `new-${newChat}`}`} id={route.id} onSaved={refreshConversations} config={config} name={firstName(session.user.email)} />
       </main>
     </div>
   );
+}
+
+/** "yousef.hosseini@x" → "Yousef"; nothing for wallet-only sign-ins. */
+function firstName(email?: string): string | undefined {
+  const w = email?.split("@")[0].split(/[._+\-\d]/)[0];
+  return w && w.length > 1 ? w[0].toUpperCase() + w.slice(1).toLowerCase() : undefined;
 }

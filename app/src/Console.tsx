@@ -716,7 +716,7 @@ export function Routing({ admin }: { admin: boolean }) {
         <label>
           Default mode
           <select value={p.defaultMode} onChange={(e) => set("defaultMode", e.target.value)}>
-            {["passthrough", "optimise", "cheapest", "fastest", "quality", "private", "decentralised_only", "byok_only", "network_only"].map((m) => (
+            {["passthrough", "optimise", "cheapest", "fastest", "quality", "private", "decentralised_only", "byok_only", "network_only", "free"].map((m) => (
               <option key={m}>{m}</option>
             ))}
           </select>

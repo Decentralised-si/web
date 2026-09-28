@@ -10,8 +10,24 @@ const MODES = [
   { id: "fastest", label: "Fastest" },
   { id: "cheapest", label: "Cheapest" },
   { id: "decentralised_only", label: "Decentralised only" },
+  { id: "free", label: "Free — community nodes" },
   { id: "private", label: "Private (strict)" },
 ];
+
+const NODE_GUIDE = "/node";
+
+interface FreeChat {
+  activeNodes: number;
+  probationNodes: number;
+  dailyTokens: number;
+  dailyRemaining: number;
+  earnedTokens: number;
+  available: number;
+}
+
+function tokensLabel(n: number): string {
+  return n >= 10_000 ? `${Math.floor(n / 1000)}k` : Math.max(0, Math.round(n)).toLocaleString();
+}
 
 function render(md: string) {
   return { __html: DOMPurify.sanitize(marked.parse(md, { async: false, gfm: true, breaks: true }) as string) };
@@ -66,6 +82,7 @@ export function Chat({ id, onSaved, config }: { id?: string; onSaved: () => void
   const [model, setModel] = useState("auto");
   const [mode, setMode] = useState("optimise");
   const [credit, setCredit] = useState<number>();
+  const [freeChat, setFreeChat] = useState<FreeChat>();
   const abort = useRef<AbortController | undefined>(undefined);
   const bottom = useRef<HTMLDivElement>(null);
   const box = useRef<HTMLTextAreaElement>(null);
@@ -83,7 +100,12 @@ export function Chat({ id, onSaved, config }: { id?: string; onSaved: () => void
     })();
     listModels().then(setModels).catch(() => {});
     api("/org")
-      .then((o) => setCredit(o.creditUsd))
+      .then((o) => {
+        setCredit(o.creditUsd);
+        setFreeChat(o.freeChat);
+        // No credit but free tokens: start new chats in free mode.
+        if (!id && o.creditUsd <= 0 && o.freeChat?.available > 0) setMode("free");
+      })
       .catch(() => {});
     box.current?.focus();
   }, [id]);
@@ -129,7 +151,10 @@ export function Chat({ id, onSaved, config }: { id?: string; onSaved: () => void
       await saveConversation(current);
       onSaved();
       api("/org")
-        .then((o) => setCredit(o.creditUsd))
+        .then((o) => {
+          setCredit(o.creditUsd);
+          setFreeChat(o.freeChat);
+        })
         .catch(() => {});
     }
   };
@@ -164,10 +189,16 @@ export function Chat({ id, onSaved, config }: { id?: string; onSaved: () => void
           </select>
         </div>
         <div className="row">
-          {credit !== undefined && (
-            <a className={`pill ${credit <= 0 ? "bad" : ""}`} href="#/wallet" title="Network and platform credit">
-              ${credit.toFixed(2)} credit
+          {mode === "free" && model === "auto" && freeChat ? (
+            <a className={`pill ${freeChat.available <= 0 ? "bad" : ""}`} href={NODE_GUIDE} title={`Free chat: ${freeChat.dailyRemaining.toLocaleString()} of today's ${freeChat.dailyTokens.toLocaleString()} + ${Math.round(freeChat.earnedTokens).toLocaleString()} earned by your node`}>
+              {tokensLabel(freeChat.available)} free
             </a>
+          ) : (
+            credit !== undefined && (
+              <a className={`pill ${credit <= 0 ? "bad" : ""}`} href="#/wallet" title="Network and platform credit">
+                ${credit.toFixed(2)} credit
+              </a>
+            )
           )}
           {conv && (
             <button className="link" onClick={remove}>
@@ -182,7 +213,22 @@ export function Chat({ id, onSaved, config }: { id?: string; onSaved: () => void
           <div className="hello">
             <h1>What can I help with?</h1>
             <p className="muted">One conversation goes to one provider; each new chat can go to a different one. Nothing you type is stored on our servers.</p>
-            {credit !== undefined && credit <= 0 && (
+            {mode === "free" && freeChat && (
+              <p className="note">
+                {freeChat.available > 0 ? (
+                  <>
+                    Free chat runs on community nodes: people's own computers. You have <b>{tokensLabel(freeChat.available)} tokens</b>: {tokensLabel(freeChat.dailyRemaining)} left of today's allowance, plus {tokensLabel(freeChat.earnedTokens)} your node has earned by serving others. Nodes see the text they answer, so keep private details out of free chats.
+                  </>
+                ) : freeChat.probationNodes > 0 ? (
+                  <>Your node is being checked (usually under an hour). Free chat unlocks when it becomes active.</>
+                ) : (
+                  <>
+                    Free chat is for people who share their computer with the network. <a href={NODE_GUIDE}>Run a node on your laptop</a> to get {tokensLabel(20_000)} free tokens a day, plus every token your node serves.
+                  </>
+                )}
+              </p>
+            )}
+            {mode !== "free" && credit !== undefined && credit <= 0 && (
               <p className="note">
                 Your organization has no credit yet. <a href="#/wallet">Top up with crypto</a>, or connect your own provider keys in <a href="#/console/providers">Console → Providers</a>.
               </p>
@@ -198,6 +244,11 @@ export function Chat({ id, onSaved, config }: { id?: string; onSaved: () => void
                 <>
                   <Assistant content={m.content} streaming={busy && i === conv!.messages.length - 1} />
                   {m.error && <p className="err small">{m.error}</p>}
+                  {m.error && /run a node|still being checked|used today's/i.test(m.error) && (
+                    <p className="note small">
+                      <a href={NODE_GUIDE}>How to run a node on your laptop</a>, or switch to a paid mode above.
+                    </p>
+                  )}
                   {m.error && /no network credit|insufficient credit/i.test(m.error) && (
                     <p className="note small">
                       To keep chatting, <a href="#/wallet">add credit</a> or connect your own provider key in <a href="#/console/providers">Console → Providers</a>. Then send your message again.

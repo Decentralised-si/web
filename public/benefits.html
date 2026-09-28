@@ -127,6 +127,10 @@ table.cost .vendor{display:block;font-size:12px;color:var(--muted)}
 .benefits ul{margin:6px 0 0;padding-left:18px;color:var(--muted);font-size:15px}
 .benefits li{margin:4px 0}
 .src{font-size:13px;color:var(--muted)}
+.steps{padding-left:22px;margin:10px 0 16px}
+.steps li{margin:6px 0}
+table.lv td.n,table.lv th.n{text-align:right;font-variant-numeric:tabular-nums}
+table.lv td:first-child{white-space:nowrap}
 </style>
 </head>
 <body>
@@ -153,7 +157,7 @@ table.cost .vendor{display:block;font-size:12px;color:var(--muted)}
   <div class="wrap">
     <div class="eyebrow">Benefits</div>
     <h1>Pay frontier prices <em>only</em> for frontier questions.</h1>
-    <p class="lead">For developers building AI-native apps over an API. Keep your Anthropic, OpenAI or Gemini SDK and change one base URL. DSI Axon, the blind router, sends each request to the cheapest provider that is good enough for it: an open model on the network for everyday requests, a frontier model for the hard ones.</p>
+    <p class="lead">For developers building AI-native apps over an API (<a href="#integrate">see how to integrate</a>). Keep your Anthropic, OpenAI or Gemini SDK and change one base URL. DSI Axon, the blind router, sends each request to the cheapest provider that is good enough for it: an open model on the network for everyday requests, a frontier model for the hard ones.</p>
     <div class="stats">
       <div class="card"><div class="big">133×</div><p>what a flagship model (Claude Fable 5.1 or GPT-6 Astra) costs per request, compared with a community node on the network, at list prices.</p></div>
       <div class="card"><div class="big">87%</div><p>saved against sending everything to Claude Opus 5.5, when 70% of requests are easy, 20% medium and 10% hard (the example below; set your own mix).</p></div>
@@ -163,6 +167,100 @@ table.cost .vendor{display:block;font-size:12px;color:var(--muted)}
 </header>
 
 <main class="wrap">
+
+<section id="integrate">
+  <h2>Integrate in minutes, save from the first request</h2>
+  <p class="muted">No new SDK and no rewrite. Your app keeps calling the Anthropic, OpenAI or Gemini API it already uses, through one endpoint that reaches every vendor and the open network.</p>
+  <ol class="steps">
+    <li><b>Get a key.</b> Sign in to the <a href="/app#/console/keys">console</a> and create an API key (<code>ds_live_…</code>).</li>
+    <li><b>Connect your vendor keys (optional).</b> In <a href="/app#/console/providers">Console → Providers</a>, add your Anthropic, OpenAI or Gemini keys. They are stored encrypted, used only to call that vendor for you, and carry no routing fee. This is how hard requests reach frontier models.</li>
+    <li><b>Change one line:</b> the base URL.</li>
+    <li><b>Turn on routing.</b> By default you get exactly the model you ask for. To save, send <code>X-Decentralise-Mode: optimise</code> (or use <code>model: "auto"</code>), or set optimise once as your account's default in the console. Your code can keep its usual model name: when the router answers with another model, the response says so.</li>
+  </ol>
+  <div class="tabs" role="tablist" aria-label="Language">
+    <button role="tab" aria-selected="true" data-tab="py">Python · Anthropic SDK</button>
+    <button role="tab" aria-selected="false" data-tab="ts">TypeScript · OpenAI SDK</button>
+    <button role="tab" aria-selected="false" data-tab="gem">TypeScript · Gemini SDK</button>
+    <button role="tab" aria-selected="false" data-tab="curl">curl</button>
+  </div>
+  <pre data-pane="py">from anthropic import Anthropic
+
+client = Anthropic(
+    api_key="ds_live_...",                              # your Decentralised.si key
+    base_url="https://api.decentralised.si/anthropic",  # the only change
+)
+
+# Your code stays the same. Add a header to let the router find a cheaper
+# model that is good enough, or leave it out to get exactly the model you name.
+msg = client.messages.create(
+    model="claude-sonnet-5",
+    max_tokens=1024,
+    messages=[{"role": "user", "content": "Summarise this support ticket: ..."}],
+    extra_headers={"X-Decentralise-Mode": "optimise", "X-Decentralise-Reasoning": "1"},
+)</pre>
+  <pre data-pane="ts" hidden>import OpenAI from "openai";
+
+const client = new OpenAI({
+  apiKey: process.env.DSI_API_KEY,
+  baseURL: "https://api.decentralised.si/openai/v1",   // the only change
+});
+
+// Everyday request: the cheapest model that clears the bar.
+const quick = await client.chat.completions.create(
+  { model: "auto", messages: [{ role: "user", content: "Classify this email: ..." }] },
+  { headers: { "X-Decentralise-Mode": "cheapest", "X-Decentralise-Reasoning": "0" } },
+);
+
+// Hard request: frontier-grade reasoning, with a quality floor.
+const deep = await client.chat.completions.create(
+  { model: "auto", messages: [{ role: "user", content: "Find the risks in this contract: ..." }] },
+  { headers: { "X-Decentralise-Mode": "quality", "X-Decentralise-Reasoning": "3", "X-Decentralise-Min-Quality": "0.9" } },
+);</pre>
+  <pre data-pane="gem" hidden>import { GoogleGenAI } from "@google/genai";
+
+const ai = new GoogleGenAI({
+  apiKey: process.env.DSI_API_KEY,
+  httpOptions: {
+    baseUrl: "https://api.decentralised.si/gemini",     // the only change
+    headers: { "X-Decentralise-Mode": "optimise" },      // for every request
+  },
+});
+
+const res = await ai.models.generateContent({ model: "gemini-2.5-pro", contents: "Explain this stack trace: ..." });</pre>
+  <pre data-pane="curl" hidden>curl https://api.decentralised.si/openai/v1/chat/completions \
+  -H "Authorization: Bearer $DSI_API_KEY" \
+  -H "Content-Type: application/json" \
+  -H "X-Decentralise-Mode: optimise" \
+  -H "X-Decentralise-Reasoning: 2" \
+  -d '{"model": "auto", "messages": [{"role": "user", "content": "Plan a three-step data migration."}]}'
+
+# The response tells you what answered and what it cost:
+#   x-decentralise-requested-model: auto
+#   x-decentralise-actual-model:    @cf/meta/llama-3.3-70b-instruct-fp8-fast
+#   x-decentralise-estimated-cost-usd: 0.000138
+#   x-decentralise-receipt: rcpt_...</pre>
+
+  <h3>Choose the reasoning level per request</h3>
+  <p class="muted">Send a hint and the router sets its quality target to match. It never reads your prompt to decide.</p>
+  <div class="tbl"><table class="lv">
+    <thead><tr><th>X-Decentralise-Reasoning</th><th>Use it for</th><th>Quality target</th><th>Typically answered by</th></tr></thead>
+    <tbody>
+      <tr><td><code>0</code> · recall</td><td>lookup, rewriting, classification, extraction</td><td class="n">0.68</td><td>small open models, community nodes</td></tr>
+      <tr><td><code>1</code> · general</td><td>everyday Q&amp;A, summaries, code help</td><td class="n">0.80</td><td>open models such as Llama 3.3 70B</td></tr>
+      <tr><td><code>2</code> · reasoning</td><td>multi-step analysis, agents, planning</td><td class="n">0.87</td><td>large open or mid-tier frontier models</td></tr>
+      <tr><td><code>3</code> · frontier</td><td>research, hard reasoning, high-stakes answers</td><td class="n">0.93</td><td>the strongest model you have connected (your vendor key)</td></tr>
+    </tbody>
+  </table></div>
+  <p class="src">Without a hint, the router estimates difficulty from the request's shape (size, tools, turns, reasoning settings). Combine the hint with a mode: <code>cheapest</code>, <code>fastest</code>, <code>optimise</code> (best value), <code>quality</code>, <code>private</code> (providers that don't train on or keep your data), <code>decentralised_only</code>, or <code>passthrough</code> (exactly the model you name). Hard limits: <code>X-Decentralise-Min-Quality</code>, <code>X-Decentralise-Max-Cost</code>, <code>X-Decentralise-Max-Latency-Ms</code>. See the <a href="/app#/console/docs">API docs</a>. On the open network, reasoning levels 2 and 3 are reserved for accounts that stake PAI; with your own vendor keys, frontier models are used directly.</p>
+
+  <h3>More connectivity from the same integration</h3>
+  <div class="grid2" style="grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr))">
+    <div class="card"><b>One key, every provider.</b> <span class="muted">Anthropic, OpenAI and Gemini (with your keys), open models on Cloudflare Workers AI, and community and specialist nodes on the network, behind one endpoint and one bill.</span></div>
+    <div class="card"><b>Automatic failover.</b> <span class="muted">If a provider is down or rate-limits you, the request goes to the next suitable one (<code>x-decentralise-failovers</code> says how often). An answer cut off mid-stream continues on another provider instead of failing.</span></div>
+    <div class="card"><b>Any protocol, any model.</b> <span class="muted">Call a Claude model through the OpenAI SDK, or a Gemini model through the Anthropic SDK: requests and tool calls are translated both ways, streaming included.</span></div>
+    <div class="card"><b>Know every answer's cost.</b> <span class="muted">Each response names the model and provider that answered and its estimated cost, and carries a receipt you can look up in the console.</span></div>
+  </div>
+</section>
 
 <section id="prices">
   <h2>List prices, side by side</h2>
@@ -333,6 +431,12 @@ table.cost .vendor{display:block;font-size:12px;color:var(--muted)}
     $("rsave").textContent = all > 0 ? `${usd(all - routed)} (${Math.round((1 - routed / all) * 100)}%)` : "–";
     $("rnet").textContent = usd(req * (easy / 100 * per(NODE) + (med + hard) / 100 * per(MID)));
   }
+  // code tabs
+  const tabs = document.querySelectorAll('#integrate [role=tab]');
+  tabs.forEach((t) => t.addEventListener("click", () => {
+    tabs.forEach((x) => x.setAttribute("aria-selected", x === t ? "true" : "false"));
+    document.querySelectorAll('#integrate [data-pane]').forEach((p) => (p.hidden = p.dataset.pane !== t.dataset.tab));
+  }));
   for (const id of ["base", "req", "tin", "tout", "easy", "hard"]) $(id).addEventListener("input", run);
   run();
 })();

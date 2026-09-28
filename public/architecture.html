@@ -86,6 +86,11 @@ table{border-collapse:collapse;width:100%;min-width:560px;background:var(--panel
 th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
 th{font-size:11.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600}
 tr:last-child td{border-bottom:0}
+/* prompt / difficulty / why: badge column only as wide as the badge; reasons get room to read as a phrase */
+table.pdw{table-layout:fixed}
+table.pdw th:nth-child(1){width:46%}
+table.pdw th:nth-child(2){width:7.5em}
+table.pdw td:first-child{white-space:normal}
 td:first-child{white-space:nowrap}
 .note{border-left:3px solid var(--accent);padding:2px 0 2px 16px;color:var(--muted);margin:16px 0}
 .src{font:12.5px var(--mono);color:var(--muted)}
@@ -339,7 +344,7 @@ finance.quant.derivatives → finance.quant → finance → general</div>
     <li><b>Raise difficulty:</b> length, number of domains, high-stakes domains (law, medicine), explicit constraints, need for live data or calculation, multi-step and research-grade language, multi-item comparisons, jurisdiction-specific questions.</li>
     <li><b>Lower difficulty:</b> short definitional questions.</li>
   </ul>
-  <div class="tbl"><table>
+  <div class="tbl"><table class="pdw">
     <thead><tr><th>Prompt</th><th>Difficulty</th><th>Why</th></tr></thead>
     <tbody>
       <tr><td>What is EBITDA?</td><td><span class="pill live">easy</span></td><td>short definitional question</td></tr>

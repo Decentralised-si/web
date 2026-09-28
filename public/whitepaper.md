@@ -399,7 +399,7 @@ The 9B investors-and-founders allocation is not minted at genesis. It is release
 | 9 | $500M | 8.1B | year 8.5 |
 | 10 | $1B | 9.0B | not reached within 10 years |
 
-Cumulative fees are reported by the metering oracle (the settler role), which later moves to a verifier quorum (§12). The reported figure can only increase, and a tranche can never be minted twice. Fees are real payments, and 30% of every fee paid in PAI is burned, so inflating volume to force an unlock costs the payer real money. Until the settler role moves to a verifier quorum, the reported figure is trusted: the contract does not check it against on-chain payments, so the foundation-appointed settler could in principle unlock tranches early. Every report and unlock is logged on-chain (`FeesReported`, `InvestorTrancheUnlocked`).
+Cumulative fees are reported by the metering oracle (the settler role), which later moves to a verifier quorum (§12). The reported figure can only increase, and a tranche can never be minted twice. Fees are real payments, and 30% of every fee paid in PAI is burned, so inflating volume to force an unlock costs the payer real money. Until the settler role moves to a verifier quorum, the reported figure is trusted: the contract does not check it against on-chain payments, so the settler appointed by the project's founders could in principle unlock tranches early. Every report and unlock is logged on-chain (`FeesReported`, `InvestorTrancheUnlocked`).
 
 ### 9.3 Emission falls over time and as the network grows
 
@@ -503,7 +503,7 @@ Stake also sets a daily quota (for L3, 500k tokens per 10,000 PAI staked). Unsta
 
 ## 12. Governance
 
-At launch the Decentralised.si foundation holds the contract's owner role and operates the reference router. Governance is handed over in stages:
+At launch the project's founders hold the contract's owner role and operate the reference router. The legal entity that holds these roles will be named before any token launch. Governance is handed over in stages:
 
 - the settler role (the metering oracle) moves to a verifier quorum
 - the slasher role moves to verifier consensus with an appeal window
@@ -560,12 +560,12 @@ claude mcp add dsi -- dsi mcp     # the same memory in Claude Code
 ## Risk factors
 
 - **Concentration.** 9B of the 10B cap (90%) is allocated to investors and founders. It is minted only as cumulative fees pass milestones, but once minted it can outweigh the rest of the supply in governance and in any market.
-- **Trusted reporting.** Until the settler role moves to a verifier quorum, the cumulative-fee figure that unlocks tranches is reported by a role the foundation appoints, and the contract does not verify it against payments (§9.2).
+- **Trusted reporting.** Until the settler role moves to a verifier quorum, the cumulative-fee figure that unlocks tranches is reported by a role the project's founders appoint, and the contract does not verify it against payments (§9.2).
 - **Unaudited, undeployed contract.** `PAI.sol` has not been audited or deployed. Rewards are recorded on an off-chain ledger operated by the project; a bug, a migration or an operator error could change recorded balances.
 - **Regulatory.** A token with these features may be treated as a security or a regulated crypto-asset in some jurisdictions. That could delay, restrict or prevent issuance, or change the design described here.
 - **Adoption.** Emission, burn and unlock timings depend on network usage. If fees stay low, tranches may never unlock, and rewards may be worth little or nothing.
 - **Technical.** Routing, canaries and privacy measures are preview software. Providers can read the requests they serve (§6), and the network can suffer outages or attacks (§10).
-- **Governance.** The foundation holds the contract owner role at launch (§12). The move to PAI-weighted governance is planned, not guaranteed.
+- **Governance.** The project's founders hold the contract owner role at launch, and no legal entity has been named yet (§12). The move to PAI-weighted governance is planned, not guaranteed.
 
 ---
 

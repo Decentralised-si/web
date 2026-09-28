@@ -41,6 +41,16 @@ export function App({ config }: { config: Config }) {
     return () => removeEventListener("hashchange", on);
   }, []);
 
+  // Arriving from "Talk to DSI" on the intro (/app?login=1): open the sign-in straight away,
+  // then land in the chat. Already signed in: straight to the chat.
+  useEffect(() => {
+    const q = new URLSearchParams(location.search);
+    if (!ready || !q.has("login")) return;
+    q.delete("login");
+    history.replaceState(null, "", location.pathname + (q.toString() ? `?${q}` : "") + (location.hash || "#/chat"));
+    if (!authenticated) login();
+  }, [ready, authenticated, login]);
+
   // Always call the latest token getter without re-running the session exchange on every render.
   const tokenRef = useRef(getAccessToken);
   tokenRef.current = getAccessToken;

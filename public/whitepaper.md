@@ -384,7 +384,7 @@ Hard cap: **10,000,000,000 PAI**. Only 500M will exist at genesis. Another 500M 
 
 ### 9.2 Investors and founders unlock as volume grows
 
-The 9B investors-and-founders allocation is not minted at genesis. It is released in ten tranches of **900M PAI**. Each tranche is minted once, when the network's cumulative fees reach its milestone. Time alone unlocks nothing: supply for investors and founders grows only as paying usage does. Unlocked tranches go to a single vault address (`investorVault`); the split between investors and founders, and any vesting after unlock, are set by that vault, not by the PAI contract.
+The 9B investors-and-founders allocation is not minted at genesis. It is released in ten tranches of **900M PAI**. Each tranche is minted once, when the network's cumulative fees reach its milestone. Time alone unlocks nothing: supply for investors and founders grows only as paying usage does. Unlocked tranches go to a single vault address (`investorVault`); the split between investors and founders, and any vesting after unlock, are enforced by that vault, not by the PAI contract. The split and vesting have not been decided yet; they will be published before any tranche can unlock.
 
 | Tranche | Cumulative network fees | Unlocked in total | In the Figure 2 scenario |
 |---|---|---|---|

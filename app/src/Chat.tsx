@@ -14,7 +14,7 @@ const MODES = [
   { id: "private", label: "Private (strict)" },
 ];
 
-const NODE_GUIDE = "/node";
+const NODE_GUIDE = "/node#laptop";
 
 interface FreeChat {
   activeNodes: number;

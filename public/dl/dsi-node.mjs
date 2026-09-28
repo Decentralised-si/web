@@ -381,6 +381,7 @@ var ProviderNode = class {
     }
     if (req.method === "GET" && path === "/models") return json(res, 200, { object: "list", data: (await this.localModels()).map((id) => ({ id, object: "model", owned_by: this.cfg.name })) });
     if (req.method !== "POST" || !["/chat/completions", "/embeddings"].includes(path)) return json(res, 404, { error: { message: "not found" } });
+    if (this.paused) return json(res, 503, { error: { message: `node paused (${this.pausedReason})` } });
     let payload;
     try {
       payload = JSON.parse(body);
@@ -397,7 +398,15 @@ var ProviderNode = class {
     if (this.inflight < this.cfg.maxConcurrency) this.inflight++;
     else if (!await this.waitForSlot(res)) return json(res, 503, { error: { message: "node at capacity" } });
     const ac = new AbortController();
-    res.on("close", () => ac.abort());
+    res.on("close", () => {
+      if (!res.writableFinished) ac.abort();
+    });
+    let keepalive;
+    if (!payload.stream)
+      keepalive = setInterval(() => {
+        if (!res.headersSent) res.writeHead(200, { "content-type": "application/json", "cache-control": "no-cache" });
+        res.write(" ");
+      }, this.keepaliveMs);
     try {
       const upstream = await this.f(`${this.cfg.llmBaseUrl.replace(/\/$/, "")}${path}`, {
         method: "POST",
@@ -405,6 +414,15 @@ var ProviderNode = class {
         body: JSON.stringify(payload),
         signal: ac.signal
       });
+      if (keepalive && res.headersSent) {
+        clearInterval(keepalive);
+        const text = await upstream.text();
+        res.end(upstream.ok ? text : JSON.stringify({ error: { message: `local LLM returned ${upstream.status}: ${text.slice(0, 300)}` } }));
+        if (upstream.ok) this.stats.served++;
+        else this.stats.errors++;
+        return;
+      }
+      clearInterval(keepalive);
       res.writeHead(upstream.status, { "content-type": upstream.headers.get("content-type") ?? "application/json", "cache-control": "no-cache" });
       const trace = upstream.ok && this.cfg.traceRetrieval && consulted.length ? traceNote(consulted) : "";
       if (trace && payload.stream) {
@@ -424,9 +442,11 @@ var ProviderNode = class {
       if (upstream.ok) this.stats.served++;
       else this.stats.errors++;
     } catch (e) {
+      clearInterval(keepalive);
       this.stats.errors++;
-      if (!res.headersSent) json(res, 502, { error: { message: `local LLM error: ${e instanceof Error ? e.message : String(e)}` } });
-      else res.end();
+      const message = `local LLM error: ${e instanceof Error ? e.message : String(e)}`;
+      if (!res.headersSent) json(res, 502, { error: { message } });
+      else res.end(keepalive ? JSON.stringify({ error: { message } }) : void 0);
     } finally {
       const next = this.waiters.shift();
       if (next) next();
@@ -435,6 +455,28 @@ var ProviderNode = class {
     }
   }
   pendingSecretCheck = false;
+  /** How often a slow non-streaming answer sends keep-alive whitespace. */
+  keepaliveMs = 15e3;
+  paused = false;
+  pausedReason = "";
+  powerTimer;
+  /** Pause or resume taking work; routers are told at once with a heartbeat. */
+  async setPaused(paused, reason = "") {
+    if (paused === this.paused) return;
+    this.paused = paused;
+    this.pausedReason = reason;
+    this.log(paused ? `paused: ${reason}` : "resumed");
+    await this.sendHeartbeat().catch((e) => this.log(`heartbeat failed: ${e.message}`));
+  }
+  /** Watches the power source and pauses while on battery. */
+  watchPower(intervalMs = 3e4) {
+    const check = async () => {
+      const onBattery = await isOnBattery();
+      if (onBattery !== void 0) await this.setPaused(onBattery, "running on battery");
+    };
+    void check();
+    this.powerTimer = setInterval(check, intervalMs);
+  }
   waiters = [];
   /** Queues a request for a free slot (bounded wait, first come first served). */
   waitForSlot(res) {
@@ -480,7 +522,13 @@ ${existing}` : system }, ...messages.filter((m) => m.role !== "system")];
         if (!res.headersSent) json(res, 500, { error: { message: "internal error" } });
       });
     });
-    await new Promise((r) => this.server.listen(this.cfg.port, r));
+    await new Promise((resolve, reject) => {
+      this.server.once(
+        "error",
+        (e) => reject(e.code === "EADDRINUSE" ? new Error(`port ${this.cfg.port} is already in use (is another node running? set PORT to use a different one)`) : e)
+      );
+      this.server.listen(this.cfg.port, resolve);
+    });
     const port = this.server.address().port;
     this.log(`listening on :${port}, forwarding to ${this.cfg.llmBaseUrl}`);
     return port;
@@ -544,7 +592,7 @@ ${existing}` : system }, ...messages.filter((m) => m.role !== "system")];
   }
   async sendHeartbeat() {
     if (!this.state) return;
-    return this.router(`/api/nodes/${this.state.nodeId}/heartbeat`, { body: { load: this.inflight / Math.max(1, this.cfg.maxConcurrency), queue_ms: this.queueMs } });
+    return this.router(`/api/nodes/${this.state.nodeId}/heartbeat`, { body: { load: this.inflight / Math.max(1, this.cfg.maxConcurrency), queue_ms: this.queueMs, ...this.paused ? { paused: true } : {} } });
   }
   startHeartbeat(intervalMs = 3e4) {
     this.heartbeat = setInterval(() => this.sendHeartbeat().catch((e) => this.log(`heartbeat failed: ${e.message}`)), intervalMs);
@@ -554,9 +602,34 @@ ${existing}` : system }, ...messages.filter((m) => m.role !== "system")];
   }
   async close() {
     if (this.heartbeat) clearInterval(this.heartbeat);
+    if (this.powerTimer) clearInterval(this.powerTimer);
     await new Promise((r) => this.server ? this.server.close(() => r()) : r());
   }
 };
+async function isOnBattery() {
+  try {
+    if (process.platform === "darwin") {
+      const out = await run("pmset", ["-g", "batt"]);
+      return out.includes("'Battery Power'") ? true : out.includes("'AC Power'") ? false : void 0;
+    }
+    if (process.platform === "linux") {
+      const { readdirSync: readdirSync2, readFileSync: readFileSync3 } = await import("node:fs");
+      const base = "/sys/class/power_supply";
+      const mains = readdirSync2(base).filter((d) => readFileSync3(`${base}/${d}/type`, "utf8").trim() === "Mains");
+      if (!mains.length) return void 0;
+      return mains.every((d) => readFileSync3(`${base}/${d}/online`, "utf8").trim() === "0");
+    }
+    if (process.platform === "win32") {
+      const out = (await run("powershell", ["-NoProfile", "-Command", "(Get-CimInstance Win32_Battery | Select-Object -First 1).BatteryStatus"])).trim();
+      return out === "" ? void 0 : out === "1";
+    }
+  } catch {
+  }
+  return void 0;
+}
+function run(cmd, args) {
+  return new Promise((resolve, reject) => execFile(cmd, args, { timeout: 5e3 }, (e, out) => e ? reject(e) : resolve(String(out))));
+}
 function traceNote(notes) {
   return `<think>Knowledge consulted by this node:
 ${notes.map((n, i) => `[${i + 1}] ${n.source}`).join("\n")}
@@ -630,7 +703,8 @@ async function node(publicUrl) {
     traceRetrieval: env.DSI_TRACE_RETRIEVAL === "1",
     minMaxTokens: env.DSI_MIN_MAX_TOKENS ? Number(env.DSI_MIN_MAX_TOKENS) : void 0,
     ttftMs: env.DSI_TTFT_MS ? Number(env.DSI_TTFT_MS) : void 0,
-    maxQueueMs: env.DSI_MAX_QUEUE_MS ? Number(env.DSI_MAX_QUEUE_MS) : void 0
+    maxQueueMs: env.DSI_MAX_QUEUE_MS ? Number(env.DSI_MAX_QUEUE_MS) : void 0,
+    pauseOnBattery: env.DSI_PAUSE_ON_BATTERY === "1"
   });
 }
 async function main() {
@@ -671,8 +745,11 @@ async function main() {
   }
   await n.sendHeartbeat();
   n.startHeartbeat();
+  if (env.DSI_PAUSE_ON_BATTERY === "1") n.watchPower();
   console.log(`[dsi-node] live at ${state.endpoint} as ${state.nodeId}. Earnings: dsi-node earnings`);
   const stop = async () => {
+    await n.setPaused(true, "shutting down").catch(() => {
+    });
     await n.close();
     process.exit(0);
   };

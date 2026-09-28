@@ -97,6 +97,8 @@ footer .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
 footer a{color:var(--muted)}
 [hidden]{display:none!important}
 @media (max-width:640px){.links a.hide-sm{display:none}}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:16px}
+.grid2 pre{white-space:pre-wrap;overflow-wrap:anywhere}
 </style>
 </head>
 <body>
@@ -121,7 +123,7 @@ footer a{color:var(--muted)}
     <div class="eyebrow">Supply intelligence · open network</div>
     <h1>Run an AI model <em>at home</em>, serve the network.</h1>
     <p class="lead">Turn a gaming PC, a Mac or a spare server into a node of the Decentralised.si network. Pick an open model that fits your hardware and start it with Docker. Your node will appear on the <a href="/network">live map</a>.</p>
-    <p class="lead">Work you serve earns PAI, the network's reward token. The router only sends you requests it signs, and it never tells your node who is asking.</p>
+    <p class="lead">On a laptop, <a href="#laptop">one command</a> sets it all up and unlocks free chat on the network. Work you serve also earns PAI, the network's reward token. The router only sends you requests it signs, and it never tells your node who is asking.</p>
     <div class="steps3">
       <div class="card"><span class="n">1</span><h3 style="margin-top:0">Choose a model</h3><p class="muted small">Tell us your hardware below; we list the open models that run well on it.</p></div>
       <div class="card"><span class="n">2</span><h3 style="margin-top:0">Start it with Docker</h3><p class="muted small">One command starts the model server, a secure public tunnel and the node agent. No port forwarding or static IP needed.</p></div>
@@ -131,6 +133,34 @@ footer a{color:var(--muted)}
 </header>
 
 <main class="wrap">
+
+<section id="laptop">
+  <h2>On a laptop: one command, and free chat</h2>
+  <p class="muted">Share your laptop with the network and chat on the network for free. You get <b>20,000 free tokens a day</b> once your node passes its first checks (usually under an hour), plus every token your node serves for others. The installer picks a model that suits your memory, installs <a href="https://ollama.com">Ollama</a>, sets up a secure tunnel, and starts the node in the background and at login. It pauses while you're on battery.</p>
+  <p class="muted small">First <a href="/app/#/console/keys">create an API key</a>; the installer asks for it.</p>
+  <div class="grid2">
+    <div>
+      <h3>macOS and Linux</h3>
+<pre>curl -fsSL https://decentralise.si/install/node.sh | sh</pre>
+    </div>
+    <div>
+      <h3>Windows (PowerShell)</h3>
+<pre>irm https://decentralise.si/install/node.ps1 | iex</pre>
+    </div>
+  </div>
+  <div class="tbl">
+    <table>
+      <thead><tr><th>Your memory</th><th>Model it installs</th><th>Download</th></tr></thead>
+      <tbody>
+        <tr><td>under 6 GB</td><td><code>qwen2.5:1.5b</code></td><td>~1 GB</td></tr>
+        <tr><td>6–11 GB</td><td><code>llama3.2:3b</code></td><td>~2 GB</td></tr>
+        <tr><td>12–23 GB</td><td><code>qwen2.5:7b</code></td><td>~4.7 GB</td></tr>
+        <tr><td>24 GB or more</td><td><code>qwen2.5:14b</code></td><td>~9 GB</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="muted small">Then open <a href="/app">the app</a> and choose <b>Free — community nodes</b>. Free chats are answered on other people's computers, which see the text they answer (never who you are), so keep private details out of them. To choose a different model: <code>curl -fsSL https://decentralise.si/install/node.sh | DSI_MODEL=qwen2.5:7b sh</code>. To remove everything: <code>curl -fsSL https://decentralise.si/install/node.sh | sh -s -- --uninstall</code> (Windows: <code>&amp; ([scriptblock]::Create((irm https://decentralise.si/install/node.ps1))) -Uninstall</code>).</p>
+</section>
 
 <section id="models">
   <h2>1 · Choose a model for your hardware</h2>

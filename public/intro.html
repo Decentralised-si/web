@@ -68,6 +68,9 @@ body:not(.filming) .bars-cine.b{transform:translateY(100%)}
   transition:background .25s,box-shadow .25s,translate .25s,opacity .4s}
 .btn:hover:not(:disabled){background:var(--amber);translate:0 -1px;box-shadow:0 16px 50px -12px rgba(255,181,71,.65)}
 .btn:disabled{opacity:.3;cursor:progress}
+.gate .go.pair{flex-direction:row;flex-wrap:wrap;justify-content:center;gap:14px}
+.btn.ghost{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 1.5px rgba(236,234,245,.55)}
+.btn.ghost:hover:not(:disabled){color:var(--ground)}
 .quiet{font-size:14px;color:var(--dim);min-height:44px;padding:10px 18px;border-radius:999px;transition:color .2s}
 .quiet:hover{color:var(--ink)}
 .loadline{position:fixed;top:0;left:0;right:0;height:2px;z-index:60;background:rgba(150,145,190,.1)}
@@ -215,8 +218,9 @@ body.no-webgl .nogl{display:block}
 <div class="grain" aria-hidden="true"></div>
 <div class="flash" id="flash" aria-hidden="true"></div>
 <section class="gate" id="gate" aria-label="Start">
-  <div class="go">
-    <button class="btn" id="beginSound" type="button" disabled>Start</button>
+  <div class="go pair">
+    <button class="btn ghost" id="beginSound" type="button" disabled>Intro</button>
+    <button class="btn" id="beginEnd" type="button" disabled>Start</button>
   </div>
 </section>
 <div class="nogl" aria-hidden="true">decentralised<span>.si</span></div>
@@ -1586,15 +1590,19 @@ function skip(){
 
 /* the gate: one point of light waits. Touching Begin sets off the bang, and
    the tap is also what lets the browser play the score. */
-var gateEl = document.getElementById('gate'), bS = document.getElementById('beginSound');
-function begin(withSound){
+var gateEl = document.getElementById('gate'), bS = document.getElementById('beginSound'), bE = document.getElementById('beginEnd');
+/* Intro plays the film with its score; Start goes straight to the finished end screen. */
+function begin(withSound, toEnd){
   if(gateEl.classList.contains('gone')) return;          /* only once */
   if(document.activeElement && document.activeElement.blur) document.activeElement.blur();
   if(withSound){ userSetSound = true; paintSound(audio.start()); }
   gateEl.classList.add('gone');
-  if(reduce || !gl){ play(); skip(); } else play();
+  if(toEnd || reduce || !gl){ play(); skip(); } else play();
+  /* Start lands on the finished screen: the name formed and the buttons showing. */
+  if(toEnd) startAt = clock - (END + 1.7);
 }
-bS.addEventListener('click', function(){ begin(true); });
+bS.addEventListener('click', function(){ begin(true, false); });
+bE.addEventListener('click', function(){ begin(false, true); });
 var fill = document.getElementById('loadfill'), ll = document.getElementById('loadline');
 
 var hasPointer = false;
@@ -1907,7 +1915,7 @@ Promise.all([Promise.race([fontLoad, new Promise(function(r){ setTimeout(r, 2500
   catch(e){ console.error(e); gl = null; body.classList.add('no-webgl'); }
   fill.style.width = '100%'; ll.classList.add('done');
   requestAnimationFrame(frame);
-  bS.disabled = false;
+  bS.disabled = false; bE.disabled = false;
 });
 })();
 </script>

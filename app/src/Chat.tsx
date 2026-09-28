@@ -11,7 +11,7 @@ const MODES = [
   { id: "fastest", label: "Fastest", hint: "Lowest time to first word" },
   { id: "cheapest", label: "Cheapest", hint: "Lowest cost that clears the quality floor" },
   { id: "decentralised_only", label: "Decentralised only", hint: "Only nodes on the open network" },
-  { id: "free", label: "Free", hint: "Community nodes, for people who run one" },
+  { id: "free", label: "Free", hint: "Community nodes: 5,000 free tokens a day for everyone, 20,000 if you run a node" },
   { id: "private", label: "Private", hint: "Strict privacy: confidential providers only" },
 ];
 const modeLabel = (id: string) => MODES.find((m) => m.id === id)?.label ?? id;

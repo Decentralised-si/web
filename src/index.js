@@ -2,14 +2,16 @@
 // (the network story) at "/"; every other path on an alias domain redirects to the canonical
 // site so there is one origin (one app session).
 //
-// The intro film (/intro) plays before the landing page on a visitor's first visit to "/".
-// Finishing it, or choosing "Skip intro" / "Enter the site" (/?intro=skip), sets a cookie so
-// later visits go straight to the landing page. Crawlers and link-preview bots always get the
-// landing page.
+// The intro film (/intro) is what "/" shows whenever someone arrives from outside the site
+// (typed address, bookmark, a link elsewhere). Navigating within the site (logo, "Home",
+// "Enter the site" / "Skip intro" = /?intro=skip) goes to the landing page: a same-site
+// Referer, or a 30-minute cookie for browsers that strip the Referer. Crawlers and
+// link-preview bots always get the landing page.
 const CANONICAL = "decentralised.si";
 const AI_HOSTS = new Set(["decentralised.ai", "www.decentralised.ai", "decentralise.ai", "www.decentralise.ai"]);
 const ALIASES = new Set(["www.decentralised.si", "decentralise.si", "www.decentralise.si", ...AI_HOSTS]);
-const SEEN = "dsi_intro=seen";
+const ENTERED = "dsi_entered=1";
+const SITE_HOSTS = new Set([CANONICAL, ...ALIASES]);
 // Pages and files renamed since publication.
 const MOVED = { "/install/oifd.sh": "/install/synapse.sh", "/install/oifd.ps1": "/install/synapse.ps1" };
 const BOTS = /bot|crawl|spider|slurp|preview|facebookexternalhit|embedly|whatsapp|telegram|discord|slack|linkedin|twitter|pinterest|vkshare|quora|redditbot|applebot|bingpreview|headless/i;
@@ -48,16 +50,20 @@ export default {
           status: 302,
           headers: {
             location: url.pathname + url.search,
-            "set-cookie": `${SEEN}; Max-Age=2592000; Path=/; Secure; SameSite=Lax`,
+            "set-cookie": `${ENTERED}; Max-Age=1800; Path=/; Secure; SameSite=Lax`,
             "cache-control": "no-store",
           },
         });
       }
-      const seen = (request.headers.get("cookie") || "").split(/;\s*/).includes(SEEN);
+      let fromSite = false;
+      try {
+        fromSite = SITE_HOSTS.has(new URL(request.headers.get("referer") || "").hostname);
+      } catch {}
+      const seen = fromSite || (request.headers.get("cookie") || "").split(/;\s*/).includes(ENTERED);
       const bot = BOTS.test(request.headers.get("user-agent") || "");
       const landing = isAi ? "/ai" : "/";
       const res = !seen && !bot ? await asset(env, request, url, "/intro") : await asset(env, request, url, landing);
-      return withHeaders(res, { "cache-control": "private, no-cache", vary: "Cookie, User-Agent" });
+      return withHeaders(res, { "cache-control": "private, no-cache", vary: "Cookie, User-Agent, Referer" });
     }
 
     return env.ASSETS.fetch(request);

@@ -278,8 +278,8 @@ body.no-webgl .nogl{display:block}
 /* Sign-ups go to the Decentralised.si gateway on the same brand domain. */
 var ENDPOINT = (function(){ var h = location.hostname.replace(/^www\./, '');
   return ['decentralise.si','decentralised.si','decentralised.ai','decentralise.ai'].indexOf(h) >= 0 ? 'https://api.' + h + '/api/join' : 'https://api.decentralise.si/api/join'; })();
-/* Remember that this visitor has seen the film: the next visit goes straight to the site. */
-function markSeen(){ try { document.cookie = 'dsi_intro=seen; Max-Age=2592000; Path=/; SameSite=Lax' + (location.protocol === 'https:' ? '; Secure' : ''); } catch(e){} }
+/* Having watched the film, moving around the site should not replay it (see src/index.js). */
+function markSeen(){ try { document.cookie = 'dsi_entered=1; Max-Age=1800; Path=/; SameSite=Lax' + (location.protocol === 'https:' ? '; Secure' : ''); } catch(e){} }
 
 var body = document.body;
 var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;

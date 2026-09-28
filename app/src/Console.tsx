@@ -298,7 +298,7 @@ export function Keys({ canLimit }: { canLimit: boolean }) {
       <Section title="Create a key">
         <div className="row wrap">
           <input placeholder="Key name, e.g. production-backend" value={name} onChange={(e) => setName(e.target.value)} style={{ flex: 1, minWidth: 220 }} />
-          <select value={scope} onChange={(e) => setScope(e.target.value as never)} aria-label="Key type" title="Inference keys call models; admin keys manage the organization">
+          <select value={scope} onChange={(e) => setScope(e.target.value as never)} aria-label="Key type" title="Inference keys call models; admin keys manage the organisation">
             <option value="inference">Inference key</option>
             {canLimit && <option value="admin">Admin key</option>}
           </select>

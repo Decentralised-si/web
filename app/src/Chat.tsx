@@ -230,7 +230,17 @@ export function Chat({ id, onSaved, config }: { id?: string; onSaved: () => void
             )}
             {mode !== "free" && credit !== undefined && credit <= 0 && (
               <p className="note">
-                Your organization has no credit yet. <a href="#/wallet">Top up with crypto</a>, or connect your own provider keys in <a href="#/console/providers">Console → Providers</a>.
+                Your organisation has no credit yet.{" "}
+                {config.deposits.evm || config.deposits.solana || config.checkout ? (
+                  <>
+                    <a href="#/wallet">Top up with crypto</a>, or connect
+                  </>
+                ) : (
+                  <>
+                    <a href={NODE_GUIDE}>Run a node</a> for free network chat, or connect
+                  </>
+                )}{" "}
+                your own provider keys in <a href="#/console/providers">Console → Providers</a>.
               </p>
             )}
             {!config.platformVendors.length && <p className="fine muted">Commercial models (Claude, GPT, Gemini) need your own key in Console → Providers until platform access is enabled; open-weight network models work with credit.</p>}
@@ -251,7 +261,8 @@ export function Chat({ id, onSaved, config }: { id?: string; onSaved: () => void
                   )}
                   {m.error && /no network credit|insufficient credit/i.test(m.error) && (
                     <p className="note small">
-                      To keep chatting, <a href="#/wallet">add credit</a> or connect your own provider key in <a href="#/console/providers">Console → Providers</a>. Then send your message again.
+                      To keep chatting,{" "}
+                      {config.deposits.evm || config.deposits.solana || config.checkout ? <a href="#/wallet">add credit</a> : <a href={NODE_GUIDE}>run a node for free chat</a>} or connect your own provider key in <a href="#/console/providers">Console → Providers</a>. Then send your message again.
                     </p>
                   )}
                   {m.meta?.model && (

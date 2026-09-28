@@ -8,15 +8,16 @@ import "./styles.css";
 const root = createRoot(document.getElementById("root")!);
 
 function Unconfigured({ error }: { error?: string }) {
+  if (error) console.error("config:", error);
   return (
     <div className="center">
       <div className="card narrow">
         <div className="brand-lg">
           Decentralised<span>.si</span>
         </div>
-        <p className="muted">{error ? `Could not reach the Decentralised.si API: ${error}` : "Sign-in is not configured on this deployment yet (no Privy app id). Developers can still use the API with a ds_ key."}</p>
+        <p className="muted">{error ? "The Decentralised.si service did not respond. Please try again in a moment." : "Sign-in is temporarily unavailable. Developers can still use the API with a ds_ key."}</p>
         <p>
-          <a href="/">Back to the site</a> · <a href="/dashboard">API-key dashboard</a>
+          <a href="/home">Back to the site</a> · <a href="/dashboard">API-key dashboard</a>
         </p>
       </div>
     </div>

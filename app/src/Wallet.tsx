@@ -161,10 +161,12 @@ export function Wallet({ role, config, session }: { role: string; config: Config
     }
   };
 
+  const payOpen = config.deposits.evm || config.deposits.solana || config.checkout;
+
   return (
     <div className="page">
       <div className="page-head">
-        <h1>Wallet &amp; billing</h1>
+        <h1>Credits &amp; wallet</h1>
       </div>
       <div className="grid3">
         <section className="card">
@@ -193,17 +195,25 @@ export function Wallet({ role, config, session }: { role: string; config: Config
           {!evmWallet && !solWallet && <p className="small muted">Creating your wallet…</p>}
           <p className="fine muted">Self-custodial wallets created by Privy on sign-in. Only you can move funds from them.</p>
         </section>
-        <section className="card">
-          <div className="muted small">Add funds to your wallet</div>
-          <div className="row wrap">
-            <button onClick={() => topUp("crypto")}>Any crypto</button>
-            <button onClick={() => topUp("fiat")}>Card / bank</button>
-          </div>
-          <p className="fine muted">Send BTC, ETH, SOL, stablecoins and more from any chain; it arrives as USDC on Base.</p>
-        </section>
+        {payOpen ? (
+          <section className="card">
+            <div className="muted small">Add funds to your wallet</div>
+            <div className="row wrap">
+              <button onClick={() => topUp("crypto")}>Any crypto</button>
+              <button onClick={() => topUp("fiat")}>Card / bank</button>
+            </div>
+            <p className="fine muted">Send BTC, ETH, SOL, stablecoins and more from any chain; it arrives as USDC on Base.</p>
+          </section>
+        ) : (
+          <section className="card">
+            <div className="muted small">Top-ups</div>
+            <p className="small">Credit top-ups aren't open yet, so there is no need to fund your wallet for this service.</p>
+            <p className="fine muted">Until they open, connect your own provider keys in Console → Providers, or run a node for free network chat.</p>
+          </section>
+        )}
       </div>
 
-      {!canPay && <p className="note">Only owners, admins and billing members can add credit to this organization.</p>}
+      {!canPay && <p className="note">Only owners, admins and billing members can add credit to this organisation.</p>}
 
       {canPay && (
         <section className="card">

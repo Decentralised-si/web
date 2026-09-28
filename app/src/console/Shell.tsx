@@ -169,7 +169,7 @@ export function ConsoleShell({ page, arg, role, session, org, config, switchOrg,
       body = <Dashboard session={session} go={go} />;
   }
 
-  const orgName = session.organizations.find((o) => o.id === org)?.name ?? "Organization";
+  const orgName = session.organizations.find((o) => o.id === org)?.name ?? "Organisation";
   return (
     <div className={`shell console-shell ${menu ? "menu-open" : ""}`}>
       <aside className="sidebar">
@@ -269,7 +269,7 @@ function Palette({ onClose, go }: { onClose: () => void; go: (id: string) => voi
     const extra: typeof items = [
       { label: "Notifications", hint: "Console", to: "notifications" },
       { label: "Documentation", hint: "Console", to: "docs" },
-      { label: "Credits & billing", hint: "Console", to: "credits" },
+      { label: "Credits & wallet", hint: "Console", to: "credits" },
       { label: "Create API key", hint: "Action", to: "keys" },
       { label: "Build an agent", hint: "Action", to: "agents" },
     ];

@@ -5,9 +5,12 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Network map — Decentralised.si</title>
 <meta name="description" content="Live map of the Decentralised.si provider network: connected open models by city, requests, tokens, work and PAI rewards, updated every few seconds.">
+<meta property="og:url" content="https://decentralised.si/network">
+<meta property="og:image" content="https://decentralised.si/brand/logo.png">
+<meta name="twitter:card" content="summary">
 <meta property="og:title" content="Decentralised.si network, live">
 <meta property="og:description" content="Connected models by city, traffic and rewards, in real time.">
-<meta property="og:image" content="/brand/logo.png">
+
 <meta name="theme-color" content="#000211">
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/png" sizes="32x32" href="/brand/favicon-32.png">
@@ -112,12 +115,14 @@ footer a{color:var(--muted)}
   <div class="wrap">
     <a class="brand" href="/home" aria-label="Decentralised.si home"><img src="/brand/logo-96.png" width="30" height="30" alt="" class="logo"><span>Decentralised<b>.si</b></span></a>
     <nav class="links" aria-label="Main">
-      <a href="/network" aria-current="page">Live map</a>
-      <a href="/node">Run a node</a>
-      <a class="hide-sm" href="/download">Download</a>
+      <a href="/download">Download</a>
       <a class="hide-sm" href="/architecture">Architecture</a>
-      <a href="https://github.com/Decentralised-si/Smart-LLM-Router" aria-label="GitHub"><svg class="gh"><use href="#gh"/></svg></a>
-      <a class="btn primary" href="/node">Run a node</a>
+      <a href="/node">Run a node</a>
+      <a class="hide-sm" href="/network" aria-current="page">Live map</a>
+      <a class="hide-sm" href="/ai">Network</a>
+      <a class="hide-sm" href="/whitepaper">Whitepaper</a>
+      <a href="https://github.com/Decentralised-si" aria-label="GitHub"><svg class="gh"><use href="#gh"/></svg></a>
+      <a class="btn small primary" href="/app">Open app</a>
     </nav>
   </div>
 </div>
@@ -193,13 +198,24 @@ footer a{color:var(--muted)}
 
 <footer>
   <div class="wrap">
-    <div><b style="color:var(--ink)">Decentralised<span style="color:var(--accent)">.si</span></b> · Decentralised Super Intelligence</div>
+    <div><b style="color:var(--ink)">Decentralised<span style="color:var(--accent)">.si</span></b> · Decentralised Super Intelligence · open source · © 2026</div>
     <div class="links">
+      <a href="/home">Home</a>
+      <a href="/intro">Watch the intro</a>
+      <a href="/download">Download</a>
+      <a href="/architecture">Architecture</a>
       <a href="/node">Run a node</a>
-      <a href="/ai">About the network</a>
+      <a href="/network">Live map</a>
+      <a href="/ai">Network</a>
       <a href="/whitepaper">Whitepaper</a>
-      <a href="https://github.com/Decentralised-si/Smart-LLM-Router">GitHub</a>
+      <a href="/app#/console/docs">API docs</a>
+      <a href="https://github.com/Decentralised-si/Smart-LLM-Router">GitHub · router</a>
+      <a href="https://github.com/Decentralised-si/web">GitHub · web</a>
+      <a href="/privacy">Privacy</a>
+      <a href="/terms">Terms</a>
+      <a href="mailto:hello@decentralised.si">hello@decentralised.si</a>
     </div>
+    <p style="flex-basis:100%;margin:12px 0 0;font-size:12px;line-height:1.5">PAI is an off-chain reward unit. It has not been issued, has no market value, and nothing on this site is an offer of securities or a solicitation to invest. The PAI contract is unaudited and not deployed. Software is provided as is.</p>
   </div>
 </footer>
 

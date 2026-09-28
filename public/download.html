@@ -5,9 +5,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Download Synapse — Decentralised.si</title>
 <meta name="description" content="Download and install Synapse, the open-source Decentralised.si router, on macOS, Linux or Windows. One-line installers, direct downloads and checksums.">
+<meta property="og:url" content="https://decentralised.si/download">
+<meta property="og:image" content="https://decentralised.si/brand/logo.png">
+<meta name="twitter:card" content="summary">
 <meta property="og:title" content="Download Synapse">
 <meta property="og:description" content="Install the open-source Decentralised.si router on your laptop: macOS, Linux and Windows.">
-<meta property="og:image" content="/brand/logo.png">
 <meta name="theme-color" content="#000211">
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/png" sizes="32x32" href="/brand/favicon-32.png">
@@ -100,17 +102,20 @@ footer a{color:var(--muted)}
     <a class="brand" href="/home" aria-label="Decentralised.si home"><img src="/brand/logo-96.png" width="30" height="30" alt="" class="logo"><span>Decentralised<b>.si</b></span></a>
     <nav class="links" aria-label="Main">
       <a href="/download" aria-current="page">Download</a>
-      <a href="/architecture">Architecture</a>
+      <a class="hide-sm" href="/architecture">Architecture</a>
+      <a href="/node">Run a node</a>
       <a class="hide-sm" href="/network">Live map</a>
-      <a href="https://github.com/Decentralised-si/Smart-LLM-Router" aria-label="GitHub"><svg class="gh"><use href="#gh"/></svg></a>
-      <a class="btn small primary" href="/app/">Open app</a>
+      <a class="hide-sm" href="/ai">Network</a>
+      <a class="hide-sm" href="/whitepaper">Whitepaper</a>
+      <a href="https://github.com/Decentralised-si" aria-label="GitHub"><svg class="gh"><use href="#gh"/></svg></a>
+      <a class="btn small primary" href="/app">Open app</a>
     </nav>
   </div>
 </div>
 
 <header class="hero">
   <div class="wrap">
-    <div class="eyebrow">Synapse · v0.1.1 · preview</div>
+    <div class="eyebrow">Synapse · v0.2.2 · preview</div>
     <h1>Put the router <em>on your laptop</em>.</h1>
     <p class="lead"><b>Synapse</b> is the open-source Decentralised.si router. It is one small program that runs in the background on your machine. For each request it picks the expert (a local model, your own API keys, or the network), keeps your identity and memory on your device, and explains every choice.</p>
 
@@ -145,7 +150,7 @@ footer a{color:var(--muted)}
     <p>Open <b>Terminal</b> (Applications → Utilities) and run:</p>
     <div class="cmd"><code id="c-mac">curl -fsSL https://decentralised.si/install/synapse.sh | sh</code><button type="button" data-copy="c-mac">Copy</button></div>
     <p class="muted">This works on Apple silicon (M1–M4) and Intel Macs; the right build is picked automatically. It installs to <code>~/.local/bin/synapse</code>. If that folder isn't on your PATH yet, the installer prints the one line to add it.</p>
-    <p class="muted">You can also use <code>SYNAPSE_INSTALL_DIR=/usr/local/bin</code> for a system-wide install (that may ask for your password), or <code>SYNAPSE_VERSION=synapse-v0.1.1</code> to pin a version.</p>
+    <p class="muted">You can also use <code>SYNAPSE_INSTALL_DIR=/usr/local/bin</code> for a system-wide install (that may ask for your password), or <code>SYNAPSE_VERSION=synapse-v0.2.2</code> to pin a version.</p>
   </div>
   <div data-pane="linux" hidden>
     <p>In a terminal:</p>
@@ -253,7 +258,7 @@ Get-FileHash synapse-x86_64-pc-windows-msvc.zip         <span class="c"># Window
     api_key_env: DSI_API_KEY
 hedging:
   skip_modes: [deep]      # quality-first: wait for the specialist</pre>
-  <p class="muted">Declare specialists with domain scores, such as <code>finance.quant.derivatives: 0.97</code> or <code>technology.software.rust: 0.96</code>, and the router will send matching questions to them. The <a href="/architecture#choose">architecture page</a> explains how scoring works. Get a gateway key in the <a href="/app/#/console/keys">console</a>.</p>
+  <p class="muted">Declare specialists with domain scores, such as <code>finance.quant.derivatives: 0.97</code> or <code>technology.software.rust: 0.96</code>, and the router will send matching questions to them. The <a href="/architecture#choose">architecture page</a> explains how scoring works. Get a gateway key in the <a href="/app#/console/keys">console</a>.</p>
 </section>
 
 <section id="background">
@@ -347,13 +352,24 @@ docker build -f docker/Dockerfile -t synapse .</pre>
 
 <footer>
   <div class="wrap">
-    <div><b style="color:var(--ink)">Decentralised<span style="color:var(--accent)">.si</span></b> · Decentralised Super Intelligence</div>
+    <div><b style="color:var(--ink)">Decentralised<span style="color:var(--accent)">.si</span></b> · Decentralised Super Intelligence · open source · © 2026</div>
     <div class="links">
       <a href="/home">Home</a>
+      <a href="/intro">Watch the intro</a>
+      <a href="/download">Download</a>
       <a href="/architecture">Architecture</a>
-      <a href="https://github.com/Decentralised-si/Smart-LLM-Router/releases">Releases</a>
-      <a href="https://github.com/Decentralised-si/Smart-LLM-Router">GitHub</a>
+      <a href="/node">Run a node</a>
+      <a href="/network">Live map</a>
+      <a href="/ai">Network</a>
+      <a href="/whitepaper">Whitepaper</a>
+      <a href="/app#/console/docs">API docs</a>
+      <a href="https://github.com/Decentralised-si/Smart-LLM-Router">GitHub · router</a>
+      <a href="https://github.com/Decentralised-si/web">GitHub · web</a>
+      <a href="/privacy">Privacy</a>
+      <a href="/terms">Terms</a>
+      <a href="mailto:hello@decentralised.si">hello@decentralised.si</a>
     </div>
+    <p style="flex-basis:100%;margin:12px 0 0;font-size:12px;line-height:1.5">PAI is an off-chain reward unit. It has not been issued, has no market value, and nothing on this site is an offer of securities or a solicitation to invest. The PAI contract is unaudited and not deployed. Software is provided as is.</p>
   </div>
 </footer>
 

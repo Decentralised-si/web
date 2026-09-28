@@ -5,8 +5,10 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Decentralised.si — Decentralised Super Intelligence</title>
 <meta name="description" content="Open-source AI routing that runs on your device: Synapse picks the cheapest expert that is good enough for each request, strips what identifies you, backs up slow providers and escalates only when unsure. Plus drop-in Anthropic, OpenAI and Gemini APIs.">
+<meta property="og:url" content="https://decentralised.si/home">
+<meta property="og:image" content="https://decentralised.si/brand/logo.png">
+<meta name="twitter:card" content="summary">
 <meta property="og:title" content="Decentralised.si — Decentralised Super Intelligence">
-<meta property="og:image" content="/brand/logo.png">
 <meta property="og:description" content="Open-source AI routing that runs on your device, plus drop-in Anthropic, OpenAI and Gemini APIs.">
 <meta name="theme-color" content="#000211">
 <link rel="icon" href="/favicon.ico" sizes="any">
@@ -181,14 +183,13 @@ footer a{color:var(--muted)}
     </a>
     <nav class="links" aria-label="Main">
       <a href="/download">Download</a>
-      <a href="/architecture">Architecture</a>
-      <a href="/network">Live map</a>
-      <a href="#migrate">API</a>
-      <a href="#console">Console</a>
-      <a href="/ai">Network</a>
-      <a href="/whitepaper">Whitepaper</a>
+      <a class="hide-sm" href="/architecture">Architecture</a>
+      <a href="/node">Run a node</a>
+      <a class="hide-sm" href="/network">Live map</a>
+      <a class="hide-sm" href="/ai">Network</a>
+      <a class="hide-sm" href="/whitepaper">Whitepaper</a>
       <a href="https://github.com/Decentralised-si" aria-label="GitHub" class="ghl"><svg class="gh" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a>
-      <a class="btn small primary" href="/app/">Open app</a>
+      <a class="btn small primary" href="/app">Open app</a>
     </nav>
   </div>
 </header>
@@ -265,13 +266,13 @@ footer a{color:var(--muted)}
   <div class="wrap">
     <div class="eyebrow">What you get</div>
     <h2>A local router, a hosted gateway, a chat app and a console.</h2>
-    <p class="sub">Sign in with email, Google, GitHub or a wallet. You get a chat interface, a console with everything a model provider's dashboard gives you, and a wallet to pay with crypto.</p>
+    <p class="sub">Sign in with email, Google, GitHub or a wallet. You get a chat interface, a console with everything a model provider's dashboard gives you, and a wallet for crypto top-ups (opening soon).</p>
     <div class="grid">
       <div class="card"><div class="ic" aria-hidden="true">⇄</div><h3>Drop-in APIs</h3><p>Anthropic Messages, OpenAI Chat Completions, Responses and Embeddings, Gemini generateContent, and MCP. Streaming, tools, vision, JSON schema, files and batches all work.</p></div>
       <div class="card"><div class="ic" aria-hidden="true">◎</div><h3>Local router</h3><p><code>synapse</code> runs on your machine and routes across local models, your own keys and the network, with a quality floor and an explanation for every choice.</p></div>
       <div class="card"><div class="ic" aria-hidden="true">✦</div><h3>Chat</h3><p>A clean chat interface across every model, with <code>auto</code> to let the router pick. Conversations are stored in your browser, not on our servers.</p></div>
       <div class="card"><div class="ic" aria-hidden="true">▤</div><h3>Console</h3><p>API keys, workspaces, rate and spend limits, usage, cost, logs, members, playground, files, batches, saved agents and alerts.</p></div>
-      <div class="card"><div class="ic" aria-hidden="true">◈</div><h3>Pay with crypto</h3><p>Every account gets a self-custodial wallet. Top up in USDC, ETH, SOL and more, or by card through a crypto on-ramp.</p></div>
+      <div class="card"><div class="ic" aria-hidden="true">◈</div><h3>Pay with crypto</h3><p>Every account gets a self-custodial wallet. Crypto and card top-ups are opening soon; until then, use your own vendor keys, or run a node for free network chat.</p></div>
       <div class="card"><div class="ic" aria-hidden="true">›_</div><h3>Agent terminal</h3><p>Hermes Agent, preconfigured for Decentralised.si, plus the <code>dsi</code> harness that keeps your memory on your own machine.</p></div>
     </div>
   </div>
@@ -385,7 +386,7 @@ x-decentralise-actual-provider / -market / -receipt</pre>
           <li>Playground with "get code", Files, Batches and saved agents</li>
           <li>Members with owner, admin, developer and billing roles</li>
         </ul>
-        <a class="btn primary" href="/app/#/console/dashboard">Open the console</a>
+        <a class="btn primary" href="/app#/console/dashboard">Open the console</a>
       </div>
       <div class="console" aria-hidden="true">
         <nav>
@@ -400,6 +401,7 @@ x-decentralise-actual-provider / -market / -receipt</pre>
           <div class="k"><small>Cache reused</small><b>1.2M</b></div>
           <div class="bars"><i style="height:34%"></i><i style="height:52%"></i><i style="height:41%"></i><i style="height:68%"></i><i style="height:57%"></i><i style="height:80%"></i><i style="height:73%"></i><i style="height:91%"></i><i style="height:62%"></i><i style="height:77%"></i></div>
         </div>
+        <p style="grid-column:1/-1;margin:0;padding:8px 14px;font-size:12px;color:var(--muted)">Illustrative figures</p>
       </div>
     </div>
   </div>
@@ -410,8 +412,8 @@ x-decentralise-actual-provider / -market / -receipt</pre>
     <div class="split">
       <div>
         <div class="eyebrow">Wallet</div>
-        <h2>Pay for AI with the crypto you already hold.</h2>
-        <p class="sub">Every account gets a self-custodial wallet at sign-in. Send from it, or from any wallet you've linked, and credit is added once the payment confirms on-chain. Or pay by card through the built-in on-ramp.</p>
+        <h2>Pay for AI with the crypto you already hold (opening soon).</h2>
+        <p class="sub">Every account gets a self-custodial wallet at sign-in. Send from it, or from any wallet you've linked, and credit is added once the payment confirms on-chain. Or pay by card through the built-in on-ramp. Top-ups are not open yet; this is how they will work.</p>
         <div class="pay"><span>USDC</span><span>USDT</span><span>ETH</span><span>SOL</span><span>BNB</span><span>POL</span><span>Base</span><span>Arbitrum</span><span>Optimism</span><span>Polygon</span><span>BNB Chain</span><span>Ethereum</span><span>Solana</span></div>
       </div>
       <div class="card">
@@ -465,7 +467,7 @@ x-decentralise-actual-provider / -market / -receipt</pre>
         <p class="sub"><b>Install in one line</b> on macOS, Linux or Windows from the <a href="/download">download page</a>, or build it from source. The default config uses simulated experts, so you can watch routing, fallback, hedging and escalation work without a GPU or an API key.</p>
         <div class="repos">
           <a class="card repo" href="https://github.com/Decentralised-si/Smart-LLM-Router"><b>Decentralised-si/Smart-LLM-Router</b><span>Synapse (Rust) · gateway &amp; router (TypeScript) · dsi-node · dsi harness · PAI</span></a>
-          <a class="card repo" href="https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/synapse"><b>synapse/</b><span>the local router daemon: 36 tests, benchmark harness, Dockerfile</span></a>
+          <a class="card repo" href="https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/synapse"><b>synapse/</b><span>the local router daemon: test suite, benchmark harness, Dockerfile</span></a>
           <a class="card repo" href="https://github.com/Decentralised-si/web"><b>Decentralised-si/web</b><span>this website, chat app, console and wallet</span></a>
         </div>
       </div>
@@ -499,9 +501,9 @@ cargo run --release --bin benchmark</pre>
   <div class="wrap">
     <div class="band">
       <div>
-        <div class="eyebrow">Decentralised super intelligence</div>
+        <div class="eyebrow">Decentralised Super Intelligence</div>
         <h2>Behind the router: an open network anyone can join.</h2>
-        <p>Run one container next to an open-weight model and your GPU becomes a paid provider. Rewards are paid in PAI, a capped token whose emission falls as the network grows.</p>
+        <p>Run one container next to an open-weight model and your GPU serves the network. Verified work earns PAI reward points, recorded on an off-chain ledger today; PAI has not been issued and has no cash value.</p>
         <div class="ctas" style="margin-top:20px"><a class="btn primary" href="/network">See the live map</a><a class="btn" href="/node">Run a node at home</a><a class="btn" href="/ai">About the network</a></div>
       </div>
       <ul>
@@ -521,7 +523,7 @@ cargo run --release --bin benchmark</pre>
     <div class="ctas">
       <a class="btn primary" href="/architecture">How it works</a>
       <a class="btn" href="https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/synapse">Synapse on GitHub</a>
-      <a class="btn" href="/app/">Open the app</a>
+      <a class="btn" href="/app">Open the app</a>
     </div>
   </div>
 </section>
@@ -529,19 +531,24 @@ cargo run --release --bin benchmark</pre>
 
 <footer>
   <div class="wrap">
-    <div><b style="color:var(--ink)">Decentralised<span style="color:var(--accent)">.si</span></b> · Decentralised Super Intelligence · open source</div>
+    <div><b style="color:var(--ink)">Decentralised<span style="color:var(--accent)">.si</span></b> · Decentralised Super Intelligence · open source · © 2026</div>
     <div class="links">
+      <a href="/home">Home</a>
       <a href="/intro">Watch the intro</a>
       <a href="/download">Download</a>
       <a href="/architecture">Architecture</a>
-      <a href="/network">Live map</a>
       <a href="/node">Run a node</a>
+      <a href="/network">Live map</a>
       <a href="/ai">Network</a>
       <a href="/whitepaper">Whitepaper</a>
-      <a href="/app/#/console/docs">API docs</a>
+      <a href="/app#/console/docs">API docs</a>
       <a href="https://github.com/Decentralised-si/Smart-LLM-Router">GitHub · router</a>
       <a href="https://github.com/Decentralised-si/web">GitHub · web</a>
+      <a href="/privacy">Privacy</a>
+      <a href="/terms">Terms</a>
+      <a href="mailto:hello@decentralised.si">hello@decentralised.si</a>
     </div>
+    <p style="flex-basis:100%;margin:12px 0 0;font-size:12px;line-height:1.5">PAI is an off-chain reward unit. It has not been issued, has no market value, and nothing on this site is an offer of securities or a solicitation to invest. The PAI contract is unaudited and not deployed. Software is provided as is.</p>
   </div>
 </footer>
 
@@ -591,7 +598,7 @@ cargo run --release --bin benchmark</pre>
   const scenes = [
     { q: "Explain Black-Scholes implied volatility.", steps: [0, 2], to: 0, t: "<b>Routed to the specialist.</b> Classified as finance.quant.derivatives; the quant specialist wins on exact domain match, above the quality target and within budget.",
       h: "route  quant-local  score 0.90  ·  exact domain match  ·  ~150 ms  ·  ~$0.0002" },
-    { q: "Email me at yousef@example.com and analyse this option position.", steps: [1], to: 0, t: "<b>Pseudonymised before it leaves.</b> The provider gets a placeholder; the mapping stays on your device and the reply you see is restored.",
+    { q: "Email me at you@example.com and analyse this option position.", steps: [1], to: 0, t: "<b>Pseudonymised before it leaves.</b> The provider gets a placeholder; the mapping stays on your device and the reply you see is restored.",
       h: 'provider received: "Email me at <EMAIL_1> and analyse this option position."' },
     { q: "Explain implied volatility.", steps: [2], to: 2, down: [0], t: "<b>Specialist offline, answer still arrives.</b> The next-best expert takes over, and the route says so.",
       h: "fallback: quant-local is offline; falling back to general-local" },

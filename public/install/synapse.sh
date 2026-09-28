@@ -2,7 +2,7 @@
 # Installs Synapse, the Decentralised.si local router, on macOS or Linux.
 #   curl -fsSL https://decentralised.si/install/synapse.sh | sh
 # Options (environment variables):
-#   SYNAPSE_VERSION=synapse-v0.1.1     install a specific release (default: latest)
+#   SYNAPSE_VERSION=synapse-v0.2.2     install a specific release (default: latest)
 #   SYNAPSE_INSTALL_DIR=/usr/local/bin   install location (default: ~/.local/bin)
 #   SYNAPSE_NO_INIT=1               do not create ~/.synapse config files
 # Source: https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/synapse

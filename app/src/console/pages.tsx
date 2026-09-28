@@ -153,7 +153,7 @@ export function Models({ go }: { go: (id: string) => void }) {
     <>
       <div className="page-head">
         <h1>Models</h1>
-        <p className="muted small">Every model the router can use. "Available" means your organization can reach it now: through your own provider key (BYOK), platform access, or the decentralised network.</p>
+        <p className="muted small">Every model the router can use. "Available" means your organisation can reach it now: through your own provider key (BYOK), platform access, or the decentralised network.</p>
       </div>
       <div className="row">
         <select value={kind} onChange={(e) => setKind(e.target.value as never)} aria-label="Kind">
@@ -437,7 +437,7 @@ export function Workspaces({ admin, onChange }: { admin: boolean; onChange: () =
                     <code>{x.id}</code>
                   </td>
                   <td>{counts[x.id] ?? 0}</td>
-                  <td className="small">{x.id === "default" ? "organization limits" : x.limits && Object.keys(x.limits).length ? Object.entries(x.limits).map(([k, v]) => `${k}: ${v}`).join(" · ") : "organization limits"}</td>
+                  <td className="small">{x.id === "default" ? "organisation limits" : x.limits && Object.keys(x.limits).length ? Object.entries(x.limits).map(([k, v]) => `${k}: ${v}`).join(" · ") : "organisation limits"}</td>
                   <td>{when(x.createdAt)}</td>
                   <td className="row">
                     {admin && x.id !== "default" && (
@@ -513,12 +513,12 @@ export function OrgSettings({ admin, role, session, onOrgsChanged, switchOrg }: 
             </button>
           ) : (
             <button className="danger" onClick={() => setConfirmLeave(true)}>
-              Leave organization
+              Leave organisation
             </button>
           )}
         </div>
       </Section>
-      <Section title="Create another organization">
+      <Section title="Create another organisation">
         <div className="row">
           <input placeholder="Organization name" value={newOrg} onChange={(e) => setNewOrg(e.target.value)} style={{ flex: 1 }} />
           <button
@@ -629,9 +629,9 @@ client = genai.Client(api_key="ds_live_...", http_options={"base_url": "${API}/g
       <Section title="Keys and limits">
         <ul className="small">
           <li>
-            <strong>Inference keys</strong> call models, files and batches. <strong>Admin keys</strong> manage the organization through <code>/api/*</code> and cannot call models.
+            <strong>Inference keys</strong> call models, files and batches. <strong>Admin keys</strong> manage the organisation through <code>/api/*</code> and cannot call models.
           </li>
-          <li>Limits (requests/min, tokens/min, daily and monthly spend) apply per key, per workspace and per organization; over-limit requests get HTTP 429 with <code>retry-after</code>.</li>
+          <li>Limits (requests/min, tokens/min, daily and monthly spend) apply per key, per workspace and per organisation; over-limit requests get HTTP 429 with <code>retry-after</code>.</li>
         </ul>
       </Section>
     </div>

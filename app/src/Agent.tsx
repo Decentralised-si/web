@@ -66,7 +66,7 @@ model:
   key_env: DSI_API_KEY`}
         />
         <p className="small muted">
-          Or interactively: run <code>hermes model</code>, choose <em>Custom endpoint</em>, and enter <code>{API}/openai/v1</code> and your key. Routing headers are optional; your organization's default policy (Console → Routing) applies.
+          Or interactively: run <code>hermes model</code>, choose <em>Custom endpoint</em>, and enter <code>{API}/openai/v1</code> and your key. Routing headers are optional; your organisation's default policy (Console → Routing) applies.
         </p>
         <h3>3 · Keep your memory on your device (optional)</h3>
         <p className="small muted">

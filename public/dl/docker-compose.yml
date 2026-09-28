@@ -47,7 +47,7 @@ services:
     command: sh -c "wget -qO /app/dsi-node.mjs https://decentralised.si/dl/dsi-node.mjs && node /app/dsi-node.mjs up"
     working_dir: /app
     environment:
-      DSI_API_KEY: ${DSI_API_KEY:?set DSI_API_KEY to your ds_ key from https://decentralised.si/app/#/console/keys}
+      DSI_API_KEY: ${DSI_API_KEY:?set DSI_API_KEY to your ds_ key from https://decentralised.si/app#/console/keys}
       DSI_ROUTER: ${DSI_ROUTER:-https://api.decentralised.si}
       LLM_BASE_URL: ${LLM_BASE_URL:-http://ollama:11434/v1}
       DSI_MODELS: ${DSI_MODEL:-qwen2.5:7b}
@@ -56,7 +56,12 @@ services:
       MAX_CONCURRENCY: ${MAX_CONCURRENCY:-4}
       DSI_NODE_LOCATION: ${DSI_NODE_LOCATION:-auto}   # "hidden" keeps this node off the public map
       DSI_NODE_STATE: /data/state.json
-    volumes: [dsi-node:/data]
+      # Optional specialist settings (see /node): put persona.md and knowledge/ in ./notes
+      DSI_DOMAINS: ${DSI_DOMAINS:-}
+      DSI_PERSONA_FILE: ${DSI_PERSONA_FILE:-}
+      DSI_KNOWLEDGE_DIR: ${DSI_KNOWLEDGE_DIR:-}
+      DSI_TRACE_RETRIEVAL: ${DSI_TRACE_RETRIEVAL:-}
+    volumes: [dsi-node:/data, "${DSI_NOTES:-./notes}:/notes:ro"]
     extra_hosts: ["host.docker.internal:host-gateway"]
     depends_on:
       cloudflared: { condition: service_started }

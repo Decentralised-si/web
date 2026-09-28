@@ -5,7 +5,7 @@
 #   curl -fsSL https://decentralised.si/install/node.sh | sh -s -- --uninstall
 #
 # What it does (macOS and Linux):
-#   1. asks for your API key (create one at https://decentralised.si/app/#/console/keys)
+#   1. asks for your API key (create one at https://decentralised.si/app#/console/keys)
 #   2. picks an open model that fits this computer's memory and installs it with Ollama
 #   3. installs what the node needs: Node.js (a private copy, if yours is older than 20) and
 #      cloudflared, for a secure tunnel so no router or firewall changes are needed
@@ -70,9 +70,9 @@ chmod 700 "$DSI_HOME"
 KEY="${DSI_API_KEY:-}"
 if [ -z "$KEY" ] && [ -f "$DSI_HOME/node.env" ]; then KEY=$(sed -n 's/^DSI_API_KEY=//p' "$DSI_HOME/node.env"); fi
 if [ -z "$KEY" ]; then
-  [ -r /dev/tty ] || die "set DSI_API_KEY (create a key at https://decentralised.si/app/#/console/keys)"
+  [ -r /dev/tty ] || die "set DSI_API_KEY (create a key at $BASE/app#/console/keys)"
   say ""
-  say "Sign in at https://decentralised.si/app, open Console -> API keys, create a key and paste it here."
+  say "Sign in at $BASE/app, open Console -> API keys, create a key and paste it here."
   printf 'API key: '
   read -r KEY </dev/tty
 fi
@@ -240,7 +240,7 @@ grep "live at" "$DSI_HOME/node.log" | tail -1
 say ""
 say "Your computer is now a Decentralised.si node, serving $MODEL."
 say "  - Free chat: after its first checks (usually under an hour) you get 20,000 free tokens a day,"
-say "    plus every token your node serves. Open https://decentralised.si/app and choose"
+say "    plus every token your node serves. Open $BASE/app and choose"
 say "    'Free - community nodes'."
 say "  - It pauses on battery, starts at login, and only answers requests signed by the network."
 say "  - Logs: $DSI_HOME/node.log   Remove: curl -fsSL $BASE/install/node.sh | sh -s -- --uninstall"

@@ -1,5 +1,5 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Decentralised.si · Dashboard</title>
+<title>Dashboard — Decentralised.si</title>
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/png" sizes="32x32" href="/brand/favicon-32.png">
 <link rel="apple-touch-icon" href="/brand/apple-touch-icon.png"><style>
@@ -33,7 +33,7 @@ label{display:block;font-size:13px;color:var(--muted);margin:10px 0 4px}
 .note{font-size:13px;color:var(--muted)}.err{color:var(--bad);font-size:13px}
 .snippets .tabs{margin:8px 0 0}
 </style></head><body><main>
-<header class="top"><div class="brand"><a href="/home" style="text-decoration:none;color:inherit">Decentralised<span>.si</span></a></div><nav><a href="/app">Open app</a><a href="/home">Docs</a><a href="/whitepaper">Whitepaper</a><a href="#" id="logout" hidden>Sign out</a></nav></header>
+<header class="top"><div class="brand"><a href="/home" style="text-decoration:none;color:inherit">Decentralised<span>.si</span></a></div><nav><a href="/home">Home</a><a href="/app#/console/docs">API docs</a><a href="/whitepaper">Whitepaper</a><a href="/app">Open app</a><a href="#" id="logout" hidden>Sign out</a></nav></header>
 
 <section id="auth" hidden>
 <h1>Dashboard</h1>
@@ -96,7 +96,7 @@ Decentralised.si
 
 client = Anthropic(
     api_key="ds_live_...",                     # your Decentralised.si key
-    base_url="https://api.decentralised.si/anthropic",              # ← the only change
+    base_url="https://<span class="api">api.decentralised.si</span>/anthropic",              # ← the only change
 )
 
 message = client.messages.create(
@@ -107,12 +107,12 @@ message = client.messages.create(
 
 const client = new Anthropic({
   apiKey: process.env.DECENTRALISE_API_KEY,
-  baseURL: "https://api.decentralised.si/anthropic",              // ← the only change
+  baseURL: "https://<span class="api">api.decentralised.si</span>/anthropic",              // ← the only change
 });</code></pre></div><div data-pane="openai"><pre><code>from openai import OpenAI
 
 client = OpenAI(
     api_key="ds_live_...",
-    base_url="https://api.decentralised.si/openai/v1",              # ← the only change
+    base_url="https://<span class="api">api.decentralised.si</span>/openai/v1",              # ← the only change
 )
 client.chat.completions.create(model="gpt-5-mini", messages=[...])
 client.responses.create(model="gpt-5", input="...")
@@ -120,12 +120,12 @@ client.embeddings.create(model="text-embedding-3-small", input="...")</code></pr
 
 client = genai.Client(
     api_key="ds_live_...",
-    http_options={"base_url": "https://api.decentralised.si/gemini"},  # ← the only change
+    http_options={"base_url": "https://<span class="api">api.decentralised.si</span>/gemini"},  # ← the only change
 )
 client.models.generate_content(model="gemini-2.5-flash", contents="...")</code></pre></div><div data-pane="env"><pre><code># No code change at all for SDKs that read base URLs from the environment
-ANTHROPIC_BASE_URL=https://api.decentralised.si/anthropic
+ANTHROPIC_BASE_URL=https://<span class="api">api.decentralised.si</span>/anthropic
 ANTHROPIC_API_KEY=ds_live_...
-OPENAI_BASE_URL=https://api.decentralised.si/openai/v1
+OPENAI_BASE_URL=https://<span class="api">api.decentralised.si</span>/openai/v1
 OPENAI_API_KEY=ds_live_...</code></pre></div><div data-pane="headers"><pre><code># Per-request control without touching the request body.
 # Omit them and your account-level policy applies.
 X-Decentralise-Mode: optimise          # passthrough|optimise|cheapest|fastest|quality|private|
@@ -152,6 +152,7 @@ function tabs(root){qsa('[data-tabs]',root).forEach(g=>{const btns=qsa(':scope >
 const DOMAINS=['decentralised.si','decentralise.si','decentralise.ai','decentralised.ai'];
 const HOST=location.hostname.replace(/^www\./,'');
 const API=(['localhost','127.0.0.1'].includes(location.hostname)&&new URLSearchParams(location.search).get('api'))||(DOMAINS.includes(HOST)?'https://api.'+HOST:'https://api.decentralised.si');
+document.querySelectorAll('.api').forEach(e=>e.textContent=new URL(API).host);
 const store={get(){try{return localStorage.getItem('dsi_key')}catch{return null}},set(v){try{v?localStorage.setItem('dsi_key',v):localStorage.removeItem('dsi_key')}catch{}}};
 let KEY=store.get();
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));

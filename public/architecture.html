@@ -5,9 +5,12 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Architecture — Decentralised.si</title>
 <meta name="description" content="How Decentralised.si works: an open-source local router that decides which expert answers each request, what context leaves your device, when to start a backup, when to escalate and when to stop.">
+<meta property="og:url" content="https://decentralised.si/architecture">
+<meta property="og:image" content="https://decentralised.si/brand/logo.png">
+<meta name="twitter:card" content="summary">
 <meta property="og:title" content="Decentralised.si architecture">
 <meta property="og:description" content="How the local router, the hosted gateway and the open provider network fit together.">
-<meta property="og:image" content="/brand/logo.png">
+
 <meta name="theme-color" content="#000211">
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/png" sizes="32x32" href="/brand/favicon-32.png">
@@ -159,12 +162,13 @@ footer a{color:var(--muted)}
     </a>
     <nav class="links" aria-label="Main">
       <a href="/download">Download</a>
-      <a href="/architecture" aria-current="page">Architecture</a>
+      <a class="hide-sm" href="/architecture" aria-current="page">Architecture</a>
+      <a href="/node">Run a node</a>
       <a class="hide-sm" href="/network">Live map</a>
       <a class="hide-sm" href="/ai">Network</a>
       <a class="hide-sm" href="/whitepaper">Whitepaper</a>
       <a href="https://github.com/Decentralised-si" aria-label="GitHub"><svg class="gh"><use href="#gh"/></svg></a>
-      <a class="btn small primary" href="/app/">Open app</a>
+      <a class="btn small primary" href="/app">Open app</a>
     </nav>
   </div>
 </div>
@@ -398,13 +402,13 @@ finance.quant.derivatives → finance.quant → finance → general</div>
   </ul>
   <p>Each is replaced with a stable placeholder. The mapping stays in the daemon's memory: it cannot be serialised, and it is never logged, stored or returned by the API. Answers shown to you are rehydrated as they stream, even when a placeholder is split across chunks.</p>
 <pre><span class="c"># You type (privacy: pseudonymised)</span>
-Email me at yousef@example.com and analyse this option position.
+Email me at you@example.com and analyse this option position.
 
 <span class="c"># The provider's server receives — captured on the wire</span>
 [{"role":"user","content":"Email me at <mark>&lt;EMAIL_1&gt;</mark> and analyse this option position."}]
 
 <span class="c"># You see</span>
-… reply to yousef@example.com …</pre>
+… reply to you@example.com …</pre>
   <div class="tbl"><table>
     <thead><tr><th>Privacy class</th><th>Behaviour</th></tr></thead>
     <tbody>
@@ -554,7 +558,7 @@ Email me at yousef@example.com and analyse this option position.
   <div class="tbl"><table>
     <thead><tr><th>Component</th><th>Where</th><th>Status</th></tr></thead>
     <tbody>
-      <tr><td>Synapse local router (Rust)</td><td><a href="https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/synapse"><code>synapse/</code></a></td><td><span class="pill impl">preview</span> 36 tests; <a href="/download">binaries for macOS, Linux, Windows</a></td></tr>
+      <tr><td>Synapse local router (Rust)</td><td><a href="https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/synapse"><code>synapse/</code></a></td><td><span class="pill impl">preview</span> tested; <a href="/download">binaries for macOS, Linux, Windows</a></td></tr>
       <tr><td>Hosted gateway, blind router, limits, billing</td><td><a href="https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/apps/gateway"><code>apps/gateway</code></a>, <code>packages/core</code></td><td><span class="pill live">live</span></td></tr>
       <tr><td>Chat app, console, wallet</td><td><a href="https://github.com/Decentralised-si/web"><code>web</code></a></td><td><span class="pill live">live</span></td></tr>
       <tr><td>dsi harness (local memory, MCP server)</td><td><a href="https://github.com/Decentralised-si/Smart-LLM-Router/tree/main/packages/harness"><code>packages/harness</code></a></td><td><span class="pill impl">implemented</span> <a href="/dl/dsi.mjs">download</a></td></tr>
@@ -586,7 +590,7 @@ curl -N localhost:7766/v1/ask -H 'Content-Type: application/json' \
 curl localhost:7766/v1/route -H 'Content-Type: application/json' \
   -d '{"prompt": "Write a Rust async TCP server."}'     <span class="c"># the decision, no inference</span>
 
-cargo test                                <span class="c"># 36 tests: routing, fallback, privacy, escalation, streaming</span>
+cargo test                                <span class="c"># tests: routing, fallback, privacy, escalation, streaming</span>
 cargo run --release --bin benchmark       <span class="c"># overhead, TTFI, cost; CSV output</span></pre>
   <p>To use real models, point <code>config/providers.yaml</code> at any OpenAI-compatible server (vLLM, llama.cpp, LM Studio, a hosted API or the Decentralised.si gateway) or at Ollama. Declare what each one is good at:</p>
 <pre>providers:
@@ -611,15 +615,24 @@ cargo run --release --bin benchmark       <span class="c"># overhead, TTFI, cost
 
 <footer>
   <div class="wrap">
-    <div><b style="color:var(--ink)">Decentralised<span style="color:var(--accent)">.si</span></b> · Decentralised Super Intelligence</div>
+    <div><b style="color:var(--ink)">Decentralised<span style="color:var(--accent)">.si</span></b> · Decentralised Super Intelligence · open source · © 2026</div>
     <div class="links">
       <a href="/home">Home</a>
+      <a href="/intro">Watch the intro</a>
       <a href="/download">Download</a>
+      <a href="/architecture">Architecture</a>
+      <a href="/node">Run a node</a>
+      <a href="/network">Live map</a>
       <a href="/ai">Network</a>
       <a href="/whitepaper">Whitepaper</a>
+      <a href="/app#/console/docs">API docs</a>
       <a href="https://github.com/Decentralised-si/Smart-LLM-Router">GitHub · router</a>
       <a href="https://github.com/Decentralised-si/web">GitHub · web</a>
+      <a href="/privacy">Privacy</a>
+      <a href="/terms">Terms</a>
+      <a href="mailto:hello@decentralised.si">hello@decentralised.si</a>
     </div>
+    <p style="flex-basis:100%;margin:12px 0 0;font-size:12px;line-height:1.5">PAI is an off-chain reward unit. It has not been issued, has no market value, and nothing on this site is an offer of securities or a solicitation to invest. The PAI contract is unaudited and not deployed. Software is provided as is.</p>
   </div>
 </footer>
 

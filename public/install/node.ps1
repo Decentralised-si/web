@@ -3,7 +3,7 @@
 #   irm https://decentralised.si/install/node.ps1 | iex
 #   & ([scriptblock]::Create((irm https://decentralised.si/install/node.ps1))) -Uninstall
 #
-# 1. asks for your API key (create one at https://decentralised.si/app/#/console/keys)
+# 1. asks for your API key (create one at https://decentralised.si/app#/console/keys)
 # 2. picks an open model that fits this computer's memory and installs it with Ollama
 # 3. installs Node.js (a private copy, if yours is older than 20) and cloudflared (secure tunnel)
 # 4. downloads dsi-node, checks its SHA-256, and starts it now and at every sign-in
@@ -50,7 +50,7 @@ $envFile = Join-Path $Home_ "node.env"
 if (-not $Key -and (Test-Path $envFile)) { $Key = ((Get-Content $envFile) -match '^DSI_API_KEY=' -replace '^DSI_API_KEY=', '') | Select-Object -First 1 }
 if (-not $Key) {
   Write-Host ""
-  Write-Host "Sign in at https://decentralised.si/app, open Console -> API keys, create a key and paste it here."
+  Write-Host "Sign in at $Base/app, open Console -> API keys, create a key and paste it here."
   $Key = Read-Host "API key"
 }
 if ($Key -notlike "ds_*") { Die "that does not look like a Decentralised.si key (they start with ds_)" }
@@ -104,8 +104,8 @@ if (-not $NodeExe) {
 $Cf = (Get-Command cloudflared -ErrorAction SilentlyContinue).Source
 if (-not $Cf) {
   $Cf = Join-Path $Bin "cloudflared.exe"
-  $cfArch = if ($env:PROCESSOR_ARCHITECTURE -eq "ARM64") { "arm64" } else { "amd64" }
-  Invoke-WebRequest "https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-windows-$cfArch.exe" -OutFile $Cf
+  # cloudflared ships no Windows arm64 build; the amd64 one runs under emulation.
+  Invoke-WebRequest "https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-windows-amd64.exe" -OutFile $Cf
 }
 
 $Mjs = Join-Path $Home_ "dsi-node.mjs"
@@ -165,7 +165,7 @@ while (-not (Select-String -Path $log -Pattern "live at" -Quiet -ErrorAction Sil
 Write-Host ""
 Write-Host "Your computer is now a Decentralised.si node, serving $Model."
 Write-Host "  - Free chat: after its first checks (usually under an hour) you get 20,000 free tokens a day,"
-Write-Host "    plus every token your node serves. Open https://decentralised.si/app and choose"
+Write-Host "    plus every token your node serves. Open $Base/app and choose"
 Write-Host "    'Free - community nodes'."
 Write-Host "  - It pauses on battery, starts at sign-in, and only answers requests signed by the network."
 Write-Host "  - Log: $log"

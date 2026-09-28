@@ -5,8 +5,10 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Decentralised.ai — Decentralised Super Intelligence</title>
 <meta name="description" content="An open network for AI: anyone can supply intelligence and earn PAI, a blind router picks the provider without reading your prompt, and your memory stays on your device.">
+<meta property="og:url" content="https://decentralised.si/ai">
+<meta property="og:image" content="https://decentralised.si/brand/logo.png">
+<meta name="twitter:card" content="summary">
 <meta property="og:title" content="Decentralised.ai — Decentralised Super Intelligence">
-<meta property="og:image" content="/brand/logo.png">
 <meta property="og:description" content="Open AI network: run a node and earn PAI, route blind, keep your memory on your device.">
 <meta name="theme-color" content="#000211">
 <link rel="icon" href="/favicon.ico" sizes="any">
@@ -109,7 +111,7 @@ footer a{color:var(--muted)}
 
 <header class="top">
   <div class="wrap">
-    <a class="brand" href="/" aria-label="Decentralised.ai home">
+    <a class="brand" href="/home" aria-label="Decentralised.ai home">
       <img src="/brand/logo-96.png" width="30" height="30" alt="" style="border-radius:8px;display:block">
       <span>Decentralised<span>.ai</span></span>
     </a>
@@ -122,8 +124,8 @@ footer a{color:var(--muted)}
       <a href="/download">Download</a>
       <a href="/architecture">Architecture</a>
       <a href="/whitepaper">Whitepaper</a>
-      <a href="https://github.com/Decentralised-si/Smart-LLM-Router">GitHub</a>
-      <a class="btn small primary" href="/app/">Open app</a>
+      <a href="https://github.com/Decentralised-si">GitHub</a>
+      <a class="btn small primary" href="/app">Open app</a>
     </nav>
   </div>
 </header>
@@ -132,12 +134,12 @@ footer a{color:var(--muted)}
 <div class="hero">
   <canvas id="mesh" aria-hidden="true"></canvas>
   <div class="wrap">
-    <div class="eyebrow">Decentralised super intelligence</div>
-    <h1>Intelligence that <em>no one</em> owns.</h1>
+    <div class="eyebrow">Decentralised Super Intelligence</div>
+    <h1>Intelligence no single company <em>controls</em>.</h1>
     <p class="lead">An open network of AI providers, a router that picks one for you without reading your prompt, and memory that stays on your device. Anyone with a GPU can supply intelligence and earn PAI for it.</p>
     <div class="ctas">
-      <a class="btn primary" href="/app/">Start chatting →</a>
-      <a class="btn" href="/node">Run a node and earn</a>
+      <a class="btn primary" href="/app">Start chatting →</a>
+      <a class="btn" href="/node">Run a node</a>
       <a class="btn" href="/network">Live map</a>
       <a class="btn" href="/whitepaper">Read the whitepaper</a>
     </div>
@@ -162,19 +164,19 @@ footer a{color:var(--muted)}
         <span class="num">01 · USE</span>
         <h3>Chat, or change one URL</h3>
         <p>Sign in with email or a wallet and chat. Developers keep the Anthropic, OpenAI or Gemini SDK they already use and point it at the network.</p>
-        <ul><li>Pay in any major crypto</li><li>Use your own vendor keys too</li><li>Console with keys, limits and usage</li></ul>
+        <ul><li>Crypto top-ups (opening soon)</li><li>Use your own vendor keys too</li><li>Console with keys, limits and usage</li></ul>
       </div>
       <div class="card">
         <span class="num">02 · SUPPLY</span>
-        <h3>Turn a GPU into income</h3>
-        <p>Run one container next to an open-weight model. The router sends it signed traffic, checks its answers with canaries, and pays PAI for verified work.</p>
+        <h3>Put a GPU to work for the network</h3>
+        <p>Run one container next to an open-weight model. The router sends it signed traffic, checks its answers with canaries, and credits PAI reward points for verified work (off-chain today, with no cash value).</p>
         <ul><li>Ollama, vLLM, llama.cpp, LM Studio</li><li>No static IP or port forwarding</li><li>Higher reasoning levels earn more</li></ul>
       </div>
       <div class="card">
         <span class="num">03 · OWN</span>
         <h3>Your memory stays with you</h3>
-        <p>Conversations and preferences live in your browser or the <code>dsi</code> harness on your machine. Providers see one request at a time, without your name.</p>
-        <ul><li>A different provider per session</li><li>No per-query inspection by the router</li><li>Nothing to leak if a provider is breached</li></ul>
+        <p>Conversations and preferences live in your browser or the <code>dsi</code> harness on your machine. Providers see one request at a time, without your account identity. Text you type is sent as written unless you route through Synapse, which strips what identifies you.</p>
+        <ul><li>A different provider per session</li><li>No per-query inspection by the router</li><li>Little to leak: a provider holds one request, not your history</li></ul>
       </div>
     </div>
   </div>
@@ -199,7 +201,7 @@ footer a{color:var(--muted)}
     <p class="sub">Every request is served at a level. Everyday answers are common knowledge and get cheaper every day. Frontier reasoning is scarce, so it needs a PAI stake. Stake is locked, not spent.</p>
     <div class="tbl">
       <table>
-        <thead><tr><th>Level</th><th>What it does</th><th>Knowledge</th><th>Reward</th><th>Stake to use</th><th>Nodes live</th></tr></thead>
+        <thead><tr><th>Level</th><th>What it does</th><th>Knowledge</th><th>Reward</th><th>Stake to use (staking not open yet)</th><th>Nodes live</th></tr></thead>
         <tbody id="levels">
           <tr><td><b>L0 · recall</b></td><td>Lookup, rewrite, classify (≤ 8B models)</td><td><span class="tag common">common</span></td><td>×1</td><td data-stake="0">none</td><td data-nodes="0">—</td></tr>
           <tr><td><b>L1 · general</b></td><td>Everyday Q&amp;A, summaries, code help (8–70B)</td><td><span class="tag common">common</span></td><td>×2</td><td data-stake="1">none</td><td data-nodes="1">—</td></tr>
@@ -235,18 +237,18 @@ footer a{color:var(--muted)}
 <section id="pai" class="alt">
   <div class="wrap">
     <div class="eyebrow">PAI</div>
-    <h2>A token that gets scarcer as the network grows.</h2>
-    <p class="sub">PAI pays the people who supply intelligence. Half of it can only ever be created by doing verified work, and every fee burns some of it.</p>
+    <h2>A capped token whose supply follows real usage.</h2>
+    <p class="sub">PAI pays the people who supply intelligence. 500M of it can only ever be created by doing verified work, and every fee paid in PAI burns some of it.</p>
     <div class="stats">
-      <div class="stat"><b>1B</b><span>Hard cap. Half exists at launch; the rest is minted only for verified work.</span></div>
+      <div class="stat"><b>10B</b><span>Hard cap. 500M exists at launch and 500M is minted only for verified work. The 9B for investors and founders is minted in ten tranches, only as cumulative network fees pass $1M to $1B.</span></div>
       <div class="stat"><b>2 yrs</b><span>Emission halves every two years, and falls further as the network grows.</span></div>
       <div class="stat"><b>30%</b><span>Of every PAI fee is burned. Slashed stake is burned too.</span></div>
       <div class="stat"><b>70 / 20 / 10</b><span>Daily rewards split between providers, verifiers and relays.</span></div>
     </div>
     <div class="split">
       <figure>
-        <img src="/whitepaper/supply.svg" alt="PAI supply projection: supply rises from the 500M genesis allocation, peaks around 691M near year 2.7 when burn overtakes emission, and declines after." loading="lazy">
-        <figcaption>One adoption scenario, not a forecast: supply peaks when burn overtakes emission, then falls.</figcaption>
+        <img src="/whitepaper/supply.svg" alt="PAI supply projection: supply starts at the 500M genesis allocation, steps up by 900M as each investors-and-founders fee milestone is passed (nine of ten within ten years), and reaches about 8.7B; fee burn overtakes reward emission around year 2.7." loading="lazy">
+        <figcaption>One adoption scenario, not a forecast: supply grows only as fee milestones unlock tranches, and burn exceeds emission from about year 2.7.</figcaption>
       </figure>
       <div>
         <h3>Common knowledge gets cheaper</h3>
@@ -294,9 +296,9 @@ node dsi-node.mjs earnings</pre>
         <h2>Your SDK already works.</h2>
         <p class="sub">Drop-in Anthropic, OpenAI and Gemini APIs with streaming, tools, vision, files and batches, plus an MCP server. Use <code>model: "auto"</code> to let the router choose, or name a model to pin it.</p>
         <div class="ctas">
-          <a class="btn primary" href="/app/#/console/keys">Create an API key</a>
-          <a class="btn" href="/app/#/console/docs">API docs</a>
-          <a class="btn" href="/app/#/console/terminal">Agent terminal</a>
+          <a class="btn primary" href="/app#/console/keys">Create an API key</a>
+          <a class="btn" href="/app#/console/docs">API docs</a>
+          <a class="btn" href="/app#/console/terminal">Agent terminal</a>
         </div>
       </div>
       <div>
@@ -346,7 +348,7 @@ claude mcp add dsi -- dsi mcp   <span class="c"># same memory in Claude Code</sp
     <h2>Intelligence should be a public utility, not a private possession.</h2>
     <p class="sub" style="margin-inline:auto">Start with a conversation, a line of code, or a spare GPU.</p>
     <div class="ctas">
-      <a class="btn primary" href="/app/">Open the app</a>
+      <a class="btn primary" href="/app">Open the app</a>
       <a class="btn" href="#run">Run a node</a>
       <a class="btn" href="/whitepaper">Whitepaper</a>
     </div>
@@ -359,12 +361,15 @@ claude mcp add dsi -- dsi mcp   <span class="c"># same memory in Claude Code</sp
     <div><b style="color:var(--ink)">Decentralised<span style="color:var(--accent)">.ai</span></b> · the open network behind <a href="https://decentralised.si/">Decentralised.si</a></div>
     <div class="links">
       <a href="/whitepaper">Whitepaper</a>
-      <a href="/app/#/console/docs">Docs</a>
+      <a href="/app#/console/docs">Docs</a>
       <a href="/intro">Watch the intro</a>
       <a href="/architecture">Architecture</a>
       <a href="https://github.com/Decentralised-si/Smart-LLM-Router">GitHub · router</a>
       <a href="https://github.com/Decentralised-si/web">GitHub · web</a>
-      <a href="/app/">App</a>
+      <a href="/privacy">Privacy</a>
+      <a href="/terms">Terms</a>
+      <a href="mailto:hello@decentralised.si">hello@decentralised.si</a>
+      <a href="/app">App</a>
     </div>
   </div>
 </footer>
@@ -374,7 +379,7 @@ claude mcp add dsi -- dsi mcp   <span class="c"># same memory in Claude Code</sp
   // API host follows the brand domain the page was served from.
   const h = location.hostname.replace(/^www\./, "");
   const known = ["decentralised.ai", "decentralise.ai", "decentralised.si", "decentralise.si"];
-  const host = known.includes(h) ? h : "decentralised.ai";
+  const host = known.includes(h) ? h : "decentralised.si";
   const apiHost = known.includes(h) ? "api." + h : "api.decentralised.si";
   document.querySelectorAll(".api").forEach((e) => (e.textContent = "api." + host));
   document.querySelectorAll(".host").forEach((e) => (e.textContent = host));

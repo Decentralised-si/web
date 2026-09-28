@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Benefits — Decentralised.si</title>
+<meta name="description" content="What building on Decentralised.si costs next to frontier model APIs, with list prices, a calculator, and the other benefits: privacy, openness, scale, inclusion.">
+<meta property="og:url" content="https://decentralised.si/benefits">
+<meta property="og:image" content="https://decentralised.si/brand/logo.png">
+<meta name="twitter:card" content="summary">
+<meta property="og:title" content="Benefits — Decentralised.si">
+<meta property="og:description" content="What building on Decentralised.si costs next to frontier model APIs, with list prices, a calculator, and the other benefits: privacy, openness, scale, inclusion.">
+
+<meta name="theme-color" content="#000211">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="/brand/favicon-32.png">
+<link rel="apple-touch-icon" href="/brand/apple-touch-icon.png">
+<style>
+:root{
+  --bg:#f6f5f1;--bg2:#efede6;--panel:#fff;--ink:#15171b;--muted:#5b616c;--line:#e1ded6;
+  --accent:#2257e6;--accent-soft:#e3eafe;--ok:#1f7a55;--ok-soft:#dcf1e7;--warn:#9a6a00;--warn-soft:#fbf0d4;--vio:#7a3fe0;--vio-soft:#efe6fd;
+  --grad:linear-gradient(120deg,#16b5ff,#2257e6 45%,#8a3ffc);--code:#f0eee8;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#0f1114;--bg2:#14171b;--panel:#1a1e24;--ink:#eceef1;--muted:#9aa1ad;--line:#282e37;
+  --accent:#4da3ff;--accent-soft:#12203d;--ok:#4cc38a;--ok-soft:#10291e;--warn:#e2b04a;--warn-soft:#2d2410;--vio:#b18cff;--vio-soft:#241a38;--code:#14171c;color-scheme:dark}}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:var(--accent)}
+.wrap{max-width:1080px;margin:0 auto;padding-inline:20px}
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;background:color-mix(in srgb,var(--bg) 85%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:60px;flex-wrap:wrap}
+.brand{font-weight:700;font-size:18px;text-decoration:none;color:var(--ink);display:flex;align-items:center;gap:9px}
+.brand b{color:var(--accent)}
+.logo{border-radius:8px;display:block}
+.links{display:flex;gap:20px;align-items:center;flex-wrap:wrap}
+.links a{color:var(--muted);text-decoration:none;font-size:14px}
+.links a:hover,.links a[aria-current]{color:var(--ink)}
+.gh{width:16px;height:16px;fill:currentColor;display:block}
+.btn{display:inline-flex;align-items:center;gap:8px;font:inherit;font-weight:600;font-size:15px;border-radius:10px;padding:10px 16px;text-decoration:none;border:1px solid var(--line);color:var(--ink);background:var(--panel);cursor:pointer}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--grad);border-color:transparent;color:#fff}
+.btn.small{padding:7px 13px;font-size:14px}
+.eyebrow{font:600 12px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+h1{font-family:var(--serif);font-weight:500;font-size:clamp(36px,5.2vw,60px);line-height:1.05;letter-spacing:-.025em;margin:14px 0 14px}
+h1 em{font-style:italic;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+h2{font-family:var(--serif);font-weight:500;font-size:clamp(26px,3.2vw,36px);line-height:1.1;letter-spacing:-.02em;margin:0 0 12px}
+h3{font-size:17px;margin:20px 0 6px}
+p{margin:0 0 12px}
+.lead{font-size:clamp(17px,1.9vw,19px);color:var(--muted);max-width:760px}
+.muted{color:var(--muted)}
+.small{font-size:14px}
+header.hero{padding:56px 0 24px}
+section{padding:40px 0;border-top:1px solid var(--line);scroll-margin-top:70px}
+.ctas{display:flex;gap:12px;flex-wrap:wrap;margin-top:18px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px}
+pre{font:13.5px/1.6 var(--mono);background:var(--code);border:1px solid var(--line);border-radius:12px;padding:14px 16px;overflow-x:auto;margin:8px 0 14px}
+pre .c{color:var(--muted)}
+pre mark{background:var(--accent-soft);color:var(--accent);border-radius:3px;padding:0 2px}
+code{font-family:var(--mono);font-size:.9em}
+:not(pre)>code{overflow-wrap:anywhere;background:var(--code);border:1px solid var(--line);border-radius:5px;padding:1px 5px}
+.grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(230px,1fr))}
+.grid>*{min-width:0}
+.steps3{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));margin-top:18px}
+.steps3 .n{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--grad);color:#fff;font:700 13px var(--mono);margin-bottom:10px}
+.hw{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 6px}
+.hw button{font:600 14px ui-sans-serif,system-ui;background:var(--panel);border:1px solid var(--line);color:var(--muted);border-radius:10px;padding:10px 14px;cursor:pointer;text-align:left;line-height:1.3}
+.hw button small{display:block;font-weight:500;font-size:12px}
+.hw button[aria-pressed="true"]{color:var(--ink);border-color:var(--accent);background:var(--accent-soft)}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:12px;margin:12px 0}
+table{border-collapse:collapse;width:100%;min-width:720px;background:var(--panel);font-size:14.5px}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:middle}
+th{font-size:11.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600}
+tr:last-child td{border-bottom:0}
+tr.pick td{background:var(--accent-soft)}
+td .tag{font:600 12.5px var(--mono)}
+.lvl{display:inline-block;font:600 11px/1 var(--mono);padding:5px 7px;border-radius:6px}
+.l0{background:var(--code);color:var(--muted);border:1px solid var(--line)}
+.l1{background:var(--accent-soft);color:var(--accent)}
+.l2{background:var(--vio-soft);color:var(--vio)}
+.use{font:600 13px ui-sans-serif,system-ui;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:8px;padding:6px 10px;cursor:pointer;white-space:nowrap}
+.use[aria-pressed="true"]{border-color:var(--accent);color:var(--accent)}
+.chosen{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:6px 0 16px;font-size:15px}
+.chosen code{font-size:14px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:16px 0 12px}
+.tabs button{font:600 14px ui-sans-serif,system-ui;background:var(--panel);border:1px solid var(--line);color:var(--muted);border-radius:9px;padding:8px 13px;cursor:pointer}
+.tabs button[aria-selected="true"]{color:var(--ink);border-color:var(--accent);background:var(--accent-soft)}
+.note{border-left:3px solid var(--warn);background:var(--warn-soft);padding:10px 14px;border-radius:0 10px 10px 0;margin:12px 0;font-size:15px}
+.note.ok{border-left-color:var(--ok);background:var(--ok-soft)}
+.note.info{border-left-color:var(--accent);background:var(--accent-soft)}
+ol.plain{padding-left:20px}
+ol.plain li{margin:4px 0}
+footer{border-top:1px solid var(--line);padding:32px 0 calc(32px + env(safe-area-inset-bottom,0px));color:var(--muted);font-size:14px}
+footer .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
+footer a{color:var(--muted)}
+[hidden]{display:none!important}
+@media (max-width:640px){.links a.hide-sm{display:none}}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:16px}
+.grid2 pre{white-space:pre-wrap;overflow-wrap:anywhere}
+
+/* benefits page */
+.big{font:700 clamp(40px,6vw,64px)/1 ui-sans-serif,system-ui;letter-spacing:-.03em;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.stats{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));margin:22px 0 6px}
+.stats .card p{margin:6px 0 0;color:var(--muted);font-size:14.5px}
+table.cost td:nth-child(1){white-space:normal}
+table.cost td.n,table.cost th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+table.cost tr.net td{background:var(--accent-soft)}
+table.cost .vendor{display:block;font-size:12px;color:var(--muted)}
+.bar{height:8px;border-radius:4px;background:var(--grad);min-width:2px}
+.calc{display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));align-items:start}
+.calc label{display:block;font-size:14px;color:var(--muted);margin:10px 0 4px}
+.calc input[type=number],.calc select{width:100%;font:inherit;font-size:15px;padding:9px 11px;border-radius:9px;border:1px solid var(--line);background:var(--panel);color:var(--ink)}
+.calc input[type=range]{width:100%;accent-color:var(--accent)}
+.calc .row{display:flex;justify-content:space-between;gap:10px;font-size:14px}
+.result{display:grid;gap:10px}
+.result .line{display:flex;justify-content:space-between;align-items:baseline;gap:12px;border-bottom:1px solid var(--line);padding:8px 0}
+.result .line:last-child{border-bottom:0}
+.result b.v{font:700 22px ui-sans-serif,system-ui;font-variant-numeric:tabular-nums}
+.result .save b.v{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;font-size:30px}
+.benefits{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.benefits .card h3{margin-top:0}
+.benefits ul{margin:6px 0 0;padding-left:18px;color:var(--muted);font-size:15px}
+.benefits li{margin:4px 0}
+.src{font-size:13px;color:var(--muted)}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="gh" viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></symbol></svg>
+
+<div class="top">
+  <div class="wrap">
+    <a class="brand" href="/home" aria-label="Decentralised.si home"><img src="/brand/logo-96.png" width="30" height="30" alt="" class="logo"><span>Decentralised<b>.si</b></span></a>
+    <nav class="links" aria-label="Main">
+      <a href="/download">Download</a>
+      <a class="hide-sm" href="/architecture">Architecture</a>
+      <a class="hide-sm" href="/benefits" aria-current="page">Benefits</a>
+      <a href="/node">Run a node</a>
+      <a class="hide-sm" href="/network">Live map</a>
+      <a class="hide-sm" href="/ai">Network</a>
+      <a class="hide-sm" href="/whitepaper">Whitepaper</a>
+      <a href="https://github.com/Decentralised-si" aria-label="GitHub"><svg class="gh"><use href="#gh"/></svg></a>
+      <a class="btn small primary" href="/app">Open app</a>
+    </nav>
+  </div>
+</div>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="eyebrow">Benefits</div>
+    <h1>Pay frontier prices <em>only</em> for frontier questions.</h1>
+    <p class="lead">For developers building AI-native apps over an API. Keep your Anthropic, OpenAI or Gemini SDK and change one base URL. DSI Axon, the blind router, sends each request to the cheapest provider that is good enough for it: an open model on the network for everyday requests, a frontier model for the hard ones.</p>
+    <div class="stats">
+      <div class="card"><div class="big">133×</div><p>what a flagship model (Claude Fable 5.1 or GPT-6 Astra) costs per request, compared with a community node on the network, at list prices.</p></div>
+      <div class="card"><div class="big">87%</div><p>saved against sending everything to Claude Opus 5.5, when 70% of requests are easy, 20% medium and 10% hard (the example below; set your own mix).</p></div>
+      <div class="card"><div class="big">$0</div><p>routing fee when you bring your own vendor keys. The network's open models are billed at their listed cost, with no markup.</p></div>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+<section id="prices">
+  <h2>List prices, side by side</h2>
+  <p class="muted">Standard API prices in US dollars per million tokens, as published by each vendor on 28 September 2026 (no batch, cache or volume discounts). The cost column is for one million requests of 1,500 input and 500 output tokens, a typical chat or agent step.</p>
+  <div class="tbl"><table class="cost">
+    <thead><tr><th>Model</th><th class="n">Input / 1M</th><th class="n">Output / 1M</th><th class="n">1M requests</th><th class="n">vs node</th><th></th></tr></thead>
+    <tbody>
+      <tr><td>Claude Fable 5.1<span class="vendor">Anthropic</span></td><td class="n">$10.00</td><td class="n">$50.00</td><td class="n"><b>$40,000</b></td><td class="n">133.3×</td><td style="width:22%"><div class="bar" style="width:29.6%"></div></td></tr>
+      <tr><td>GPT-6 Astra<span class="vendor">OpenAI</span></td><td class="n">$10.00</td><td class="n">$50.00</td><td class="n"><b>$40,000</b></td><td class="n">133.3×</td><td style="width:22%"><div class="bar" style="width:29.6%"></div></td></tr>
+      <tr><td>GPT-5.5 Pro<span class="vendor">OpenAI</span></td><td class="n">$30.00</td><td class="n">$180.00</td><td class="n"><b>$135,000</b></td><td class="n">450.0×</td><td style="width:22%"><div class="bar" style="width:100.0%"></div></td></tr>
+      <tr><td>GPT-5.5<span class="vendor">OpenAI</span></td><td class="n">$5.00</td><td class="n">$30.00</td><td class="n"><b>$22,500</b></td><td class="n">75.0×</td><td style="width:22%"><div class="bar" style="width:16.7%"></div></td></tr>
+      <tr><td>Claude Opus 5.5<span class="vendor">Anthropic</span></td><td class="n">$4.00</td><td class="n">$20.00</td><td class="n"><b>$16,000</b></td><td class="n">53.3×</td><td style="width:22%"><div class="bar" style="width:11.9%"></div></td></tr>
+      <tr><td>Gemini 3.1 Pro (preview)<span class="vendor">Google</span></td><td class="n">$2.00</td><td class="n">$12.00</td><td class="n"><b>$9,000</b></td><td class="n">30.0×</td><td style="width:22%"><div class="bar" style="width:6.7%"></div></td></tr>
+      <tr><td>Claude Sonnet 5<span class="vendor">Anthropic</span></td><td class="n">$2.00</td><td class="n">$10.00</td><td class="n"><b>$8,000</b></td><td class="n">26.7×</td><td style="width:22%"><div class="bar" style="width:5.9%"></div></td></tr>
+      <tr><td>GPT-6 Sol<span class="vendor">OpenAI</span></td><td class="n">$2.00</td><td class="n">$10.00</td><td class="n"><b>$8,000</b></td><td class="n">26.7×</td><td style="width:22%"><div class="bar" style="width:5.9%"></div></td></tr>
+      <tr><td>Claude Haiku 4.5<span class="vendor">Anthropic</span></td><td class="n">$1.00</td><td class="n">$5.00</td><td class="n"><b>$4,000</b></td><td class="n">13.3×</td><td style="width:22%"><div class="bar" style="width:3.0%"></div></td></tr>
+      <tr><td>GPT-6 Luna<span class="vendor">OpenAI</span></td><td class="n">$0.10</td><td class="n">$0.50</td><td class="n"><b>$400</b></td><td class="n">1.3×</td><td style="width:22%"><div class="bar" style="width:0.6%"></div></td></tr>
+      <tr><td>Gemini 2.5 Flash-Lite<span class="vendor">Google</span></td><td class="n">$0.10</td><td class="n">$0.40</td><td class="n"><b>$350</b></td><td class="n">1.2×</td><td style="width:22%"><div class="bar" style="width:0.6%"></div></td></tr>
+      <tr class="net"><td>Llama 3.3 70B (open model, Cloudflare Workers AI)<span class="vendor">Decentralised.si network</span></td><td class="n">$0.29</td><td class="n">$2.25</td><td class="n"><b>$1,566</b></td><td class="n">5.2×</td><td style="width:22%"><div class="bar" style="width:1.2%"></div></td></tr>
+      <tr class="net"><td>Llama 3.1 8B (open model, Cloudflare Workers AI)<span class="vendor">Decentralised.si network</span></td><td class="n">$0.045</td><td class="n">$0.38</td><td class="n"><b>$260</b></td><td class="n">0.9×</td><td style="width:22%"><div class="bar" style="width:0.6%"></div></td></tr>
+      <tr class="net"><td>Community node (open model on a member's computer)<span class="vendor">Decentralised.si network</span></td><td class="n">$0.10</td><td class="n">$0.30</td><td class="n"><b>$300</b></td><td class="n">1.0×</td><td style="width:22%"><div class="bar" style="width:0.6%"></div></td></tr>
+    </tbody>
+  </table></div>
+  <p class="src">Sources: <a href="https://platform.claude.com/docs/en/about-claude/pricing">Anthropic pricing</a> · <a href="https://developers.openai.com/api/docs/pricing">OpenAI pricing</a> · <a href="https://ai.google.dev/gemini-api/docs/pricing">Gemini API pricing</a> · <a href="https://developers.cloudflare.com/workers-ai/platform/pricing/">Cloudflare Workers AI pricing</a> · community node price: the default a node declares in <a href="https://github.com/Decentralised-si/DSI-AXON/blob/main/packages/core/src/network.ts">network.ts</a> (operators can set their own). Cost = (1,500 × input price + 500 × output price) ÷ 1,000,000 per request.</p>
+  <p class="muted small">Read the table fairly: the vendors' smallest models (GPT-6 Luna, Gemini 2.5 Flash-Lite) cost about the same as the network's open models. The large gap is with flagship and mid-tier models, which is where most AI app spend goes. Claude 4.7 and later models also count about 30% more tokens for the same text (Anthropic's note), which raises their real cost further.</p>
+</section>
+
+<section id="calculator">
+  <h2>Estimate your bill</h2>
+  <p class="muted">Pick the model you would otherwise send everything to, then your traffic. The routed estimate sends easy requests to community nodes, medium ones to Llama 3.3 70B, and hard ones to your chosen model through your own key, at the vendor's price.</p>
+  <div class="calc">
+    <div class="card">
+      <label for="base">Model you use today</label>
+      <select id="base"></select>
+      <label for="req">Requests per month</label>
+      <input id="req" type="number" min="0" step="1000" value="1000000">
+      <div class="grid2" style="gap:10px">
+        <div><label for="tin">Input tokens per request</label><input id="tin" type="number" min="0" step="100" value="1500"></div>
+        <div><label for="tout">Output tokens per request</label><input id="tout" type="number" min="0" step="50" value="500"></div>
+      </div>
+      <label>Share of easy / medium / hard requests</label>
+      <div class="row"><span>Easy <b id="easyv">70%</b></span><span>Medium <b id="medv">20%</b></span><span>Hard <b id="hardv">10%</b></span></div>
+      <input id="easy" type="range" min="0" max="100" value="70" aria-label="Easy requests, percent">
+      <input id="hard" type="range" min="0" max="100" value="10" aria-label="Hard requests, percent">
+      <p class="src">The first slider sets easy requests, the second hard ones; the rest are medium.</p>
+    </div>
+    <div class="card result" aria-live="polite">
+      <div class="line"><span>Everything on <span id="bname"></span></span><b class="v" id="rbase">–</b></div>
+      <div class="line"><span>Routed with Decentralised.si</span><b class="v" id="rrouted">–</b></div>
+      <div class="line"><span class="small muted" id="rsplit"></span></div>
+      <div class="line save"><span>You save each month</span><b class="v" id="rsave">–</b></div>
+      <div class="line"><span>Everything on the open network (no frontier model)</span><b class="v" id="rnet">–</b></div>
+    </div>
+  </div>
+  <p class="src">Estimates at list prices for the token counts you enter. Your real bill depends on your prompts, caching and the vendors' discounts. Which requests count as easy is decided per request by the router's difficulty estimate and quality floor (see <a href="/architecture#understand">how routing decides</a>).</p>
+</section>
+
+<section id="honest">
+  <h2>Where the savings come from, and their limits</h2>
+  <div class="grid2">
+    <div class="card"><h3>What makes it cheaper</h3><ul class="plain" style="padding-left:18px;color:var(--muted)">
+      <li>Most requests in real apps are routine: summaries, extraction, classification, short answers. They don't need a flagship model.</li>
+      <li>Open models on the network cost a fraction of flagship prices, and community nodes run on hardware members already own.</li>
+      <li>Routing is per request, so hard questions still reach the strongest model you have access to.</li>
+      <li>With your own keys, the router adds no fee to vendor prices.</li>
+    </ul></div>
+    <div class="card"><h3>What to keep in mind</h3><ul class="plain" style="padding-left:18px;color:var(--muted)">
+      <li>Open and small models are not frontier models. The router sets a quality floor per request, but check results for your own use case.</li>
+      <li>Community nodes run on members' machines, so speed and capacity vary with who is online.</li>
+      <li>Vendors offer batch (50% off) and caching discounts that this table leaves out on both sides.</li>
+      <li>Buying network credit is not open yet. Today you can bring your own vendor keys (no routing fee), or <a href="/node#laptop">run a node</a> for free network chat.</li>
+    </ul></div>
+  </div>
+</section>
+
+<section id="more">
+  <h2>More than price</h2>
+  <div class="benefits">
+    <div class="card"><h3>Privacy by design</h3><ul>
+      <li>The router chooses providers from a request's structure and your hints, never by reading your prompt.</li>
+      <li>Network nodes never receive your account identity, and conversations are spread across providers.</li>
+      <li>Usage records hold token counts and costs, not your text. Chat history stays in your browser.</li>
+      <li>Private mode sends requests only to providers that don't train on or keep your data. DSI Synapse can pseudonymise details on your device first.</li>
+    </ul><p class="src">A node or vendor still sees the text it answers. <a href="/privacy">Privacy policy</a></p></div>
+    <div class="card"><h3>Open, with no lock-in</h3><ul>
+      <li>Drop-in Anthropic, OpenAI and Gemini APIs, plus MCP: keep your SDK and change the base URL.</li>
+      <li>Your own vendor keys work alongside the network, and you can switch back at any time.</li>
+      <li>The source code is public: <a href="https://github.com/Decentralised-si/DSI-AXON">DSI Axon</a>, <a href="https://github.com/Decentralised-si/DSI-Synapse">DSI Synapse</a> and this <a href="https://github.com/Decentralised-si/web">website and app</a>.</li>
+      <li>Open-weight models on the network, and a public directory of every node's models and expertise.</li>
+    </ul></div>
+    <div class="card"><h3>Scale and resilience</h3><ul>
+      <li>Capacity grows as people add machines: a laptop, a gaming PC or a GPU server can join with one command.</li>
+      <li>The router is stateless and runs at Cloudflare's edge, close to your users.</li>
+      <li>If a provider fails, the request moves to another one, and an answer interrupted mid-stream continues on the next provider.</li>
+      <li>Nodes are checked continuously with test prompts, and traffic follows reputation.</li>
+    </ul><p class="src">Today one operator, the project's founders, runs the router. <a href="/architecture">How it fits together</a></p></div>
+    <div class="card"><h3>Inclusion</h3><ul>
+      <li>Anyone can supply intelligence: run a node and you get free network chat, 20,000 tokens a day plus every token your node serves.</li>
+      <li>Nodes earn PAI reward points for verified work (an off-chain unit with no market value today).</li>
+      <li>Open models at open-model prices put capable AI within reach of small teams, students and regions that frontier prices shut out.</li>
+      <li>Sign in with email, Google, Apple, GitHub or a wallet.</li>
+    </ul></div>
+    <div class="card"><h3>Transparency</h3><ul>
+      <li>Every response says which model and provider answered (<code>x-decentralise-actual-model</code>) and carries a receipt.</li>
+      <li>The live map shows every node, its models and its traffic by city.</li>
+      <li>Routing decisions can be explained: DSI Synapse shows each candidate's score and why it won.</li>
+    </ul></div>
+    <div class="card"><h3>Smarter than one model</h3><ul>
+      <li>Specialist nodes (for example law or accounting) declare their expertise, and questions in their field go to them.</li>
+      <li>With DSI Synapse on your device, a hard question can escalate to a stronger model, or get a second opinion, only when the first answer looks uncertain.</li>
+    </ul></div>
+  </div>
+  <div class="ctas"><a class="btn primary" href="/app?login=1">Talk to DSI</a><a class="btn" href="/app#/console/docs">API docs</a><a class="btn" href="/node#laptop">Run a node</a></div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <div><b style="color:var(--ink)">Decentralised<span style="color:var(--accent)">.si</span></b> · Decentralised Super Intelligence · open source · © 2026</div>
+    <div class="links">
+      <a href="/home">Home</a>
+      <a href="/intro">Watch the intro</a>
+      <a href="/download">Download</a>
+      <a href="/architecture">Architecture</a>
+      <a href="/benefits">Benefits</a>
+      <a href="/node">Run a node</a>
+      <a href="/network">Live map</a>
+      <a href="/ai">Network</a>
+      <a href="/whitepaper">Whitepaper</a>
+      <a href="/app#/console/docs">API docs</a>
+      <a href="https://github.com/Decentralised-si/DSI-AXON">GitHub · router</a>
+      <a href="https://github.com/Decentralised-si/web">GitHub · web</a>
+      <a href="https://research.innovation.net/atlas/sphere/" target="_blank" rel="noopener">How did we get here</a>
+      <a href="/privacy">Privacy</a>
+      <a href="/terms">Terms</a>
+      <a href="mailto:yousef@clanz.com">yousef@clanz.com</a>
+    </div>
+    <p style="flex-basis:100%;margin:12px 0 0;font-size:12px;line-height:1.5">PAI is an off-chain reward unit. It has not been issued, has no market value, and nothing on this site is an offer of securities or a solicitation to invest. The PAI contract is unaudited and not deployed. Software is provided as is.</p>
+  </div>
+</footer>
+<script>
+(() => {
+  // Prices per 1M tokens (input, output), checked against each vendor's page on 28 September 2026.
+  const M = {
+    "Claude Fable 5.1": [10, 50], "GPT-6 Astra": [10, 50], "GPT-5.5 Pro": [30, 180], "GPT-5.5": [5, 30],
+    "Claude Opus 5.5": [4, 20], "Gemini 3.1 Pro (preview)": [2, 12], "Claude Sonnet 5": [2, 10], "GPT-6 Sol": [2, 10], "Claude Haiku 4.5": [1, 5],
+  };
+  const NODE = [0.10, 0.30], MID = [0.293, 2.253];
+  const $ = (id) => document.getElementById(id);
+  const base = $("base");
+  for (const k of Object.keys(M)) base.add(new Option(k, k, false, k === "Claude Opus 5.5"));
+  const usd = (x) => "$" + (x >= 100 ? Math.round(x).toLocaleString("en") : x.toFixed(2));
+  function run() {
+    const req = Math.max(0, +$("req").value || 0), tin = Math.max(0, +$("tin").value || 0), tout = Math.max(0, +$("tout").value || 0);
+    let easy = +$("easy").value, hard = +$("hard").value;
+    if (easy + hard > 100) { hard = 100 - easy; $("hard").value = hard; }
+    const med = 100 - easy - hard;
+    $("easyv").textContent = easy + "%"; $("medv").textContent = med + "%"; $("hardv").textContent = hard + "%";
+    const per = (p) => (tin * p[0] + tout * p[1]) / 1e6;
+    const b = M[base.value];
+    const all = req * per(b);
+    const routed = req * (easy / 100 * per(NODE) + med / 100 * per(MID) + hard / 100 * per(b));
+    $("bname").textContent = base.value;
+    $("rbase").textContent = usd(all);
+    $("rrouted").textContent = usd(routed);
+    $("rsplit").textContent = `${easy}% on community nodes, ${med}% on Llama 3.3 70B, ${hard}% on ${base.value} with your key`;
+    $("rsave").textContent = all > 0 ? `${usd(all - routed)} (${Math.round((1 - routed / all) * 100)}%)` : "–";
+    $("rnet").textContent = usd(req * (easy / 100 * per(NODE) + (med + hard) / 100 * per(MID)));
+  }
+  for (const id of ["base", "req", "tin", "tout", "easy", "hard"]) $(id).addEventListener("input", run);
+  run();
+})();
+</script>
+</body>
+</html>

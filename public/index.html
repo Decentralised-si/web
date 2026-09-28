@@ -81,7 +81,7 @@ h3{font-size:18px;margin:0 0 8px;letter-spacing:-.01em}
 .flow figcaption{border-top:1px solid var(--line);margin-top:10px;padding-top:12px;min-height:96px}
 .flow figcaption p{margin:6px 0 8px;font-size:15px;line-height:1.45}
 .flow figcaption p b{color:var(--accent)}
-.flow figcaption code{display:block;font-size:11.5px;color:var(--muted);white-space:pre;overflow-x:auto}
+.flow figcaption code{display:block;font-size:11.5px;color:var(--muted);white-space:pre-wrap;overflow-wrap:anywhere}
 .flow .outer{fill:none;stroke:var(--accent);stroke-dasharray:4 4}
 .flow .link{stroke:var(--accent);stroke-width:2;fill:none}
 .flow .od .frame{fill:var(--accent-soft);stroke:var(--accent);stroke-width:1.4}
@@ -216,7 +216,7 @@ footer a{color:var(--muted)}
     </div>
 
     <figure class="flow" aria-labelledby="flow-cap">
-      <svg viewBox="0 0 560 384" role="img" aria-label="Your app sends requests to Synapse on your device, which understands, protects, chooses, streams and escalates, keeping memory locally, and sends each request to one of several expert providers: local specialists, a local general model, a strong model on your own API key, a network GPU node or DSI Axon, the hosted blind router.">
+      <svg viewBox="0 0 560 384" role="img" aria-label="Your app sends requests to Synapse on your device, which understands, protects, chooses, streams and escalates, keeping memory locally, and sends each request to one of several expert providers: local specialists, a local general model, a strong model on your own API key, or DSI Axon, the hosted blind router, which also reaches specialist GPU nodes on the network.">
         <defs>
           <linearGradient id="g" x1="0" x2="1"><stop offset="0" stop-color="#16b5ff"/><stop offset=".5" stop-color="#2257e6"/><stop offset="1" stop-color="#8a3ffc"/></linearGradient>
         </defs>
@@ -580,19 +580,25 @@ cargo run --release --bin benchmark</pre>
     txt(g, 54, y + 18, st[1]);
     return g;
   });
-  const P = [["Quant specialist", "local GPU"], ["Coder specialist", "local GPU"], ["General model", "Ollama · local"], ["Strong model", "your API key"], ["Network GPU node", "dsi-node"], ["DSI Axon", "api.decentralised.si"]]
-    .map((t, i) => ({ t, y: 38 + i * 56 }));
+  // Network nodes only accept requests signed by DSI Axon, so Synapse reaches them through Axon (index 5 hangs off 4).
+  const AXON = 4, NODE = 5;
+  const P = [["Quant specialist", "local GPU"], ["Coder specialist", "local GPU"], ["General model", "Ollama · local"], ["Strong model", "your API key"], ["DSI Axon", "hosted blind router"], ["Network GPU node", "dsi-node · reached via Axon"]]
+    .map((t, i) => ({ t, y: 38 + i * 56, x: i === NODE ? 350 : 330, w: i === NODE ? 204 : 224 }));
   const pc = (j) => P[j].y + 21;
   const path = (j) => `M230 206 C 280 206, 280 ${pc(j)}, 330 ${pc(j)}`;
+  const hop = `M452 ${P[AXON].y + 42} V${P[NODE].y}`;
+  // A route to a network node is two hops: Synapse → Axon, then Axon → node.
+  const route = (j, cls) => { el("path", { d: path(j === NODE ? AXON : j), class: cls }, live); if (j === NODE) el("path", { d: hop, class: cls }, live); };
   const mesh = document.getElementById("mesh"), live = document.getElementById("live");
-  P.forEach((_, j) => el("path", { d: path(j), class: "m" }, mesh));
+  P.forEach((_, j) => j !== NODE && el("path", { d: path(j), class: "m" }, mesh));
+  el("path", { d: hop, class: "m" }, mesh);
   const pg = document.getElementById("providers");
   const pn = P.map((p, j) => {
     const g = el("g", { class: "nd" }, pg);
-    el("rect", { x: 330, y: p.y, width: 224, height: 42, rx: 10 }, g);
-    txt(g, 442, p.y + 18, p.t[0]);
-    txt(g, 442, p.y + 33, p.t[1], "s");
-    txt(g, 544, p.y + 14, "✕", "x");
+    el("rect", { x: p.x, y: p.y, width: p.w, height: 42, rx: 10 }, g);
+    txt(g, p.x + p.w / 2, p.y + 18, p.t[0]);
+    txt(g, p.x + p.w / 2, p.y + 33, p.t[1], "s");
+    txt(g, p.x + p.w - 10, p.y + 14, "✕", "x");
     return g;
   });
 
@@ -602,8 +608,8 @@ cargo run --release --bin benchmark</pre>
     { q: "Email me at you@example.com and analyse this option position.", steps: [1], to: 0, t: "<b>Pseudonymised before it leaves.</b> The provider gets a placeholder; the mapping stays on your device and the reply you see is restored.",
       h: 'provider received: "Email me at <EMAIL_1> and analyse this option position."' },
     { q: "Explain implied volatility.", steps: [2], to: 2, down: [0], t: "<b>Specialist offline, answer still arrives.</b> The next-best expert takes over, and the route says so.",
-      h: "fallback: quant-local is offline; falling back to general-local" },
-    { q: "Summarise the history of the printing press.", steps: [3], to: 4, cut: 2, t: "<b>Slow expert, backup launched.</b> No first token after 300 ms, so a backup starts; it answers first and the slow request is cancelled.",
+      h: "fallback: quant-local is offline (best match for finance.quant); falling back to general-local" },
+    { q: "Summarise the history of the printing press.", steps: [3], to: NODE, cut: 2, t: "<b>Slow expert, backup launched.</b> No first token after 300 ms, so a backup starts on a network node, through DSI Axon; it answers first and the slow request is cancelled.",
       h: "hedge at 303 ms  →  backup first token 394 ms  ·  primary cancelled" },
     { q: "Compare three tokenisation structures under Australian securities law.", steps: [4], to: 3, done: 2, t: "<b>Unsure answer, stronger expert.</b> Uncertainty is above the threshold, so the ladder climbs one rung, within budget. Confident answers stop at one.",
       h: "status: deepening  ·  rung R2  ·  uncertainty 0.41  →  strong model" },
@@ -614,11 +620,11 @@ cargo run --release --bin benchmark</pre>
   const show = () => {
     const sc = scenes[k % scenes.length];
     live.replaceChildren();
-    if (sc.cut !== undefined) el("path", { d: path(sc.cut), class: "p cut" }, live);
-    if (sc.done !== undefined) el("path", { d: path(sc.done), class: "p done" }, live);
-    el("path", { d: path(sc.to), class: "p" }, live);
+    if (sc.cut !== undefined) route(sc.cut, "p cut");
+    if (sc.done !== undefined) route(sc.done, "p done");
+    route(sc.to, "p");
     stepEls.forEach((g, i) => g.classList.toggle("on", sc.steps.includes(i)));
-    pn.forEach((g, j) => { g.classList.toggle("on", j === sc.to); g.classList.toggle("down", (sc.down || []).includes(j)); });
+    pn.forEach((g, j) => { g.classList.toggle("on", j === sc.to || (sc.to === NODE && j === AXON)); g.classList.toggle("down", (sc.down || []).includes(j)); });
     dots.forEach((d, i) => d.classList.toggle("on", i === k % scenes.length));
     capQ.textContent = "› " + sc.q;
     capT.innerHTML = sc.t;

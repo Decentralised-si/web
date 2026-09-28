@@ -239,7 +239,7 @@ footer a{color:var(--muted)}
   <h2>The system at a glance</h2>
   <p>There are three layers. Only the first is required. Everything below it is a <em>provider</em>, and Synapse treats them all the same way: an endpoint with a price, an expected latency and quality, and a map of the domains it is good at.</p>
 
-  <div class="sys" role="img" aria-label="Layer 1: your device, running your apps, the DSI Synapse router and local memory. Layer 2: expert providers — local models, your own vendor keys, DSI Axon (the blind router) and independent GPU nodes. Layer 3: future fabric services — discovery, reputation, settlement and verification.">
+  <div class="sys" role="img" aria-label="Layer 1: your device, running your apps, the DSI Synapse router and local memory. Layer 2: expert providers — local models, your own vendor keys, DSI Axon (the blind router) and independent GPU nodes reached through it. Layer 3: future fabric services — discovery, reputation, settlement and verification.">
     <div class="layer device">
       <h4><span>① Your device</span><span>required · runs locally</span></h4>
       <div class="row">
@@ -257,14 +257,14 @@ footer a{color:var(--muted)}
         <div class="box"><b>Local models</b><span>Ollama, vLLM, llama.cpp, LM Studio on this machine or LAN</span></div>
         <div class="box"><b>Your vendor keys</b><span>any OpenAI-compatible API, billed to you directly</span></div>
         <div class="box"><b>DSI Axon — blind router</b><span>drop-in Anthropic / OpenAI / Gemini APIs, routing without reading prompts, limits, billing</span></div>
-        <div class="box"><b>Network GPU nodes</b><span>independent operators running <code>dsi-node</code>, paid in PAI</span></div>
+        <div class="box"><b>Network GPU nodes</b><span>independent operators running <code>dsi-node</code>, paid in PAI; reached through DSI Axon, which signs every request they serve</span></div>
       </div>
     </div>
     <div class="arrow">interfaces today · network later</div>
     <div class="layer future">
       <h4><span>③ Fabric services</span><span>roadmap · interfaces in code</span></h4>
       <div class="row">
-        <div class="box"><b>Discovery</b><span>find experts for a domain</span></div>
+        <div class="box"><b>Discovery</b><span>find experts for a domain; a first directory of network specialists is live through DSI Axon</span></div>
         <div class="box"><b>Reputation</b><span>shared, verifiable track records</span></div>
         <div class="box"><b>Settlement</b><span>pay providers for verified work</span></div>
         <div class="box"><b>Verification</b><span>independent checks of answers</span></div>

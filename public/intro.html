@@ -378,16 +378,16 @@ function compose(){
   }
   /* a new planet each time: node count, radius, arcs and viewing angle all re-roll */
   GLOBE_YAW0 = Math.random() * 6.283;
-  if(gl && N){ upload('globe', makeBuf(function(a){ bGlobe(a); })); upload('bang', makeBuf(bBang)); }
-  var hold = 11.9;
+  if(gl && N){ upload('globe', makeBuf(function(a){ bGlobe(a); })); if(metaGL){ gl.bindBuffer(gl.ARRAY_BUFFER, metaGL); gl.bufferData(gl.ARRAY_BUFFER, metaBuf, gl.STATIC_DRAW); } upload('bang', makeBuf(bBang)); }
+  var hold = 12.4;
   SEGS = [
     {at:0,    to:'spark', d:.1,  stag:0,   swirl:0},               /* the singularity, beating */
     {at:2.5,  to:'bang',  d:1.6, stag:.2,  swirl:0, ease:'expo'},  /* everything, at once, everywhere */
-    {at:4.4,  to:key,     d:3.2, stag:1.3, swirl:0},               /* through the stars, a world */
+    {at:4.4,  to:key,     d:1.3, stag:4.0, swirl:0},               /* through the stars, a world */
     {at:hold, to:'text',  d:1.7, stag:2.4, swirl:0}                /* and from it, the name */
   ];
   BURST_AT = 2.5; FLY_AT = 4.4; FLY_DUR = 4.4;
-  TEXT_AT = hold; END = hold + 3.3; FILM = END; EARTH_AT = FLY_AT + FLY_DUR - .3;
+  TEXT_AT = hold; END = hold + 3.3; FILM = END; EARTH_AT = FLY_AT + 4.9;
 }
 
 var MODE = {bang:5, disk:12, void:9, spark:0, roots:1, minds:2, flock:3, centre:4, burst:5, globe:6, among:7, text:8, w1:8, w2:8, trio:8};
@@ -432,7 +432,7 @@ var VS = [
 'attribute vec4 aA; attribute vec4 aB; attribute vec3 aMeta;',
 'uniform mat4 uProj, uView; uniform mat3 uRA, uRB;',
 'uniform float uMA, uMB, uTime, uTL, uT0, uDur, uStag, uSwirl, uExpo, uGrow, uBeat, uPix, uScan, uCamD;',
-'uniform vec2 uMouse; uniform vec2 uTextX; uniform float uWave; uniform vec3 uRip; uniform vec4 uVarA, uVarB; uniform float uPath; uniform vec3 uGOff; uniform float uLogoT, uLogoDur; uniform vec3 uSparkCol; uniform vec2 uLogoX;',
+'uniform vec2 uMouse; uniform vec2 uTextX; uniform float uWave; uniform vec3 uRip; uniform vec4 uVarA, uVarB; uniform float uPath; uniform vec3 uGOff; uniform float uLogoT, uLogoDur; uniform vec3 uSparkCol; uniform vec2 uLogoX; uniform float uSeq;',
 'varying vec3 vCol; varying float vA; varying float vSize;',
 'vec3 pal(float k){ k = mod(floor(k), 5.0);',
 '  if(k < .5) return vec3(.447,.718,1.); if(k < 1.5) return vec3(1.,.71,.278); if(k < 2.5) return vec3(.247,.851,.788);',
@@ -509,7 +509,7 @@ var VS = [
 '  vec3 pA, pB, cA, cB; float aA_, aB_, sA, sB;',
 '  motion(uMA, aA, uRA, uVarA, pA, aA_, cA, sA);',
 '  motion(uMB, aB, uRB, uVarB, pB, aB_, cB, sB);',
-'  float dl = fract(aMeta.x * 3.71);',
+'  float dl = uSeq > .5 ? aMeta.y : fract(aMeta.x * 3.71);',
 '  if(uPath > .5){',
 '    /* the migration: dots leave in the order their letters are written, left to right */',
 '    float hx = aB.w < 0. ? fract(aMeta.x * 7.3) : clamp((aB.x - uTextX.x) / (uTextX.y - uTextX.x), 0., 1.);',
@@ -559,7 +559,7 @@ function initGL(){
   gl.linkProgram(prog); if(!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
   gl.useProgram(prog);
   ['aA','aB','aMeta'].forEach(function(n){ loc[n] = gl.getAttribLocation(prog, n); });
-  ['uProj','uView','uRA','uRB','uMA','uMB','uTime','uTL','uT0','uDur','uStag','uSwirl','uExpo','uGrow','uBeat','uPix','uScan','uCamD','uMouse','uTextX','uWave','uRip','uVarA','uVarB','uPath','uGOff','uLogoT','uLogoDur','uSparkCol','uLogoX']
+  ['uProj','uView','uRA','uRB','uMA','uMB','uTime','uTL','uT0','uDur','uStag','uSwirl','uExpo','uGrow','uBeat','uPix','uScan','uCamD','uMouse','uTextX','uWave','uRip','uVarA','uVarB','uPath','uGOff','uLogoT','uLogoDur','uSparkCol','uLogoX','uSeq']
     .forEach(function(n){ loc[n] = gl.getUniformLocation(prog, n); });
   gl.disable(gl.DEPTH_TEST); gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE);
 }
@@ -582,7 +582,7 @@ function buildShapes(){
   STAR = new Float32Array(N * 3); STARW = new Float32Array(N);
   for(i = 0; i < N; i++){ var z = 7 - Math.pow(rnd(), .9) * 70, spread = 3 + Math.abs(z - 4) * .55, gx = gauss(), gy = gauss();
     STAR[i*3] = gx * spread; STAR[i*3+1] = gy * spread * .7; STAR[i*3+2] = z; STARW[i] = starW(); }
-  var meta = new Float32Array(N * 3);
+  var meta = new Float32Array(N * 3); metaBuf = meta;
   for(i = 0; i < N; i++){ meta[i*3] = rnd(); meta[i*3+1] = 1; meta[i*3+2] = .55 + Math.pow(rnd(), 3) * 1.4; }
 
   /* ---- the branching form: roots, then neurons: one pattern at two scales ---- */
@@ -915,11 +915,24 @@ function loadWorld(done){
    (0 own hue, 1-5 palette, 6 gold, 7 white), fraction = brightness. */
 function nUse(f){ return Math.floor(N * (f || .84)); }
 function put(a, q, x, y, z, w){ set(a, order[q], x, y, z, w); }
-var GLOBE_HUE0 = Math.random(), GLOBE_YAW0 = Math.random() * 6.283;
+var metaGL = null, GLOBE_HUE0 = Math.random(), GLOBE_YAW0 = Math.random() * 6.283;
 function ll2v(lon, lat){ var la = lat * Math.PI / 180, lo = lon * Math.PI / 180; return [Math.cos(la) * Math.cos(lo), Math.sin(la), -Math.cos(la) * Math.sin(lo)]; }
 function capHue(i){ return (GLOBE_HUE0 + i * .61803) % 1; }
 function nearestCap(v){ var best = 0, bd = -2; for(var i = 0; i < CAPV.length; i++){ var c = CAPV[i], d = c[0]*v[0] + c[1]*v[1] + c[2]*v[2]; if(d > bd){ bd = d; best = i; } } return best; }
 var CAPV = CAPITALS.map(function(c){ return ll2v(c[0], c[1]); });
+var CONT_ORDER = ['africa','europe','asia','namerica','samerica','oceania','antarctica'];
+function continentOf(lon, lat){
+  if(lat < -58) return 'antarctica';
+  if(lon < -25) return lat > 12 ? 'namerica' : 'samerica';
+  if(lon >= 110 && lat < -8) return 'oceania';
+  if(lon >= 150) return 'oceania';
+  if(lon < 45 && lat >= 36) return 'europe';
+  if(lon >= 26 && lon < 60 && lat >= 12) return 'asia';            /* the Middle East */
+  if(lon < 52) return 'africa';
+  return 'asia';
+}
+/* a per-particle arrival time (0..1) written into the spare meta channel */
+function seq(q, v){ if(metaBuf) metaBuf[order[q] * 3 + 1] = v; }
 function bGlobe(a){
   /* a world in dots: dense, vividly coloured countries; sparse deep-blue
      oceans; a glowing node at every capital with a column of light rising
@@ -937,21 +950,24 @@ function bGlobe(a){
   for(var k = 0; k < nLand && q < cap; k++, q++){
     var L = land[Math.floor(k * stepL)], hue = MAP.source === 'detailed' ? (GLOBE_HUE0 + L[1] * .61803) % 1 : capHue(nearestCap(L[0]));
     put(a, q, L[0][0]*RG, L[0][1]*RG, L[0][2]*RG, 1 + hue * .998);
+    var vv = L[0], lat0 = Math.asin(vv[1]) * 180 / Math.PI, lon0 = Math.atan2(-vv[2], vv[0]) * 180 / Math.PI;
+    var ci = CONT_ORDER.indexOf(continentOf(lon0, lat0));
+    seq(q, .1 + ci * .105 + rnd() * .07);                            /* continents, one after another */
   }
   var nSea = Math.floor(N * .13), stepS = sea.length / nSea;
-  for(k = 0; k < nSea && q < cap; k++, q++){ var S = sea[Math.floor(k * stepS)][0]; put(a, q, S[0]*RG, S[1]*RG, S[2]*RG, .14 + .1 * rnd()); }
+  for(k = 0; k < nSea && q < cap; k++, q++){ var S = sea[Math.floor(k * stepS)][0]; put(a, q, S[0]*RG, S[1]*RG, S[2]*RG, .14 + .1 * rnd()); seq(q, rnd() * .08); }
   /* faint graticule */
   var nLat = Math.floor(N * .035), lines = 17, per0 = Math.floor(nLat / lines);
   for(var g = 0; g < lines; g++) for(k = 0; k < per0 && q < cap; k++, q++){
     var u = (k + .5) / per0, P = g < 12 ? ll2v(g * 30 - 180, (u - .5) * 180) : ll2v(u * 360 - 180, ((g - 11) / 6 - .5) * 180);
-    put(a, q, P[0]*RG, P[1]*RG, P[2]*RG, .3);
+    put(a, q, P[0]*RG, P[1]*RG, P[2]*RG, .3); seq(q, .02 + rnd() * .06);
   }
   /* a node at every capital, and a column of light rising from it */
-  CAPV.forEach(function(c, ci){ for(var r = 0; r < 3 && q < cap; r++, q++) put(a, q, c[0]*RG*1.004, c[1]*RG*1.004, c[2]*RG*1.004, 100 + capHue(ci) * .998); });
+  CAPV.forEach(function(c, ci){ for(var r = 0; r < 3 && q < cap; r++, q++){ put(a, q, c[0]*RG*1.004, c[1]*RG*1.004, c[2]*RG*1.004, 100 + capHue(ci) * .998); seq(q, .86 + rnd() * .04); } });
   var nCol = Math.floor(N * .06), perCol = Math.floor(nCol / CAPV.length);
   CAPV.forEach(function(c, ci){ var hgt = .16 + .08 * ((ci * .37) % 1);
     for(var r = 0; r < perCol && q < cap; r++, q++){ var s = (r + .5) / perCol * hgt, rr = RG * (1 + s);
-      put(a, q, c[0]*rr, c[1]*rr, c[2]*rr, 200 + capHue(ci) * .998); } });
+      put(a, q, c[0]*rr, c[1]*rr, c[2]*rr, 200 + capHue(ci) * .998); seq(q, .9 + s / hgt * .05); } });
   /* arcs between capitals */
   var nArcP = cap - q, arcs = 34, per = Math.floor(nArcP / arcs);
   for(var k2 = 0; k2 < arcs; k2++){
@@ -961,7 +977,7 @@ function bGlobe(a){
     var sn = Math.sin(ang), lift = .08 + ang * .14;
     for(var m = 0; m < per && q < cap; m++, q++){
       var s2 = (m + .5) / per, w1 = Math.sin((1-s2)*ang)/sn, w2 = Math.sin(s2*ang)/sn, r2 = RG * (1 + lift * Math.sin(Math.PI * s2));
-      put(a, q, (A[0]*w1 + B[0]*w2)*r2, (A[1]*w1 + B[1]*w2)*r2, (A[2]*w1 + B[2]*w2)*r2, 2 + ((ia * 7 + k2) % 97) + s2 * .999);
+      put(a, q, (A[0]*w1 + B[0]*w2)*r2, (A[1]*w1 + B[1]*w2)*r2, (A[2]*w1 + B[2]*w2)*r2, 2 + ((ia * 7 + k2) % 97) + s2 * .999); seq(q, .94 + rnd() * .06);
     }
   }
 }
@@ -1189,7 +1205,7 @@ function build(){
       if(ex >= 0){ bufs[key] = bufs[Object.keys(shapes)[ex]]; made.push(null); return; }
       made.push(arr); var b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.bufferData(gl.ARRAY_BUFFER, arr, gl.STATIC_DRAW); bufs[key] = b;
     });
-    var mb = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, mb); gl.bufferData(gl.ARRAY_BUFFER, metaBuf, gl.STATIC_DRAW);
+    var mb = metaGL = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, mb); gl.bufferData(gl.ARRAY_BUFFER, metaBuf, gl.STATIC_DRAW);
     gl.enableVertexAttribArray(loc.aMeta); gl.vertexAttribPointer(loc.aMeta, 3, gl.FLOAT, false, 0, 0);
     upload('bang', makeBuf(bBang));
     buildReasons();
@@ -1303,6 +1319,7 @@ function frame(now){
     gl.uniform3f(loc.uGOff, 0, 0, GZ);
     var ks = 1 - Math.exp(-dt * 7); for(var ci = 0; ci < 3; ci++) sparkCol[ci] += (sparkTarget[ci] - sparkCol[ci]) * ks;
     gl.uniform2f(loc.uLogoX, LOGO_X[0], LOGO_X[1]);
+    gl.uniform1f(loc.uSeq, curKey === 'globe' ? 1 : 0);
     gl.uniform3f(loc.uSparkCol, sparkCol[0], sparkCol[1], sparkCol[2]);
     gl.uniform1f(loc.uLogoT, LOGO_AT); gl.uniform1f(loc.uLogoDur, LOGO_DUR);
     gl.uniform1f(loc.uPath, curKey === 'text' && prevKey === 'globe' ? 1 : 0);

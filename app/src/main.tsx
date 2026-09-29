@@ -49,7 +49,8 @@ loadConfig()
         <PrivyProvider
           appId={cfg.privyAppId}
           config={{
-            loginMethods: ["email", "google", "apple", "github", "wallet"],
+            // Google, Apple and GitHub use the redirect buttons on the sign-in screen (App.tsx); the modal is for email and wallets.
+            loginMethods: ["email", "wallet"],
             appearance: { theme: dark ? "dark" : "light", accentColor: dark ? "#4da3ff" : "#2257e6", logo: `${location.origin}/brand/logo-96.png`, walletChainType: "ethereum-and-solana", landingHeader: "Sign in to Decentralised.si" },
             // Every user gets a self-custodial wallet (EVM + Solana) to pay for AI with crypto.
             embeddedWallets: { ethereum: { createOnLogin: "users-without-wallets" }, solana: { createOnLogin: "users-without-wallets" } },

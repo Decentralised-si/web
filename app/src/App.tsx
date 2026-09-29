@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { usePrivy, useIdentityToken } from "@privy-io/react-auth";
+import { usePrivy, useIdentityToken, useLoginWithOAuth } from "@privy-io/react-auth";
 import { api, setAccount, setTokenSource, type Config } from "./api";
 import { listConversations, setNamespace, type Conversation } from "./localdb";
 import { Chat } from "./Chat";
@@ -40,6 +40,20 @@ export function App({ config }: { config: Config }) {
       return false;
     }
   });
+  // Google, Apple and GitHub sign in with a full-page redirect rather than Privy's popup: the
+  // provider sends the browser back to this page, and this hook (mounted while signed out)
+  // finishes the login here, so the visitor lands in the signed-in chat.
+  const { initOAuth, state: oauth } = useLoginWithOAuth({
+    onComplete: () => {
+      if (!location.hash || location.hash === "#" || location.hash === "#/") history.replaceState(null, "", `${location.pathname}#/chat`);
+      setRoute(parseRoute());
+    },
+  });
+  const signInWith = (provider: "google" | "apple" | "github") => {
+    // The provider returns to the URL we leave from: make that the chat.
+    if (!location.hash.startsWith("#/")) history.replaceState(null, "", `${location.pathname}#/chat`);
+    initOAuth({ provider }).catch(() => {});
+  };
   // A new, unsaved chat keeps the "#/chat" route after its first message (the id is written with
   // replaceState), so "New chat" needs its own key to start a fresh conversation.
   const [newChat, setNewChat] = useState(0);
@@ -59,15 +73,14 @@ export function App({ config }: { config: Config }) {
     return () => removeEventListener("hashchange", on);
   }, []);
 
-  // Arriving from "Talk to DSI" on the intro (/app?login=1): open the sign-in straight away,
-  // then land in the chat. Already signed in: straight to the chat.
+  // Arriving from "Chat with DSI" on the intro (/app?login=1): the sign-in screen below, then the
+  // chat. Already signed in: straight to the chat.
   useEffect(() => {
     const q = new URLSearchParams(location.search);
     if (!ready || !q.has("login")) return;
     q.delete("login");
     history.replaceState(null, "", location.pathname + (q.toString() ? `?${q}` : "") + (location.hash || "#/chat"));
-    if (!authenticated) login();
-  }, [ready, authenticated, login]);
+  }, [ready]);
 
   // Always call the latest token getter without re-running the session exchange on every render.
   const tokenRef = useRef(getAccessToken);
@@ -108,17 +121,25 @@ export function App({ config }: { config: Config }) {
     }
   };
 
-  if (!ready) return <div className="center muted">Loading…</div>;
+  if (!ready || oauth.status === "loading" || (oauth.status === "done" && !authenticated)) return <div className="center muted">{ready ? "Signing you in…" : "Loading…"}</div>;
   if (!authenticated)
     return (
       <div className="center">
         <div className="c-login">
           <img src="/brand/logo-96.png" alt="" width={48} height={48} />
           <h1>Every AI model, routed for you.</h1>
-          <p className="muted">Sign in with email, Google, Apple, GitHub or a wallet. Your conversations stay in this browser.</p>
-          <button className="primary big" onClick={() => login()}>
-            Sign in
-          </button>
+          <p className="muted">Sign in to chat. Your conversations stay in this browser.</p>
+          <div className="c-login-options">
+            <button className="primary big" onClick={() => signInWith("google")}>
+              Continue with Google
+            </button>
+            <div className="row">
+              <button onClick={() => signInWith("apple")}>Apple</button>
+              <button onClick={() => signInWith("github")}>GitHub</button>
+              <button onClick={() => login()}>Email or wallet</button>
+            </div>
+          </div>
+          {oauth.status === "error" && <p className="err small">Sign-in didn't complete{oauth.error?.message ? `: ${oauth.error.message}` : ""}. Please try again.</p>}
           <p className="fine">
             <a href="/home">About</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a>
           </p>

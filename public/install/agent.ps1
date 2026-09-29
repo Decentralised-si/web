@@ -4513,10 +4513,10 @@ function Set-DsiNetwork {
     try {
         $py = if (-not $NoVenv) { ".\venv\Scripts\python.exe" } else { "python" }
         & $py -m hermes_cli.main config set model.provider decentralised | Out-Null
-        & $py -m hermes_cli.main config set model.default auto | Out-Null
+        & $py -m hermes_cli.main config set model.default @cf/zai-org/glm-5.3-flash | Out-Null
         & $py -m hermes_cli.main config set model.base_url https://api.decentralised.si/openai/v1 | Out-Null
         & $py -m hermes_cli.main config set DSI_API_KEY $key | Out-Null
-        Write-Success "Connected to Decentralised.si (model: auto)"
+        Write-Success "Connected to Decentralised.si (model: @cf/zai-org/glm-5.3-flash)"
         return $true
     } catch {
         Write-Warn "Could not save the Decentralised.si settings; run: dsi-agent config set DSI_API_KEY <key>"

@@ -29,53 +29,50 @@ export function Agent() {
         <h1>Agent terminal</h1>
       </div>
       <section className="card hero">
-        <h2>Hermes Agent — the default harness</h2>
+        <h2>DSI Agent Terminal</h2>
         <p>
+          An AI agent for your terminal that runs tools, edits files and works through tasks, connected to the network with your API key. Every step is routed to the best model for the job, paid from your credit or your own vendor keys. Built on{" "}
           <a href="https://github.com/NousResearch/hermes-agent" target="_blank" rel="noreferrer">
             Hermes Agent
           </a>{" "}
-          by Nous Research is an open-source (MIT) agent for your terminal: it runs tools, edits files and works through tasks. Point it at Decentralised.si and every step is routed to the best model for the job, paid from your credit or your own keys.
+          by Nous Research (MIT).
         </p>
         <div className="tabs small">
           <a className={os === "unix" ? "on" : ""} onClick={() => setOs("unix")} href="#/agent">
-            macOS · Linux · WSL
+            macOS · Linux · WSL · Android
           </a>
           <a className={os === "windows" ? "on" : ""} onClick={() => setOs("windows")} href="#/agent">
             Windows
           </a>
         </div>
-        <h3>1 · Install</h3>
-        {os === "unix" ? <Copy text={"curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash\nsource ~/.bashrc   # or ~/.zshrc"} /> : <Copy text={"iex (irm https://hermes-agent.nousresearch.com/install.ps1)"} />}
+        <h3>1 · Create an API key</h3>
+        <p className="small muted">
+          In <a href="#/console/keys">Console → API keys</a>. The installer asks for it and connects the agent to the network.
+        </p>
+        <h3>2 · Install</h3>
+        {os === "unix" ? <Copy text={"curl -fsSL https://decentralised.si/install/agent.sh | bash"} /> : <Copy text={"iex (irm https://decentralised.si/install/agent.ps1)"} />}
+        <p className="small muted">
+          Or pass the key so the installer doesn't ask:{" "}
+          <code>{os === "unix" ? "DSI_API_KEY=ds_live_... curl -fsSL https://decentralised.si/install/agent.sh | bash" : '$env:DSI_API_KEY="ds_live_..."; iex (irm https://decentralised.si/install/agent.ps1)'}</code>
+        </p>
+        <h3>3 · Use it</h3>
+        <Copy text={'dsi-agent                        # interactive session\ndsi-agent -z "summarise README.md"   # one question\ndsi-agent config set DSI_API_KEY ds_live_...   # change key'} />
         <p className="fine">
-          <a className="button primary" href="https://github.com/NousResearch/hermes-agent" target="_blank" rel="noreferrer">
-            Get Hermes Agent on GitHub
+          <a className="button primary" href="https://github.com/Decentralised-si/terminal" target="_blank" rel="noreferrer">
+            DSI Agent Terminal on GitHub
           </a>{" "}
-          <span className="muted">Linux, macOS, WSL2, Windows and Android (Termux).</span>
+          <span className="muted">
+            Provider <code>decentralised</code>, base URL <code>{API}/openai/v1</code>, model <code>auto</code>. Your organisation's default policy (Console → Routing) applies.
+          </span>
         </p>
-        <h3>2 · Use Decentralised.si as its model provider</h3>
+        <h3>4 · Keep your memory on your device (optional)</h3>
         <p className="small muted">
-          Create a key in <a href="#/console/keys">Console → API keys</a>, then add it to <code>~/.hermes/.env</code> and <code>~/.hermes/config.yaml</code>:
-        </p>
-        <Copy text={"echo 'DSI_API_KEY=ds_live_...' >> ~/.hermes/.env"} />
-        <Copy
-          text={`# ~/.hermes/config.yaml
-model:
-  default: auto                # let the router pick per step; or name a model, e.g. claude-sonnet-5
-  provider: custom
-  base_url: ${API}/openai/v1
-  key_env: DSI_API_KEY`}
-        />
-        <p className="small muted">
-          Or interactively: run <code>hermes model</code>, choose <em>Custom endpoint</em>, and enter <code>{API}/openai/v1</code> and your key. Routing headers are optional; your organisation's default policy (Console → Routing) applies.
-        </p>
-        <h3>3 · Keep your memory on your device (optional)</h3>
-        <p className="small muted">
-          The <code>dsi</code> harness gives Hermes private, on-device memory and preferences over MCP; nothing it stores leaves your machine except what a request needs.
+          The <code>dsi</code> harness gives the agent private, on-device memory and preferences over MCP; nothing it stores leaves your machine except what a request needs.
         </p>
         <Copy
           text={`mkdir -p ~/.local/bin && curl -fsSL https://decentralised.si/dl/dsi.mjs -o ~/.local/bin/dsi && chmod +x ~/.local/bin/dsi
 dsi login ds_live_...
-hermes mcp add dsi --command dsi --args mcp`}
+dsi-agent mcp add dsi --command dsi --args mcp`}
         />
         <Copy
           text={`# or in ~/.hermes/config.yaml
@@ -85,7 +82,7 @@ mcp_servers:
     args: ["mcp"]`}
         />
         <p className="fine muted">
-          Hermes also works with the network MCP endpoint directly: <code>{API}/mcp</code> (Streamable HTTP, <code>Authorization: Bearer ds_…</code>).
+          The agent also works with the network MCP endpoint directly: <code>{API}/mcp</code> (Streamable HTTP, <code>Authorization: Bearer ds_…</code>).
         </p>
       </section>
       <section className="card">

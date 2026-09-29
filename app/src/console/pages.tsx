@@ -127,7 +127,7 @@ export function Dashboard({ session, go }: { session: Session; go: (id: string) 
           ["Playground", "Test prompts across models, then get the code.", "playground"],
           ["Batch API", "Run thousands of requests asynchronously; collect JSONL results.", "batches"],
           ["Files", "Upload documents and images once; reference them by id.", "files"],
-          ["Agent terminal", "Hermes Agent in your shell, routed through Decentralised.si.", "terminal"],
+          ["Agent terminal", "DSI Agent Terminal in your shell, routed through Decentralised.si.", "terminal"],
         ].map(([title, body, to]) => (
           <section key={to} className="card">
             <h3>{title}</h3>

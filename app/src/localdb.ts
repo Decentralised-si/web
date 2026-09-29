@@ -10,7 +10,7 @@ export interface Conversation {
   model: string;
   mode: string;
   affinity?: string;
-  messages: Array<{ role: "user" | "assistant"; content: string; files?: string[]; meta?: { provider?: string; model?: string; market?: string } ; error?: string }>;
+  messages: Array<{ role: "user" | "assistant"; content: string; files?: string[]; meta?: { provider?: string; model?: string; market?: string; welcomeRemaining?: number } ; error?: string }>;
 }
 
 const DB = "dsi-chat";

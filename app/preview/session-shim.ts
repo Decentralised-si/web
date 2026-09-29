@@ -4,11 +4,11 @@ window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
   const url = String(input instanceof Request ? input.url : input);
   // No ?key=: answer the org and model list locally so the chat layout can be previewed offline.
   if (!new URLSearchParams(location.search).get("key")) {
-    if (url.endsWith("/api/org")) return Response.json({ id: "org_preview", name: "Preview organisation", creditUsd: 12.5, freeChat: { activeNodes: 1, probationNodes: 0, dailyTokens: 20000, dailyRemaining: 18200, earnedTokens: 3400, available: 21600 } });
+    if (url.endsWith("/api/org")) return Response.json({ id: "org_preview", name: "Preview organisation", creditUsd: 0, freeChat: { activeNodes: 0, probationNodes: 0, dailyTokens: 5000, dailyRemaining: 5000, earnedTokens: 0, available: 5000, welcomeRemaining: 5 } });
     if (url.includes("/chat/completions")) {
       const words = "**Implied volatility** is the volatility that, fed into Black-Scholes, reproduces an option's market price.\n\nIt is the market's forecast of how much the underlying will move, backed out from prices rather than measured from history.".split(" ");
       const body = words.map((w, i) => `data: ${JSON.stringify({ choices: [{ delta: { content: (i ? " " : "") + w } }] })}\n\n`).join("") + "data: [DONE]\n\n";
-      return new Response(body, { headers: { "content-type": "text/event-stream", "x-decentralise-actual-provider": "general-local", "x-decentralise-actual-model": "general-8b", "x-decentralise-market": "network" } });
+      return new Response(body, { headers: { "content-type": "text/event-stream", "x-decentralise-actual-provider": "workers-ai", "x-decentralise-actual-model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast", "x-decentralise-market": "network", "x-decentralise-welcome-remaining": "4" } });
     }
     if (url.includes("/models")) return Response.json({ data: [{ id: "auto" }, { id: "general-8b" }, { id: "coder-32b" }, { id: "claude-sonnet-5" }] });
   }

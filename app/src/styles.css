@@ -1689,3 +1689,70 @@ kbd {
   width: 19px;
   height: 19px;
 }
+
+/* newcomers: join-the-network card and the note under welcome answers */
+.c-join {
+  margin: 26px auto 0;
+  max-width: 560px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 18px 20px;
+  background: color-mix(in srgb, var(--accent) 5%, var(--panel));
+}
+.c-join h3 {
+  margin: 0 0 6px;
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: 20px;
+}
+.c-join-lead {
+  margin: 0 0 8px;
+  color: var(--muted);
+  font-size: 14px;
+}
+.c-join ul {
+  margin: 0 0 12px;
+  padding-left: 18px;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.c-join-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  font-size: 14px;
+}
+.c-cta {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 14px;
+  border-radius: 10px;
+  background: var(--grad);
+  color: #fff !important;
+  text-decoration: none;
+  font-weight: 600;
+}
+.c-cta:hover {
+  filter: brightness(1.08);
+}
+.c-join-fine {
+  margin: 10px 0 0;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.c-welcome {
+  margin-top: 12px;
+  border-left: 3px solid var(--accent);
+  padding: 8px 12px;
+  border-radius: 0 10px 10px 0;
+  background: color-mix(in srgb, var(--accent) 6%, transparent);
+  font-size: 13.5px;
+}
+.c-welcome.last {
+  border-left-color: var(--a2);
+  background: color-mix(in srgb, var(--a2) 8%, transparent);
+}
+.c-welcome p {
+  margin: 0 0 8px;
+}

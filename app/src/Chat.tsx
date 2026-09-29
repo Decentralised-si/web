@@ -58,6 +58,73 @@ interface FreeChat {
   dailyRemaining: number;
   earnedTokens: number;
   available: number;
+  /** Welcome answers left (hosted model, free) for newcomers while no community node can serve them. */
+  welcomeRemaining?: number;
+}
+
+const WELCOME_TOTAL = 5;
+
+/** Why running a node is worth it; shown to people who don't run one yet. */
+function JoinCard({ welcomeRemaining }: { welcomeRemaining?: number }) {
+  return (
+    <section className="c-join" aria-labelledby="join-h">
+      <h3 id="join-h">Chat free by joining the network</h3>
+      {welcomeRemaining ? (
+        <p className="c-join-lead">
+          You have <b>{welcomeRemaining} welcome answers</b> to try it now. To keep chatting free after that, share your computer with the network:
+        </p>
+      ) : (
+        <p className="c-join-lead">Share your computer with the network and chat free every day:</p>
+      )}
+      <ul>
+        <li>
+          <b>20,000 free tokens a day</b>, plus every token your node serves to others.
+        </li>
+        <li>
+          <b>Earn PAI</b>, the network's reward points, for the verified work your node does.
+        </li>
+        <li>
+          <b>One command</b> on a laptop, Mac or PC. Your city appears on the live map.
+        </li>
+      </ul>
+      <div className="c-join-actions">
+        <a className="c-cta" href={NODE_GUIDE}>
+          Run a node on your laptop
+        </a>
+        <a href="/ai#pai">What is PAI?</a>
+      </div>
+      <p className="c-join-fine">PAI is recorded on an off-chain ledger today. It has not been issued and has no cash value.</p>
+    </section>
+  );
+}
+
+/** Shown under a welcome answer: what just happened, and how to keep chatting free. */
+function WelcomeNote({ remaining }: { remaining: number }) {
+  const n = WELCOME_TOTAL - remaining;
+  return (
+    <div className={`c-welcome ${remaining === 0 ? "last" : ""}`}>
+      <p>
+        {remaining > 0 ? (
+          <>
+            <b>
+              Welcome answer {n} of {WELCOME_TOTAL}.
+            </b>{" "}
+            No community node was free, so a hosted open model answered, on us. Run a node to get free chat every day and earn PAI for the work it serves.
+          </>
+        ) : (
+          <>
+            <b>That was your last welcome answer.</b> To keep chatting free, run a node: one command on your laptop gives you 20,000 free tokens a day, plus every token it serves, and earns PAI.
+          </>
+        )}
+      </p>
+      <div className="c-join-actions">
+        <a className="c-cta" href={NODE_GUIDE}>
+          Run a node
+        </a>
+        <a href="/ai#pai">What is PAI?</a>
+      </div>
+    </div>
+  );
 }
 
 function tokensLabel(n: number): string {
@@ -435,7 +502,11 @@ export function Chat({ id, onSaved, config, name }: { id?: string; onSaved: () =
               </button>
             ))}
           </div>
-          {notice && <p className="c-notice">{notice}</p>}
+          {freeChat && freeChat.activeNodes === 0 && (credit ?? 0) <= 0 ? (
+            <JoinCard welcomeRemaining={freeChat.welcomeRemaining} />
+          ) : (
+            notice && <p className="c-notice">{notice}</p>
+          )}
         </div>
       </div>
     );
@@ -486,6 +557,7 @@ export function Chat({ id, onSaved, config, name }: { id?: string; onSaved: () =
                       {servedBy(m.meta)}
                     </p>
                   )}
+                  {m.meta?.welcomeRemaining !== undefined && <WelcomeNote remaining={m.meta.welcomeRemaining} />}
                 </div>
               </>
             )}

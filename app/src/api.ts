@@ -96,6 +96,8 @@ export interface StreamMeta {
   market?: string;
   affinity?: string;
   receipt?: string;
+  /** Set on a newcomer's welcome answer (hosted model, free): how many remain after this one. */
+  welcomeRemaining?: number;
 }
 
 /** Stream a chat completion; calls onDelta for every text chunk. */
@@ -135,6 +137,7 @@ export async function streamChat(opts: {
     market: r.headers.get("x-decentralise-market") ?? undefined,
     affinity: r.headers.get("x-decentralise-affinity") ?? undefined,
     receipt: r.headers.get("x-decentralise-receipt") ?? undefined,
+    ...(r.headers.get("x-decentralise-welcome-remaining") !== null ? { welcomeRemaining: Number(r.headers.get("x-decentralise-welcome-remaining")) } : {}),
   };
   const reader = r.body.getReader();
   const dec = new TextDecoder();

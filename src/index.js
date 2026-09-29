@@ -39,6 +39,13 @@ export default {
       return Response.redirect(url.toString(), 301);
     }
 
+    // Same-origin door to the router for the chat app: /gw/<path> is api.decentralised.si/<path>,
+    // over a service binding (no second hostname, no CORS preflight). Streams pass straight through.
+    if (url.pathname.startsWith("/gw/") && env.API) {
+      const target = new URL(url.pathname.slice(3) + url.search, "https://api.decentralised.si");
+      return env.API.fetch(new Request(target, request));
+    }
+
     const landing = isAi ? "/ai" : "/";
     const html = (res) => withHeaders(res, { "cache-control": "private, no-cache", vary: "User-Agent" });
     if (url.pathname === "/home") return html(await asset(env, request, url, landing));

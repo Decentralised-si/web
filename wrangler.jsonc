@@ -19,6 +19,9 @@
     { "pattern": "www.decentralised.ai", "custom_domain": true }
   ],
   "workers_dev": true,
+  // The chat app reaches the router same-origin at /gw/* (see src/index.js), so a network that
+  // cannot reach api.decentralised.si (some mobile carriers, blockers) still works.
+  "services": [{ "binding": "API", "service": "decentralised-si-router" }],
   "vars": {
     // Set to "true" once decentralised.si is active at the .si registry, to make it the canonical site again.
     "CANONICAL_LIVE": "false"

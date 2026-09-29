@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { marked } from "marked";
 import DOMPurify from "dompurify";
-import { API, api, authHeaders, listModels, streamChat } from "../api";
+import { API, api, authHeaders, listModels, streamChat, PUBLIC_API } from "../api";
 import { Section, useLoad, when } from "../Console";
 
 const MODES = ["optimise", "quality", "fastest", "cheapest", "decentralised_only", "private", "passthrough"];
@@ -31,7 +31,7 @@ function codeFor(lang: string, p: Params, messages: Array<{ role: string; conten
 
 client = Anthropic(
     api_key="ds_live_...",  # your Decentralised.si key
-    base_url="${API}/anthropic",${hdr ? `\n    default_headers={"X-Decentralise-Mode": "${hdr}"},` : ""}
+    base_url="${PUBLIC_API}/anthropic",${hdr ? `\n    default_headers={"X-Decentralise-Mode": "${hdr}"},` : ""}
 )
 
 message = client.messages.create(
@@ -45,7 +45,7 @@ print(message.content[0].text)`;
 
 const client = new Anthropic({
   apiKey: process.env.DECENTRALISE_API_KEY,
-  baseURL: "${API}/anthropic",${hdr ? `\n  defaultHeaders: { "X-Decentralise-Mode": "${hdr}" },` : ""}
+  baseURL: "${PUBLIC_API}/anthropic",${hdr ? `\n  defaultHeaders: { "X-Decentralise-Mode": "${hdr}" },` : ""}
 });
 
 const message = await client.messages.create({
@@ -57,7 +57,7 @@ console.log(message.content);`;
   if (lang === "openai")
     return `from openai import OpenAI
 
-client = OpenAI(api_key="ds_live_...", base_url="${API}/openai/v1")
+client = OpenAI(api_key="ds_live_...", base_url="${PUBLIC_API}/openai/v1")
 
 resp = client.chat.completions.create(
     model="${model}",
@@ -65,7 +65,7 @@ resp = client.chat.completions.create(
     messages=${py([...(p.system ? [{ role: "system", content: p.system }] : []), ...msgs])},
 )
 print(resp.choices[0].message.content)`;
-  return `curl ${API}/anthropic/v1/messages \\
+  return `curl ${PUBLIC_API}/anthropic/v1/messages \\
   -H "x-api-key: $DECENTRALISE_API_KEY" \\
   -H "content-type: application/json" \\${hdr ? `\n  -H "X-Decentralise-Mode: ${hdr}" \\` : ""}
   -d '${JSON.stringify({ model, max_tokens: mt, ...(p.system ? { system: p.system } : {}), ...(t !== undefined ? { temperature: t } : {}), messages: msgs }).replace(/'/g, "'\\''")}'`;

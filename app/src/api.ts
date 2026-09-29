@@ -7,9 +7,13 @@ function apiBase(): string {
   const host = location.hostname.replace(/^www\./, "");
   const override = new URLSearchParams(location.search).get("api");
   if (["localhost", "127.0.0.1"].includes(location.hostname) && override) return override;
-  return DOMAINS.includes(host) ? `https://api.${host}` : "https://api.decentralised.si";
+  // On our own domains, go through the site itself (/gw -> the router): some mobile networks and
+  // blockers cannot reach the api. subdomain. Elsewhere, the public API host.
+  return DOMAINS.includes(host) ? `${location.origin}/gw` : "https://api.decentralised.si";
 }
 export const API = apiBase();
+/** The public API host, for code samples and docs shown to developers. */
+export const PUBLIC_API = "https://api.decentralised.si";
 
 export interface Config {
   privyAppId: string | null;

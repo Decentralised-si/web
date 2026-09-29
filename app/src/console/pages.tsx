@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { usePrivy } from "@privy-io/react-auth";
-import { API, api, type Config } from "../api";
+import { API, api, type Config, PUBLIC_API } from "../api";
 import type { Session } from "../App";
 import { Bars, dailyTotals, int, LimitFields, Section, Stat, useLoad, usd, when, type Limits } from "../Console";
 import { Wallet } from "../Wallet";
@@ -575,12 +575,12 @@ export function Docs() {
       </div>
       <Section title="Quickstart">
         {block(`from anthropic import Anthropic
-client = Anthropic(api_key="ds_live_...", base_url="${API}/anthropic")
+client = Anthropic(api_key="ds_live_...", base_url="${PUBLIC_API}/anthropic")
 msg = client.messages.create(model="auto", max_tokens=1024, messages=[{"role": "user", "content": "Hello"}])`)}
         {block(`from openai import OpenAI
-client = OpenAI(api_key="ds_live_...", base_url="${API}/openai/v1")`)}
+client = OpenAI(api_key="ds_live_...", base_url="${PUBLIC_API}/openai/v1")`)}
         {block(`from google import genai
-client = genai.Client(api_key="ds_live_...", http_options={"base_url": "${API}/gemini"})`)}
+client = genai.Client(api_key="ds_live_...", http_options={"base_url": "${PUBLIC_API}/gemini"})`)}
       </Section>
       <Section title="Endpoints">
         <div className="tbl">

@@ -3,7 +3,8 @@ import { marked } from "marked";
 import DOMPurify from "dompurify";
 import { api, listModels, streamChat, type Config } from "./api";
 import { deleteConversation, listConversations, saveConversation, type Conversation } from "./localdb";
-import { IconArrowUp, IconBook, IconBulb, IconChart, IconCheck, IconChevron, IconClip, IconCode, IconLeaf, IconLock, IconPen, IconPlus, IconRoute, IconStop, IconTrash, IconX } from "./icons";
+import { Recorder, SentenceSplitter, Speaker, transcribe, voiceSupported } from "./voice";
+import { IconMic, IconSpeaker, IconArrowUp, IconBook, IconBulb, IconChart, IconCheck, IconChevron, IconClip, IconCode, IconLeaf, IconLock, IconPen, IconPlus, IconRoute, IconStop, IconTrash, IconX } from "./icons";
 
 const MODES = [
   { id: "optimise", label: "Best value", hint: "The router balances quality, speed and cost" },
@@ -201,6 +202,24 @@ export function Chat({ id, onSaved, config, name }: { id?: string; onSaved: () =
   const bottom = useRef<HTMLDivElement>(null);
   const box = useRef<HTMLTextAreaElement>(null);
   const fileInput = useRef<HTMLInputElement>(null);
+
+  // Voice conversation: listen → transcribe (Whisper) → send → speak the reply as it streams → listen again.
+  const [voice, setVoice] = useState<"idle" | "listening" | "transcribing" | "thinking" | "speaking">("idle");
+  const [level, setLevel] = useState(0);
+  const [voiceErr, setVoiceErr] = useState<string>();
+  const voiceOn = useRef(false);
+  const recorder = useRef<Recorder | undefined>(undefined);
+  const speakerRef = useRef<Speaker | undefined>(undefined);
+  const speaker = () => {
+    if (!speakerRef.current) {
+      const sp = new Speaker();
+      sp.onState = (on) => voiceOn.current && on && setVoice("speaking");
+      sp.onError = (e) => setVoiceErr(e.message);
+      speakerRef.current = sp;
+    }
+    return speakerRef.current;
+  };
+  const sendRef = useRef<(spoken?: string, speak?: boolean) => Promise<void>>(async () => {});
   usePopover(plus, useCallback(() => setPlus(false), []), ".c-plus-wrap");
   usePopover(picker, useCallback(() => setPicker(false), []), ".c-picker-wrap");
 
@@ -263,12 +282,13 @@ export function Chat({ id, onSaved, config, name }: { id?: string; onSaved: () =
     box.current?.focus();
   };
 
-  const send = async () => {
-    const text = input.trim();
+  const send = async (spoken?: string, speak = false) => {
+    const text = (spoken ?? input).trim();
     if ((!text && !files.length) || busy) return;
     const attached = files;
-    setInput("");
+    if (spoken === undefined) setInput("");
     setFiles([]);
+    const sentences = speak ? new SentenceSplitter() : undefined;
     const content = [text, ...attached.map((f) => `<file name="${f.name}">\n${f.text}\n</file>`)].filter(Boolean).join("\n\n");
     const now = Date.now();
     const title = (text || attached[0]?.name || "New chat").slice(0, 60);
@@ -295,10 +315,12 @@ export function Chat({ id, onSaved, config, name }: { id?: string; onSaved: () =
         affinity: current.affinity,
         signal: ac.signal,
         onDelta: (d) => {
+          sentences?.push(d).forEach((t) => speaker().say(t));
           current = { ...current, messages: current.messages.map((m, i) => (i === current.messages.length - 1 ? { ...m, content: m.content + d } : m)) };
           setConv(current);
         },
       });
+      sentences?.flush().forEach((t) => speaker().say(t));
       current = { ...current, affinity: meta.affinity ?? current.affinity, messages: current.messages.map((m, i) => (i === current.messages.length - 1 ? { ...m, meta } : m)) };
     } catch (e) {
       const msg = (e as Error).name === "AbortError" ? "Stopped." : (e as Error).message;
@@ -316,6 +338,83 @@ export function Chat({ id, onSaved, config, name }: { id?: string; onSaved: () =
         .catch(() => {});
     }
   };
+
+  sendRef.current = send;
+
+  const endVoice = useCallback(() => {
+    voiceOn.current = false;
+    recorder.current?.cancel();
+    recorder.current = undefined;
+    speakerRef.current?.stop();
+    setVoice("idle");
+    setLevel(0);
+  }, []);
+
+  const listen = async (): Promise<void> => {
+    setVoiceErr(undefined);
+    const rec = new Recorder();
+    recorder.current = rec;
+    setVoice("listening");
+    let r;
+    try {
+      r = await rec.start({ onLevel: setLevel });
+    } catch (e) {
+      endVoice();
+      setVoiceErr((e as Error).name === "NotAllowedError" ? "Microphone access was blocked. Allow it in your browser's site settings to talk." : `Microphone unavailable: ${(e as Error).message}`);
+      return;
+    }
+    recorder.current = undefined;
+    setLevel(0);
+    if (!voiceOn.current) return;
+    // Silence ends the conversation; say something to continue.
+    if (!r.heardSpeech || r.blob.size < 800) return endVoice();
+    setVoice("transcribing");
+    let text = "";
+    try {
+      text = await transcribe(r.blob);
+    } catch (e) {
+      endVoice();
+      setVoiceErr((e as Error).message);
+      return;
+    }
+    if (!voiceOn.current) return;
+    if (!text) {
+      endVoice();
+      setVoiceErr("Didn't catch that. Tap the mic and try again.");
+      return;
+    }
+    setVoice("thinking");
+    await sendRef.current(text, true);
+    if (!voiceOn.current) return;
+    await speaker().whenIdle();
+    if (voiceOn.current) return listen();
+  };
+
+  const micClick = () => {
+    if (voice === "listening") return recorder.current?.stop(); // send now
+    if (voice === "speaking") return speakerRef.current?.stop(); // interrupt; the loop listens again
+    if (voiceOn.current) return endVoice();
+    speaker().unlock();
+    voiceOn.current = true;
+    void listen();
+  };
+
+  const readAloud = (text: string) => {
+    const sp = speaker();
+    sp.unlock();
+    sp.stop();
+    const split = new SentenceSplitter();
+    [...split.push(text), ...split.flush()].forEach((t) => sp.say(t));
+  };
+
+  // Leaving the chat or switching conversations ends a voice conversation.
+  useEffect(() => endVoice, [id, endVoice]);
+  useEffect(() => {
+    if (voice === "idle") return;
+    const key = (e: KeyboardEvent) => e.key === "Escape" && endVoice();
+    addEventListener("keydown", key);
+    return () => removeEventListener("keydown", key);
+  }, [voice, endVoice]);
 
   const remove = async () => {
     if (!conv) return;
@@ -444,6 +543,18 @@ export function Chat({ id, onSaved, config, name }: { id?: string; onSaved: () =
             </div>
           )}
         </div>
+        {voiceSupported() && (
+          <button
+            type="button"
+            className={`c-tool c-mic ${voice !== "idle" ? `on ${voice}` : ""}`}
+            style={{ "--lvl": level } as React.CSSProperties}
+            aria-label={voice === "idle" ? "Talk" : voice === "listening" ? "Send what I said" : voice === "speaking" ? "Interrupt" : "End voice conversation"}
+            title={voice === "idle" ? "Talk: ask by voice and hear the answer" : undefined}
+            onClick={micClick}
+          >
+            <IconMic />
+          </button>
+        )}
         {busy ? (
           <button type="button" className="c-send" aria-label="Stop" onClick={() => abort.current?.abort()}>
             <IconStop />
@@ -454,6 +565,24 @@ export function Chat({ id, onSaved, config, name }: { id?: string; onSaved: () =
           </button>
         )}
       </div>
+      {(voice !== "idle" || voiceErr) && (
+        <div className={`c-voice ${voiceErr && voice === "idle" ? "err" : ""}`} role="status" aria-live="polite">
+          {voice === "idle" ? (
+            <span>{voiceErr}</span>
+          ) : (
+            <>
+              <span className="c-voice-dot" />
+              <span>
+                {voice === "listening" ? "Listening… pause when you're done" : voice === "transcribing" ? "Transcribing…" : voice === "thinking" ? "Thinking…" : "Speaking… tap the mic to interrupt"}
+              </span>
+              <button type="button" onClick={endVoice}>
+                End voice
+              </button>
+            </>
+          )}
+          {voice !== "idle" && <small>Whisper and speech run on Cloudflare Workers AI; recordings aren't stored.</small>}
+        </div>
+      )}
     </form>
   );
 
@@ -555,6 +684,12 @@ export function Chat({ id, onSaved, config, name }: { id?: string; onSaved: () =
                   {m.meta?.model && (
                     <p className="c-meta">
                       {servedBy(m.meta)}
+                      {voiceSupported() && m.content && (
+                        <button type="button" className="c-read" onClick={() => readAloud(m.content)} title="Read this answer aloud">
+                          <IconSpeaker />
+                          <span>Read aloud</span>
+                        </button>
+                      )}
                     </p>
                   )}
                   {m.meta?.welcomeRemaining !== undefined && <WelcomeNote remaining={m.meta.welcomeRemaining} />}

@@ -62,7 +62,7 @@ export function Agent() {
             DSI Agent Terminal on GitHub
           </a>{" "}
           <span className="muted">
-            Provider <code>decentralised</code>, base URL <code>{API}/openai/v1</code>, model <code>auto</code>. Your organisation's default policy (Console → Routing) applies.
+            Provider <code>decentralised</code>, base URL <code>{API}/openai/v1</code>, default model <code>@cf/zai-org/glm-5.3-flash</code> (long context, reliable tool calls; <code>-m auto</code> lets the router choose). Your organisation's default policy (Console → Routing) applies.
           </span>
         </p>
         <h3>4 · Keep your memory on your device (optional)</h3>

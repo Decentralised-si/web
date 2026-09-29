@@ -167,6 +167,18 @@ label.check {
   align-items: center;
   color: var(--ink);
 }
+/* Form fields in a label line up: inputs and selects share one height, and stacked fields breathe. */
+label > input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+label > select {
+  box-sizing: border-box;
+  height: 40px;
+}
+:not(.grid3):not(.grid4):not(.row) > label:not(.check) + label:not(.check),
+label + .grid3,
+label + .grid4,
+label + .row {
+  margin-top: 14px;
+}
 .muted {
   color: var(--muted);
 }
@@ -474,6 +486,27 @@ label.check {
 }
 .page-head {
   margin-bottom: 16px;
+}
+.page-head.row {
+  align-items: flex-start;
+  gap: 20px;
+}
+/* The page's main action keeps to one line beside the intro text. */
+.page-head.row > button,
+.page-head.row > .button {
+  flex-shrink: 0;
+  white-space: nowrap;
+  margin-top: 6px;
+}
+@media (max-width: 560px) {
+  .page-head.row {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .page-head.row > button,
+  .page-head.row > .button {
+    margin-top: 0;
+  }
 }
 .tabs {
   display: flex;

@@ -165,7 +165,9 @@ export function App({ config }: { config: Config }) {
       }
       return !c;
     });
-  const who = session.user.email ?? `${session.user.wallets[0]?.address.slice(0, 6)}…`;
+  // Email, else a short wallet address, else "Anonymous" (e.g. a social sign-in with neither).
+  const wallet = session.user.wallets?.[0]?.address;
+  const who = session.user.email || (wallet ? `${wallet.slice(0, 6)}…` : "Anonymous");
   const orgName = session.organizations.find((o) => o.id === org)?.name ?? "";
 
   return (

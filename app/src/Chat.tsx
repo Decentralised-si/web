@@ -68,13 +68,12 @@ function render(md: string) {
   return { __html: DOMPurify.sanitize(marked.parse(md, { async: false, gfm: true, breaks: true }) as string) };
 }
 
-/** Who answered, in plain words: a community node, the hosted fallback, or a vendor through your key. */
-function servedBy(meta: { model?: string; provider?: string; market?: string }): string {
-  const model = (meta.model ?? "").replace(/^node:[^/]+\//, "").replace(/^@cf\/[^/]+\//, "");
+/** Who answered, in plain words (no model name): a community node, the hosted fallback, or a vendor through your key. */
+function servedBy(meta: { provider?: string; market?: string }): string {
   const p = meta.provider ?? "";
-  if (p.startsWith("node:")) return `${model} · community node`;
-  if (p === "workers-ai") return `${model} · Cloudflare-hosted fallback (no community node fit this request)`;
-  return `${model} · ${p}${meta.market === "byok" ? " · your key" : meta.market ? ` · ${meta.market}` : ""}`;
+  if (p.startsWith("node:")) return "Community node";
+  if (p === "workers-ai") return "Cloudflare-hosted fallback (no community node fit this request)";
+  return `${p}${meta.market === "byok" ? " · your key" : meta.market ? ` · ${meta.market}` : ""}`;
 }
 
 /** Splits reasoning models' <think>…</think> blocks (possibly still streaming) from the answer. */
@@ -223,7 +222,7 @@ export function Chat({ id, onSaved, config, name }: { id?: string; onSaved: () =
       const meta = await streamChat({
         messages: current.messages.slice(0, -1).map((m) => ({ role: m.role, content: m.content })),
         model,
-        // A specific model means exactly that model; "any model" lets the router choose by the selected mode.
+        // A specific model means exactly that model; "Smart Routing" lets the router choose by the selected mode.
         mode: model === "auto" ? mode : "passthrough",
         session: current.id,
         affinity: current.affinity,
@@ -360,7 +359,7 @@ export function Chat({ id, onSaved, config, name }: { id?: string; onSaved: () =
         {balance}
         <div className="c-picker-wrap">
           <button type="button" className="c-picker" aria-expanded={picker} onClick={() => setPicker((v) => !v)}>
-            <span>{model === "auto" ? "Any model" : model}</span>
+            <span>{model === "auto" ? "Smart Routing" : model}</span>
             <IconChevron />
           </button>
           {picker && (
@@ -369,7 +368,7 @@ export function Chat({ id, onSaved, config, name }: { id?: string; onSaved: () =
               {modelOptions.map((m) => (
                 <button key={m} type="button" role="menuitemradio" aria-checked={model === m} onClick={() => setModel(m)}>
                   <span className="c-model">
-                    <b>{m === "auto" ? "Any model" : m}</b>
+                    <b>{m === "auto" ? "Smart Routing" : m}</b>
                     {m === "auto" && <small>The router picks per conversation</small>}
                   </span>
                   {model === m && <IconCheck />}

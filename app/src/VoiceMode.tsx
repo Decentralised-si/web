@@ -78,7 +78,8 @@ function Orb({ phase, color, level }: { phase: Phase; color: string; level: () =
       const c = w / 2;
       const R = w * (0.3 + lvl * 0.08) * (ph === "starting" ? 0.85 : 1);
       // glow
-      const glow = g.createRadialGradient(c, c, R * 0.2, c, c, R * 1.65);
+      // The glow fades out inside the canvas, so no square edge shows.
+      const glow = g.createRadialGradient(c, c, R * 0.2, c, c, Math.min(R * 1.65, c));
       glow.addColorStop(0, `${col}${ph === "thinking" ? "55" : "44"}`);
       glow.addColorStop(1, `${col}00`);
       g.fillStyle = glow;
@@ -290,13 +291,18 @@ export function VoiceMode({ live, started, ask, stop, onClose, onType }: { live:
 
       <div className="vm-stage" onClick={() => needTap && live.ctx?.resume().then(() => setNeedTap(false))}>
         <Orb phase={phase} color={color} level={level} />
-        <p className="vm-status" aria-live="polite">
+        {/* A new element per status: Safari could leave the previous text painted underneath. */}
+        <p key={needTap ? "tap" : status} className="vm-status" aria-live="polite">
           {needTap ? "Tap to start" : status}
         </p>
         <div className="vm-captions">
-          {you && <p className="vm-you">“{you}”</p>}
+          {you && (
+            <p className="vm-you" dir="auto">
+              “{you}”
+            </p>
+          )}
           {dsi && (
-            <p className="vm-dsi" lang={lang ?? undefined}>
+            <p key={dsi} className="vm-dsi" lang={lang ?? undefined} dir="auto">
               {dsi}
             </p>
           )}
@@ -324,7 +330,7 @@ export function VoiceMode({ live, started, ask, stop, onClose, onType }: { live:
           </svg>
         </button>
       </div>
-      <p className="vm-fine">Interrupt anytime just by talking · speech runs on Cloudflare Workers AI, audio is never stored</p>
+      <p className="vm-fine">Interrupt anytime just by talking · speech runs on Cloudflare, audio is never stored</p>
     </div>
   );
 }

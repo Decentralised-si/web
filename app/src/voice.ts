@@ -211,7 +211,7 @@ export class SentenceSplitter {
         if (ch === "\n") end = i + 1;
         // Chinese, Japanese, Arabic and Hindi end sentences without a following space.
         else if ("。！？؟।".includes(ch)) end = i + 1;
-        else if (this.eager && !this.emitted && ",，、".includes(ch) && i - used > 25) end = i + 1;
+        else if (this.eager && !this.emitted && ",，、،".includes(ch) && i - used > 25) end = i + 1;
         else if (".!?".includes(ch)) {
           let j = i + 1;
           while (j < prose.length && ".!?\"')]".includes(prose[j])) j++;

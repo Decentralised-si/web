@@ -22,6 +22,8 @@ export const EMOTIONS: Emotion[] = ["neutral", "warm", "cheerful", "excited", "c
 export type Tone = "neutral" | "calm" | "animated" | "tense" | "subdued";
 
 export interface Utterance {
+  /** Same id for a turn's early (tentative) and final version. */
+  id: number;
   wav: Blob;
   seconds: number;
   tone: Tone;
@@ -29,7 +31,8 @@ export interface Utterance {
 
 // ------------------------------------------------------------------ capture
 
-const TAP = `class DsiTap extends AudioWorkletProcessor{process(inputs){const c=inputs[0]&&inputs[0][0];if(c)this.port.postMessage(c.slice(0));return true}}registerProcessor("dsi-tap",DsiTap);`;
+/** Posts [raw, voice-band] sample blocks: channel 0 is recorded, channel 1 drives turn detection. */
+const TAP = `class DsiTap extends AudioWorkletProcessor{process(inputs){const i=inputs[0];if(i&&i[0])this.port.postMessage([i[0].slice(0),(i[1]||i[0]).slice(0)]);return true}}registerProcessor("dsi-tap",DsiTap);`;
 const BLOCK_MS = 20;
 const PREROLL_MS = 400;
 const TARGET_RATE = 16_000;
@@ -102,18 +105,35 @@ const std = (xs: number[]) => {
 };
 const semis = (hz: number) => 12 * Math.log2(hz / 100);
 
+const pct = (xs: number[], p: number) => {
+  if (!xs.length) return 0;
+  const s = [...xs].sort((a, b) => a - b);
+  return s[Math.min(s.length - 1, Math.floor(p * s.length))];
+};
+
 export class LiveVoice {
   ctx?: AudioContext;
   private stream?: MediaStream;
   private tap?: AudioWorkletNode | ScriptProcessorNode;
   private sink?: GainNode;
   private rate = 48_000;
-  private block: number[] = [];
+  private raw: number[] = [];
+  private band: number[] = [];
   private blockSize = 960;
-  private noise = 0.006;
+
+  // Turn detection, on the voice band (250-3600 Hz) so rumble, hum and hiss count for little.
+  /** Noise floor: the 20th percentile of the last 3 s of band level, so it follows a noisy room. */
+  private noise = 0.003;
+  private history: number[] = [];
   private inSpeech = false;
   private above = 0;
+  private voicedRun = 0;
   private below = 0;
+  private sinceVoiced = 0;
+  private voicedTotal = 0;
+  private peak = 0;
+  private tentativeSent = false;
+  private uttId = 0;
   private preroll: Float32Array[] = [];
   private utt: Float32Array[] = [];
   private uttMs = 0;
@@ -127,13 +147,19 @@ export class LiveVoice {
   private outBuf = new Float32Array(1024);
 
   muted = false;
-  /** True while DSI is talking: the detector then needs louder, longer speech (barge-in). */
+  /** True while DSI is audible: starting a turn then needs clearer, longer speech (barge-in). */
   talking = false;
-  /** Silence that ends a turn. */
-  endOfTurnMs = 600;
+  /** Quiet that ends a turn. */
+  endOfTurnMs = 500;
+  /** Quiet after which transcription starts early (dropped if the user carries on). */
+  tentativeMs = 220;
 
   onLevel?: (level: number) => void;
   onSpeechStart?: () => void;
+  /** Early version of the turn, sent after a short pause so transcription can start. */
+  onTentative?: (u: Utterance) => void;
+  /** The user carried on after a tentative turn: discard it. */
+  onResume?: () => void;
   onUtterance?: (u: Utterance) => void;
 
   /** Call from a tap: mobile browsers only allow audio and the mic after a user gesture. */
@@ -158,6 +184,15 @@ export class LiveVoice {
     this.rate = this.ctx.sampleRate;
     this.blockSize = Math.round((this.rate * BLOCK_MS) / 1000);
     const src = this.ctx.createMediaStreamSource(this.stream);
+    const hp = this.ctx.createBiquadFilter();
+    hp.type = "highpass";
+    hp.frequency.value = 250;
+    const lp = this.ctx.createBiquadFilter();
+    lp.type = "lowpass";
+    lp.frequency.value = 3600;
+    const merge = this.ctx.createChannelMerger(2);
+    src.connect(merge, 0, 0);
+    src.connect(hp).connect(lp).connect(merge, 0, 1);
     // The tap must be pulled by the graph; route it into a muted gain so nothing is heard.
     this.sink = this.ctx.createGain();
     this.sink.gain.value = 0;
@@ -165,14 +200,14 @@ export class LiveVoice {
     try {
       const url = URL.createObjectURL(new Blob([TAP], { type: "application/javascript" }));
       await this.ctx.audioWorklet.addModule(url);
-      const node = new AudioWorkletNode(this.ctx, "dsi-tap");
-      node.port.onmessage = (e) => this.samples(e.data as Float32Array);
-      src.connect(node).connect(this.sink);
+      const node = new AudioWorkletNode(this.ctx, "dsi-tap", { channelCount: 2, channelCountMode: "explicit" });
+      node.port.onmessage = (e) => this.samples((e.data as Float32Array[])[0], (e.data as Float32Array[])[1]);
+      merge.connect(node).connect(this.sink);
       this.tap = node;
     } catch {
-      const node = this.ctx.createScriptProcessor(2048, 1, 1);
-      node.onaudioprocess = (e) => this.samples(new Float32Array(e.inputBuffer.getChannelData(0)));
-      src.connect(node).connect(this.sink);
+      const node = this.ctx.createScriptProcessor(2048, 2, 1);
+      node.onaudioprocess = (e) => this.samples(new Float32Array(e.inputBuffer.getChannelData(0)), new Float32Array(e.inputBuffer.getChannelData(1)));
+      merge.connect(node).connect(this.sink);
       this.tap = node;
     }
   }
@@ -195,37 +230,81 @@ export class LiveVoice {
     return Math.min(1, Math.sqrt(s / this.outBuf.length) * 5);
   }
 
-  private samples(x: Float32Array) {
-    for (let i = 0; i < x.length; i++) {
-      this.block.push(x[i]);
-      if (this.block.length >= this.blockSize) {
-        const b = Float32Array.from(this.block);
-        this.block = [];
-        this.analyse(b);
+  /** A short reward sound: two bright notes for PAI earned, one soft note for knowledge saved. */
+  chime(kind: "reward" | "saved") {
+    const ctx = this.ctx;
+    if (!ctx || !this.out) return;
+    const notes = kind === "reward" ? [1046.5, 1568] : [784];
+    notes.forEach((f, i) => {
+      const t = ctx.currentTime + i * 0.11;
+      for (const [mult, vol] of [
+        [1, 0.22],
+        [2, 0.05],
+      ]) {
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
+        o.type = "sine";
+        o.frequency.value = f * mult;
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(vol, t + 0.012);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + (kind === "reward" ? 0.32 : 0.25));
+        o.connect(g).connect(this.out!);
+        o.start(t);
+        o.stop(t + 0.4);
+      }
+    });
+    // The chime must not count as the user starting to talk.
+    this.talking = true;
+    setTimeout(() => (this.talking = false), 500);
+  }
+
+  private samples(raw: Float32Array, band: Float32Array) {
+    for (let i = 0; i < raw.length; i++) {
+      this.raw.push(raw[i]);
+      this.band.push(band[i]);
+      if (this.raw.length >= this.blockSize) {
+        const r = Float32Array.from(this.raw);
+        const b = Float32Array.from(this.band);
+        this.raw = [];
+        this.band = [];
+        this.analyse(r, b);
       }
     }
   }
 
-  private analyse(b: Float32Array) {
+  private analyse(raw: Float32Array, band: Float32Array) {
     let s = 0;
-    for (const v of b) s += v * v;
-    const rms = this.muted ? 0 : Math.sqrt(s / b.length);
-    this.onLevel?.(Math.min(1, rms * 9));
-
-    // Barge-in needs clearer, longer speech than a normal turn, so DSI's own voice leaking past
-    // echo cancellation does not interrupt it.
-    const thr = this.talking ? Math.max(0.035, this.noise * 6) : Math.max(0.012, this.noise * 3);
-    const startMs = this.talking ? 260 : 120;
-    const loud = rms > thr;
+    let sr = 0;
+    for (let i = 0; i < band.length; i++) (s += band[i] * band[i]), (sr += raw[i] * raw[i]);
+    const lvl = this.muted ? 0 : Math.sqrt(s / band.length);
+    this.onLevel?.(this.muted ? 0 : Math.min(1, Math.sqrt(sr / raw.length) * 9));
 
     if (!this.inSpeech) {
-      this.preroll.push(b);
+      this.history.push(lvl);
+      if (this.history.length > 150) this.history.shift();
+      if (this.history.length % 10 === 0) this.noise = Math.max(0.0015, Math.min(0.05, pct(this.history, 0.2)));
+    }
+    const thr = this.talking ? Math.max(0.02, this.noise * 5) : Math.max(0.004, this.noise * 3);
+    const loud = lvl > thr;
+    // Voiced sound (a pitch) is what separates speech from fans, traffic and rustle.
+    const pitch = loud || this.inSpeech ? pitchOf(resample([raw], this.rate)) : 0;
+    const voiced = pitch > 0;
+
+    if (!this.inSpeech) {
+      this.preroll.push(raw);
       if (this.preroll.length > PREROLL_MS / BLOCK_MS) this.preroll.shift();
-      if (!loud) this.noise = Math.min(0.04, this.noise * 0.985 + rms * 0.015);
-      this.above = loud ? this.above + BLOCK_MS : 0;
-      if (this.above >= startMs) {
+      this.above = loud ? this.above + BLOCK_MS : Math.max(0, this.above - BLOCK_MS * 2);
+      this.voicedRun = loud && voiced ? this.voicedRun + BLOCK_MS : Math.max(0, this.voicedRun - BLOCK_MS);
+      const needAbove = this.talking ? 260 : 140;
+      const needVoiced = this.talking ? 160 : 80;
+      if (this.above >= needAbove && this.voicedRun >= needVoiced) {
         this.inSpeech = true;
+        this.uttId++;
         this.below = 0;
+        this.sinceVoiced = 0;
+        this.voicedTotal = 0;
+        this.peak = lvl;
+        this.tentativeSent = false;
         this.utt = [...this.preroll];
         this.uttMs = this.preroll.length * BLOCK_MS;
         this.preroll = [];
@@ -235,30 +314,50 @@ export class LiveVoice {
       return;
     }
 
-    this.utt.push(b);
+    this.utt.push(raw);
     this.uttMs += BLOCK_MS;
-    if (rms > thr * 0.6) {
+    this.peak = Math.max(this.peak * 0.997, lvl);
+    // Quiet relative to this utterance, not just to the room: in noise the voice is still far above it.
+    const speaking = lvl > Math.max(thr * 0.8, this.peak * 0.12) && (voiced || lvl > this.peak * 0.3);
+    if (voiced && lvl > thr) {
+      this.sinceVoiced = 0;
+      this.voicedTotal += BLOCK_MS;
+      this.stats.energy.push(lvl);
+      this.stats.pitch.push(pitch);
+    } else this.sinceVoiced += BLOCK_MS;
+    if (speaking) {
+      if (this.tentativeSent && this.below >= this.tentativeMs) {
+        this.tentativeSent = false;
+        this.onResume?.();
+      }
       this.below = 0;
-      this.stats.energy.push(rms);
-      const p = pitchOf(resample([b], this.rate));
-      if (p) this.stats.pitch.push(p);
     } else this.below += BLOCK_MS;
 
-    if (this.below >= this.endOfTurnMs || this.uttMs > 30_000) this.finish();
+    const quiet = Math.max(this.below, this.sinceVoiced - 400);
+    if (!this.tentativeSent && quiet >= this.tentativeMs && this.voicedTotal >= 200) {
+      this.tentativeSent = true;
+      this.onTentative?.(this.snapshot(false));
+    }
+    if (quiet >= this.endOfTurnMs || this.uttMs > 30_000) this.finish();
+  }
+
+  /** The utterance so far (with 200 ms of trailing quiet kept). */
+  private snapshot(final: boolean): Utterance {
+    const trimMs = Math.max(0, Math.max(this.below, this.sinceVoiced - 400) - 200);
+    const trim = Math.floor(trimMs / BLOCK_MS);
+    const chunks = trim ? this.utt.slice(0, -trim) : this.utt;
+    return { id: this.uttId, wav: wav(resample(chunks, this.rate)), seconds: (chunks.length * BLOCK_MS) / 1000, tone: final ? this.tone() : "neutral" };
   }
 
   private finish() {
     this.inSpeech = false;
     this.above = 0;
-    // Keep 200 ms of the trailing silence.
-    const trim = Math.max(0, Math.floor((this.below - 200) / BLOCK_MS));
-    const chunks = trim ? this.utt.slice(0, -trim) : this.utt;
-    const seconds = (chunks.length * BLOCK_MS) / 1000;
-    const spoken = this.stats.energy.length * (BLOCK_MS / 1000);
+    this.voicedRun = 0;
+    const enough = this.voicedTotal >= 200; // a cough, a click or a clatter is not a turn
+    const u = enough ? this.snapshot(true) : undefined;
     this.utt = [];
-    if (spoken < 0.3) return; // a cough or a click
-    const tone = this.tone();
-    this.onUtterance?.({ wav: wav(resample(chunks, this.rate)), seconds, tone });
+    if (u) this.onUtterance?.(u);
+    else if (this.tentativeSent) this.onResume?.();
   }
 
   private tone(): Tone {
@@ -288,19 +387,23 @@ export class LiveVoice {
 
 // ------------------------------------------------------------------ server calls
 
-export async function transcribeWav(wavBlob: Blob, language?: string): Promise<{ text: string; language: string | null }> {
+export async function transcribeWav(wavBlob: Blob, language?: string, signal?: AbortSignal): Promise<{ text: string; language: string | null; confidence: number | null }> {
   const h = await authHeaders();
   // engine=fast: Nova-3 where it is reliable (0.5-1 s), Whisper for other languages.
   const q = `?engine=fast${language ? `&language=${encodeURIComponent(language)}` : ""}`;
-  const r = await fetch(`${API}/api/voice/transcribe${q}`, { method: "POST", headers: { ...h, "content-type": "audio/wav" }, body: wavBlob });
+  const r = await fetch(`${API}/api/voice/transcribe${q}`, { method: "POST", headers: { ...h, "content-type": "audio/wav" }, body: wavBlob, signal });
   const j = await r.json().catch(() => ({}));
   if (!r.ok) throw new Error(j?.error?.message ?? `Voice request failed (HTTP ${r.status})`);
-  return { text: (j.text ?? "").trim(), language: j.language ?? null };
+  return { text: (j.text ?? "").trim(), language: j.language ?? null, confidence: typeof j.confidence === "number" ? j.confidence : null };
 }
 
 /** Whisper's usual inventions on silence and noise. */
 const PHANTOMS = /^(thank you\.?|thanks for watching!?|you|bye\.?|\.+|subtitles by.*|♪+)$/i;
-export const isPhantom = (text: string, seconds: number) => !/\p{L}/u.test(text) || (seconds < 1.6 && PHANTOMS.test(text.trim()));
+export const isPhantom = (text: string, seconds: number, confidence: number | null = null) =>
+  !/\p{L}/u.test(text) ||
+  (seconds < 1.6 && PHANTOMS.test(text.trim())) ||
+  // A few words the recogniser itself doubts: most likely background noise.
+  (confidence !== null && confidence < 0.45 && text.trim().split(/\s+/).length <= 4);
 
 // ------------------------------------------------------------------ speaking
 
@@ -316,7 +419,45 @@ const DELIVERY: Record<Emotion, { rate: number; pitch: number }> = {
   curious: { rate: 1.02, pitch: 1.05 },
 };
 
-type Clip = { kind: "audio"; buf: AudioBuffer } | { kind: "device"; text: string; lang: string } | { kind: "none" };
+/** Raw PCM arriving from a streaming voice (Aura), played as it comes in. */
+class PcmStream {
+  chunks: Float32Array[] = [];
+  done = false;
+  private carry?: number;
+  private wake?: () => void;
+  constructor(readonly rate: number) {}
+  get seconds() {
+    return this.chunks.reduce((a, c) => a + c.length, 0) / this.rate;
+  }
+  push(bytes: Uint8Array) {
+    // 16-bit little-endian samples; a chunk can end in the middle of one.
+    let start = 0;
+    const out: number[] = [];
+    if (this.carry !== undefined && bytes.length) {
+      out.push((((bytes[0] << 8) | this.carry) << 16) >> 16);
+      start = 1;
+      this.carry = undefined;
+    }
+    for (let i = start; i + 1 < bytes.length; i += 2) out.push((((bytes[i + 1] << 8) | bytes[i]) << 16) >> 16);
+    if ((bytes.length - start) % 2) this.carry = bytes[bytes.length - 1];
+    if (out.length) this.chunks.push(Float32Array.from(out, (v) => v / 32768));
+    this.poke();
+  }
+  end() {
+    this.done = true;
+    this.poke();
+  }
+  next(): Promise<void> {
+    return this.done ? Promise.resolve() : new Promise((r) => (this.wake = r));
+  }
+  private poke() {
+    const w = this.wake;
+    this.wake = undefined;
+    w?.();
+  }
+}
+
+type Clip = { kind: "audio"; buf: AudioBuffer } | { kind: "stream"; s: PcmStream } | { kind: "device"; text: string; lang: string } | { kind: "none" };
 
 /**
  * Speaks sentences in order, fetching ahead so each one is ready when the previous ends.
@@ -354,11 +495,29 @@ export class LivePlayer {
 
   private async fetchClip(text: string, lang: string, signal: AbortSignal): Promise<Clip> {
     try {
-      const r = await fetch(`${API}/api/voice/speak`, { method: "POST", headers: await authHeaders(), body: JSON.stringify({ text, lang }), signal });
+      const r = await fetch(`${API}/api/voice/speak`, { method: "POST", headers: await authHeaders(), body: JSON.stringify({ text, lang, format: "pcm" }), signal });
       if (r.status === 204) return r.headers.get("x-decentralise-voice") === "device" ? { kind: "device", text, lang } : { kind: "none" };
       if (!r.ok) {
         const j = await r.json().catch(() => ({}));
         throw new Error(j?.error?.message ?? `Speech failed (HTTP ${r.status})`);
+      }
+      const type = r.headers.get("content-type") ?? "";
+      if (type.startsWith("audio/pcm") && r.body) {
+        const st = new PcmStream(Number(/rate=(\d+)/.exec(type)?.[1] ?? 24000));
+        const reader = r.body.getReader();
+        void (async () => {
+          try {
+            for (;;) {
+              const { value, done } = await reader.read();
+              if (done) break;
+              if (value) st.push(value);
+            }
+          } catch {
+            /* aborted */
+          }
+          st.end();
+        })();
+        return { kind: "stream", s: st };
       }
       const data = await r.arrayBuffer();
       const ctx = this.live.ctx;
@@ -379,11 +538,13 @@ export class LivePlayer {
     this.ac.abort();
     this.ac = new AbortController();
     this.queue = [];
-    try {
-      this.src?.stop();
-    } catch {
-      /* already stopped */
-    }
+    for (const x of [this.src, ...this.live_srcs])
+      try {
+        x?.stop();
+      } catch {
+        /* already stopped */
+      }
+    this.live_srcs.clear();
     if (typeof speechSynthesis !== "undefined") speechSynthesis.cancel();
     this.setPlaying(false);
   }
@@ -420,9 +581,48 @@ export class LivePlayer {
       this.onSentence?.(item.text);
       this.audible();
       if (c.kind === "audio") await this.playBuffer(c.buf, item.emotion);
+      else if (c.kind === "stream") await this.playStream(c.s, item.emotion, token);
       else await this.speakOnDevice(c.text, c.lang, item.emotion);
     }
     if (!token.aborted) this.setPlaying(false);
+  }
+
+  private live_srcs = new Set<AudioBufferSourceNode>();
+
+  /** Plays PCM as it streams in: starts once ~150 ms is buffered, then schedules each arrival back to back. */
+  private async playStream(st: PcmStream, emotion: Emotion, token: AbortSignal): Promise<void> {
+    const ctx = this.live.ctx;
+    const out = this.live.out;
+    if (!ctx || !out) return;
+    const rate = 1 + (DELIVERY[emotion].rate - 1) * 0.6;
+    while (!st.done && st.seconds < 0.15 && !token.aborted) await st.next();
+    let t = ctx.currentTime + 0.02;
+    let i = 0;
+    for (;;) {
+      if (token.aborted) return;
+      if (i < st.chunks.length) {
+        const parts = st.chunks.slice(i);
+        i = st.chunks.length;
+        const n = parts.reduce((a, c) => a + c.length, 0);
+        const buf: AudioBuffer = ctx.createBuffer(1, n, st.rate);
+        const data: Float32Array = buf.getChannelData(0);
+        let o = 0;
+        for (const p of parts) data.set(p, o), (o += p.length);
+        const src = ctx.createBufferSource();
+        src.buffer = buf;
+        src.playbackRate.value = rate;
+        src.connect(out);
+        const at = Math.max(t, ctx.currentTime + 0.005);
+        src.start(at);
+        t = at + n / st.rate / rate;
+        this.live_srcs.add(src);
+        src.onended = () => this.live_srcs.delete(src);
+      }
+      if (st.done && i >= st.chunks.length) break;
+      await st.next();
+    }
+    // Wait for the scheduled audio to finish (or an interruption).
+    while (!token.aborted && ctx.currentTime < t - 0.01) await new Promise((r) => setTimeout(r, 40));
   }
 
   private playBuffer(buf: AudioBuffer, emotion: Emotion): Promise<void> {
@@ -504,6 +704,77 @@ export class EmotionTag {
   }
 }
 
+/**
+ * Takes the model's closing <learn>…</learn> note off a streaming reply: it holds what the user
+ * taught, for the Learning Fabric, and is never shown or spoken.
+ */
+export class LearnTag {
+  private buf = "";
+  private inTag = false;
+  private note = "";
+  learned?: string;
+
+  push(d: string): string {
+    this.buf += d;
+    let out = "";
+    for (;;) {
+      if (this.inTag) {
+        const end = this.buf.indexOf("</learn>");
+        if (end < 0) {
+          // Keep a possible start of the closing tag for the next chunk.
+          let keep = 0;
+          for (let k = Math.min(7, this.buf.length); k > 0; k--) if ("</learn>".startsWith(this.buf.slice(-k))) (keep = k), (k = 0);
+          this.note += this.buf.slice(0, this.buf.length - keep);
+          this.buf = this.buf.slice(this.buf.length - keep);
+          return out;
+        }
+        this.note += this.buf.slice(0, end);
+        this.learned = this.note.trim() || undefined;
+        this.buf = this.buf.slice(end + 8);
+        this.inTag = false;
+        continue;
+      }
+      const start = this.buf.indexOf("<learn>");
+      if (start >= 0) {
+        out += this.buf.slice(0, start);
+        this.buf = this.buf.slice(start + 7);
+        this.inTag = true;
+        continue;
+      }
+      // Hold back a possible start of the tag split across chunks.
+      let keep = 0;
+      for (let k = Math.min(6, this.buf.length); k > 0; k--) if ("<learn>".startsWith(this.buf.slice(-k))) (keep = k), (k = 0);
+      out += this.buf.slice(0, this.buf.length - keep);
+      this.buf = this.buf.slice(this.buf.length - keep);
+      return out;
+    }
+  }
+
+  /** End of the reply: an unterminated note still counts; a held-back "<" is text after all. */
+  flush(): string {
+    if (this.inTag) this.learned = (this.note + this.buf).replace(/<\/?l?e?a?r?n?>?$/, "").trim() || undefined;
+    const rest = this.inTag ? "" : this.buf;
+    this.buf = "";
+    return rest;
+  }
+}
+
+export interface TeachResult {
+  outcome: "rewarded" | "verified" | "pending" | "known" | "rejected" | "private" | "limit";
+  reward?: { pai: number; status: string } | null;
+  potential_pai?: number;
+  balance?: number;
+  message?: string;
+}
+
+/** Offer what the user taught to the Learning Fabric (only this statement is sent, never the conversation). */
+export async function teach(statement: string, question: string): Promise<TeachResult> {
+  const r = await fetch(`${API}/api/learning/teach`, { method: "POST", headers: await authHeaders(), body: JSON.stringify({ statement, question }) });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j?.error?.message ?? `Teaching failed (HTTP ${r.status})`);
+  return j as TeachResult;
+}
+
 const TONE_WORDS: Record<Tone, string> = {
   neutral: "",
   calm: "calm and relaxed",
@@ -512,15 +783,38 @@ const TONE_WORDS: Record<Tone, string> = {
   subdued: "quiet and low, perhaps tired or sad",
 };
 
-export function voiceSystemPrompt(o: { language: string | null; tone: Tone }): string {
+/**
+ * Calculations the user states ("523 times 19 is 9937"), checked on the device. Models are poor at
+ * mental arithmetic and would otherwise "correct" a user who is right.
+ */
+export function checkedArithmetic(text: string): string[] {
+  const num = String.raw`-?\d[\d,]*(?:\.\d+)?`;
+  const op = String.raw`times|multiplied by|x|×|\*|plus|\+|minus|−|-|divided by|over|÷|/`;
+  const re = new RegExp(`(${num})\\s*(${op})\\s*(${num})\\s*(?:is|equals|makes|=|gives|is equal to)\\s*(${num})`, "gi");
+  const n = (x: string) => Number(x.replace(/,/g, ""));
+  const out: string[] = [];
+  for (const m of text.matchAll(re)) {
+    const [a, o, b, c] = [n(m[1]), m[2].toLowerCase(), n(m[3]), n(m[4])];
+    const r = /times|multiplied|x|×|\*/.test(o) ? a * b : /plus|\+/.test(o) ? a + b : /minus|−|-/.test(o) ? a - b : b !== 0 ? a / b : NaN;
+    if (!Number.isFinite(r)) continue;
+    const sym = /times|multiplied|x|×|\*/.test(o) ? "×" : /plus|\+/.test(o) ? "+" : /minus|−|-/.test(o) ? "−" : "÷";
+    const right = Math.abs(r - c) < 1e-9 * Math.max(1, Math.abs(r));
+    out.push(`${a} ${sym} ${b} = ${Number(r.toFixed(10))}: the user's ${c} is ${right ? "correct" : "wrong"}`);
+  }
+  return out;
+}
+
+export function voiceSystemPrompt(o: { language: string | null; tone: Tone; checked?: string[] }): string {
   const lang = o.language ? (new Intl.DisplayNames(["en"], { type: "language" }).of(o.language) ?? o.language) : null;
   return [
     "You are DSI, talking with the user in a live voice conversation. Your words are spoken aloud.",
     lang ? `The user is speaking ${lang}. Always answer in ${lang} unless they ask otherwise.` : "Answer in the language the user speaks.",
-    "Keep it conversational: usually one to three short sentences, like a person talking. No markdown, lists, headings, emoji or code; say numbers and symbols the way you would out loud. If they want detail, give it in short spoken sentences.",
+    "Be spontaneous: answer straight away with the most useful thing first, in one or two short sentences, the way a quick-witted friend talks. No preamble (never \"Great question\"), no hedging, no markdown, lists, emoji or code; say numbers and symbols as you would out loud. If they want detail, give it in short spoken sentences.",
     TONE_WORDS[o.tone] ? `From their tone of voice (not their words), the user sounds ${TONE_WORDS[o.tone]}. Let that shape your warmth and pace, without mentioning it unless it matters.` : "",
     `Start every reply with exactly one emotion tag for how your reply should sound, chosen from: ${EMOTIONS.join(", ")}. Write it as <emotion:NAME> and then your words, e.g. "<emotion:warm> That sounds lovely."`,
     "If the user interrupts you, simply respond to what they just said.",
+    o.checked?.length ? `Checked with a calculator (trust this over your own arithmetic): ${o.checked.join("; ")}.` : "",
+    "When the user teaches you something (a fact, a correction or how to do something), take it seriously: they may know more than you. Unless you are certain it is wrong, thank them briefly and say what you learned; if you are certain, say so gently and why. Then end your reply with <learn>what the user taught, stated faithfully as they meant it (not your own version, even if you doubt it: independent validators check it), as one self-contained sentence in their language, with no personal details; write numbers as digits and calculations as an equation, e.g. 7219 × 43 = 310417</learn>. The note is not spoken. Never add it for questions, opinions, small talk or personal information.",
   ]
     .filter(Boolean)
     .join(" ");

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { EmotionTag, isPhantom, LivePlayer, LiveVoice, transcribeWav, voiceSystemPrompt, type Emotion, type Tone } from "./live";
+import { checkedArithmetic, EmotionTag, isPhantom, LearnTag, LivePlayer, LiveVoice, teach, transcribeWav, voiceSystemPrompt, type Emotion, type TeachResult, type Tone } from "./live";
 import { SentenceSplitter } from "./voice";
 
 /** Sends one spoken turn through the chat (so it is saved with the conversation) and streams the reply. */
@@ -20,6 +20,12 @@ const COLORS: Record<Emotion | "listening" | "hearing" | "thinking", string> = {
   serious: "#7b8cff",
   curious: "#5ce1e6",
 };
+
+/**
+ * A turn that sounds unfinished ("Remember this:", "and…", "because"), cut by a pause mid-thought.
+ * It is held briefly and joined with what the user says next instead of being answered on its own.
+ */
+const UNFINISHED = /(?:[,:;–—-]|\.\.\.|…|\b(?:and|but|or|so|because|then|which|that|if|when|like|um+|uh+|remember this|listen|here'?s (?:the thing|something)|you know what|guess what|the thing is))[.!]?$/i;
 
 const TONE_LABEL: Record<Tone, string> = { neutral: "", calm: "calm", animated: "upbeat", tense: "tense", subdued: "low" };
 
@@ -124,6 +130,38 @@ function Orb({ phase, color, level }: { phase: Phase; color: string; level: () =
   return <canvas ref={ref} className="vm-orb" aria-hidden="true" />;
 }
 
+// ------------------------------------------------------------------ teaching rewards
+
+const pai = (n: number) => (n >= 100 ? n.toLocaleString("en", { maximumFractionDigits: 0 }) : n.toLocaleString("en", { maximumFractionDigits: n < 1 ? 3 : 2 }));
+
+/** What teaching DSI earned, per the Learning Fabric: paid at once only when verified. */
+function TaughtToast({ r, wallet, onDone }: { r: TeachResult; wallet?: number; onDone: () => void }) {
+  useEffect(() => {
+    const t = setTimeout(onDone, r.outcome === "rewarded" ? 7000 : 5000);
+    return () => clearTimeout(t);
+  }, [r, onDone]);
+  const body =
+    r.outcome === "rewarded" && r.reward
+      ? { big: `+${pai(r.reward.pai)} PAI`, small: r.reward.status === "deferred" ? "New knowledge verified · part paid next epoch" : "New knowledge verified and rewarded" }
+      : r.outcome === "pending" || r.outcome === "verified"
+        ? { big: "New knowledge saved", small: `Earns up to ${pai(r.potential_pai ?? 0)} PAI once validators confirm it` }
+        : r.outcome === "known"
+          ? { big: "DSI already knew that", small: "Only new knowledge earns PAI" }
+          : r.outcome === "limit"
+            ? { big: "Teaching limit reached", small: r.message ?? "Limits grow as your contributions are verified" }
+            : { big: "Not added", small: "It didn't pass the Learning Fabric's checks" };
+  return (
+    <a className={`vm-taught vm-taught-${r.outcome}`} href="#/console/credits" role="status" aria-live="polite">
+      {r.outcome === "rewarded" && <span className="vm-coin" aria-hidden="true" />}
+      <span>
+        <b>{body.big}</b>
+        <small>{body.small}</small>
+        {wallet !== undefined && <small className="vm-bal">Wallet: {pai(wallet)} PAI</small>}
+      </span>
+    </a>
+  );
+}
+
 // ------------------------------------------------------------------ voice mode
 
 export function VoiceMode({ live, started, ask, stop, onClose, onType }: { live: LiveVoice; started: Promise<void>; ask: VoiceAsk; stop: () => void; onClose: () => void; onType: () => void }) {
@@ -138,6 +176,9 @@ export function VoiceMode({ live, started, ask, stop, onClose, onType }: { live:
   const [err, setErr] = useState<string>();
   const [picker, setPicker] = useState(false);
   const [needTap, setNeedTap] = useState(false);
+  /** What teaching earned: shown as a toast, with the PAI balance. */
+  const [taught, setTaught] = useState<{ r: TeachResult; at: number }>();
+  const [wallet, setWallet] = useState<number>();
 
   const phaseRef = useRef(phase);
   phaseRef.current = phase;
@@ -177,38 +218,44 @@ export function VoiceMode({ live, started, ask, stop, onClose, onType }: { live:
       setDsi("");
     };
     live.onLevel = (l) => (inLevel.current = l);
+    // Transcription starts at the first pause; if the user carries on, that early result is dropped.
+    let early: { id: number; p: Promise<{ text: string; language: string | null; confidence: number | null }>; ac: AbortController } | undefined;
+    live.onTentative = (u) => {
+      early?.ac.abort();
+      const ac = new AbortController();
+      early = { id: u.id, p: transcribeWav(u.wav, pinnedRef.current ?? undefined, ac.signal), ac };
+      early.p.catch(() => {});
+    };
+    live.onResume = () => {
+      early?.ac.abort();
+      early = undefined;
+    };
     live.onSpeechStart = () => {
       if (["speaking", "thinking", "transcribing"].includes(phaseRef.current)) interrupt();
       setPhase("hearing");
     };
-    live.onUtterance = async (u) => {
-      const my = ++turn.current;
-      setPhase("transcribing");
-      setErr(undefined);
-      let r: { text: string; language: string | null };
-      try {
-        r = await transcribeWav(u.wav, pinnedRef.current ?? undefined);
-      } catch (e) {
-        if (my === turn.current) setErr((e as Error).message), setPhase("listening");
-        return;
-      }
-      if (my !== turn.current) return;
-      if (!r.text || isPhantom(r.text, u.seconds)) return setPhase("listening");
+    type Heard = { text: string; language: string | null; tone: Tone };
+    type Held = Heard & { at: number; timer?: ReturnType<typeof setTimeout> };
+    const hold: { v?: Held } = {};
+
+    /** Answer one complete turn: stream the reply, speak it, and offer anything taught to the fabric. */
+    const respond = async (h: Heard, my: number) => {
       // Whisper can misjudge the language of a few words; keep the conversation's language unless
       // this turn is long enough to be sure (or the user pinned one).
-      const language = pinnedRef.current ?? (r.language && (r.text.length >= 12 || !langRef.current) ? r.language : langRef.current ?? r.language);
+      const language = pinnedRef.current ?? (h.language && (h.text.length >= 12 || !langRef.current) ? h.language : langRef.current ?? h.language);
       setLang(language);
-      setYou(r.text);
-      setTone(u.tone);
+      setYou(h.text);
+      setTone(h.tone);
       setDsi("");
       setPhase("thinking");
       const tag = new EmotionTag();
+      const learn = new LearnTag();
       const split = new SentenceSplitter(true);
       const speakLang = language ?? "en";
       try {
-        await ask(r.text, {
-          system: voiceSystemPrompt({ language, tone: u.tone }),
-          filter: (d) => tag.push(d),
+        await ask(h.text, {
+          system: voiceSystemPrompt({ language, tone: h.tone, checked: checkedArithmetic(h.text) }),
+          filter: (d) => learn.push(tag.push(d)),
           onVisible: (d) => {
             if (my !== turn.current) return;
             setEmotion(tag.emotion);
@@ -219,9 +266,62 @@ export function VoiceMode({ live, started, ask, stop, onClose, onType }: { live:
         if (my === turn.current) setErr((e as Error).message);
       }
       if (my !== turn.current) return;
+      const tail = learn.flush();
+      if (tail) split.push(tail).forEach((s) => p.say(s, speakLang, tag.emotion));
       split.flush().forEach((s) => p.say(s, speakLang, tag.emotion));
+      // The user taught something: offer it to the Learning Fabric while DSI is talking.
+      if (learn.learned)
+        teach(learn.learned, h.text)
+          .then((t) => {
+            if (t.balance !== undefined) setWallet(t.balance);
+            if (t.outcome === "private") return;
+            setTaught({ r: t, at: Date.now() });
+            if (t.outcome === "rewarded") live.chime("reward");
+            else if (t.outcome === "pending" || t.outcome === "verified") live.chime("saved");
+          })
+          .catch(() => {});
       await p.whenIdle();
       if (my === turn.current) setPhase("listening");
+    };
+
+    live.onUtterance = async (u) => {
+      const my = ++turn.current;
+      setPhase("transcribing");
+      setErr(undefined);
+      let r: { text: string; language: string | null; confidence: number | null };
+      try {
+        const head = early && early.id === u.id ? early : undefined;
+        early = undefined;
+        r = head ? await head.p.catch(() => transcribeWav(u.wav, pinnedRef.current ?? undefined)) : await transcribeWav(u.wav, pinnedRef.current ?? undefined);
+      } catch (e) {
+        if (my === turn.current) setErr((e as Error).message), setPhase("listening");
+        return;
+      }
+      if (my !== turn.current) return;
+      // Background noise the recogniser doubts is ignored, not answered.
+      if (!r.text || isPhantom(r.text, u.seconds, r.confidence)) return setPhase("listening");
+      let h: Heard = { text: r.text, language: r.language, tone: u.tone };
+      // Join the unfinished start of this thought, if the user just paused mid-sentence.
+      const prev = hold.v;
+      if (prev && Date.now() - prev.at < 4000) {
+        clearTimeout(prev.timer);
+        h = { ...h, text: `${prev.text} ${h.text}` };
+      }
+      hold.v = undefined;
+      if (UNFINISHED.test(h.text.trim())) {
+        const pending: Held = { ...h, at: Date.now() };
+        hold.v = pending;
+        setYou(h.text);
+        setPhase("listening");
+        // Nothing more within a second: it was complete after all.
+        pending.timer = setTimeout(() => {
+          if (hold.v !== pending) return;
+          hold.v = undefined;
+          void respond(pending, ++turn.current);
+        }, 1100);
+        return;
+      }
+      await respond(h, my);
     };
     p.onStart = () => setPhase("speaking");
     p.onSentence = (t) => setDsi(t);
@@ -295,6 +395,7 @@ export function VoiceMode({ live, started, ask, stop, onClose, onType }: { live:
         <p key={needTap ? "tap" : status} className="vm-status" aria-live="polite">
           {needTap ? "Tap to start" : status}
         </p>
+        {taught && <TaughtToast key={taught.at} r={taught.r} wallet={wallet} onDone={() => setTaught(undefined)} />}
         <div className="vm-captions">
           {you && (
             <p className="vm-you" dir="auto">

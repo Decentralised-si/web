@@ -2091,3 +2091,66 @@ button.vm-chip {
     animation: none;
   }
 }
+.vm-taught {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 14px;
+  padding: 11px 16px;
+  border-radius: 16px;
+  text-decoration: none;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(12px);
+  animation: vm-pop 0.45s cubic-bezier(0.2, 1.4, 0.4, 1);
+  max-width: 92vw;
+}
+.vm-taught b {
+  display: block;
+  font-size: 16px;
+}
+.vm-taught small {
+  display: block;
+  font-size: 12.5px;
+  color: rgba(223, 230, 255, 0.72);
+  margin-top: 2px;
+}
+.vm-taught .vm-bal {
+  color: #ffd166;
+}
+.vm-taught-rewarded {
+  background: linear-gradient(120deg, rgba(255, 181, 71, 0.28), rgba(138, 63, 252, 0.28));
+  border-color: rgba(255, 209, 102, 0.6);
+  box-shadow: 0 10px 40px -10px rgba(255, 181, 71, 0.55);
+}
+.vm-taught-rewarded b {
+  color: #ffd166;
+  font-size: 20px;
+}
+.vm-coin {
+  width: 30px;
+  height: 30px;
+  flex: none;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff6c9, #ffcf4d 45%, #d99a1b);
+  box-shadow: 0 0 18px rgba(255, 209, 102, 0.8);
+  animation: vm-coin 1.2s ease;
+}
+@keyframes vm-pop {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.92);
+  }
+}
+@keyframes vm-coin {
+  0% {
+    transform: rotateY(0) scale(0.6);
+  }
+  60% {
+    transform: rotateY(540deg) scale(1.15);
+  }
+  100% {
+    transform: rotateY(720deg) scale(1);
+  }
+}

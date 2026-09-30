@@ -39,6 +39,73 @@ interface Chain {
   explorerTx: string;
 }
 
+/** PAI: the network's reward unit, earned by running nodes and by teaching DSI new knowledge. */
+function PaiPanel() {
+  const [pai, setPai] = useState<{ balance: number; staked: number }>();
+  const [learn, setLearn] = useState<{ rewards: { total_paid: number; deferred: number; events: Array<{ id: string; kind: string; amount: number; status: string; created_at: string; learning_object?: string }> }; objects: Array<{ state: string }> }>();
+  useEffect(() => {
+    const load = () => {
+      api("/pai").then(setPai).catch(() => {});
+      api("/learning/me").then(setLearn).catch(() => {});
+    };
+    load();
+    // Rewards from voice teaching arrive while this page may be open.
+    const t = setInterval(load, 15_000);
+    return () => clearInterval(t);
+  }, []);
+  const fmt = (n: number) => n.toLocaleString("en", { maximumFractionDigits: n < 1 ? 4 : 2 });
+  const pending = learn?.objects.filter((o) => o.state === "PROVISIONAL").length ?? 0;
+  return (
+    <>
+      <div className="grid3">
+        <section className="card">
+          <div className="muted small">PAI balance</div>
+          <div className="big">{pai ? `${fmt(pai.balance)} PAI` : "…"}</div>
+          <p className="fine muted">Earned by running a node and by teaching DSI knowledge it did not have. {pai?.staked ? `${fmt(pai.staked)} PAI staked.` : ""}</p>
+        </section>
+        <section className="card">
+          <div className="muted small">Earned by teaching</div>
+          <div className="big">{learn ? `${fmt(learn.rewards.total_paid)} PAI` : "…"}</div>
+          <p className="fine muted">
+            Paid when what you teach is verified as new. Talk to DSI and teach it something: a reward sound plays when it pays.
+            {learn?.rewards.deferred ? ` ${fmt(learn.rewards.deferred)} PAI is waiting for next epoch's budget.` : ""}
+          </p>
+        </section>
+        <section className="card">
+          <div className="muted small">Waiting for validators</div>
+          <div className="big">{learn ? pending : "…"}</div>
+          <p className="fine muted">New knowledge you taught that independent validators still have to confirm; it earns PAI once they do.</p>
+        </section>
+      </div>
+      {!!learn?.rewards.events.length && (
+        <section className="card" style={{ marginBottom: 14 }}>
+          <h2>Recent PAI rewards</h2>
+          <div className="tbl">
+            <table className="data">
+              <thead>
+                <tr>
+                  <th>When</th>
+                  <th>For</th>
+                  <th className="n">PAI</th>
+                </tr>
+              </thead>
+              <tbody>
+                {learn.rewards.events.slice(0, 10).map((e) => (
+                  <tr key={e.id}>
+                    <td>{new Date(e.created_at).toLocaleString()}</td>
+                    <td>{e.kind === "verify" ? "Knowledge you taught, verified" : e.kind === "improve" ? "Your knowledge improved a model" : e.kind === "usage" ? "Your knowledge used by a model" : e.kind}{e.status === "deferred" ? " (next epoch)" : ""}</td>
+                    <td className="n">+{fmt(e.amount)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
+    </>
+  );
+}
+
 export function Wallet({ role, config, session }: { role: string; config: Config; session: Session }) {
   const canPay = ["owner", "admin", "billing"].includes(role);
   const [billing, setBilling] = useState<any>();
@@ -168,6 +235,7 @@ export function Wallet({ role, config, session }: { role: string; config: Config
       <div className="page-head">
         <h1>Credits &amp; wallet</h1>
       </div>
+      <PaiPanel />
       <div className="grid3">
         <section className="card">
           <div className="muted small">Credit balance</div>

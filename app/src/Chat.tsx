@@ -1,9 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { marked } from "marked";
 import DOMPurify from "dompurify";
 import { api, listModels, streamChat, type Config } from "./api";
 import { deleteConversation, listConversations, saveConversation, type Conversation } from "./localdb";
-import { Recorder, SentenceSplitter, Speaker, transcribe, voiceSupported } from "./voice";
+import { SentenceSplitter, Speaker, voiceSupported } from "./voice";
+import { LiveVoice, unlockDeviceVoice } from "./live";
+import { VoiceMode, type VoiceAsk } from "./VoiceMode";
 import { IconMic, IconSpeaker, IconArrowUp, IconBook, IconBulb, IconChart, IconCheck, IconChevron, IconClip, IconCode, IconLeaf, IconLock, IconPen, IconPlus, IconRoute, IconStop, IconTrash, IconX } from "./icons";
 
 const MODES = [
@@ -185,6 +187,8 @@ function Assistant({ content, streaming }: { content: string; streaming: boolean
   );
 }
 
+type VoiceTurn = Parameters<VoiceAsk>[1];
+
 export function Chat({ id, onSaved, config, name }: { id?: string; onSaved: () => void; config: Config; name?: string }) {
   const [conv, setConv] = useState<Conversation>();
   const [input, setInput] = useState("");
@@ -203,23 +207,18 @@ export function Chat({ id, onSaved, config, name }: { id?: string; onSaved: () =
   const box = useRef<HTMLTextAreaElement>(null);
   const fileInput = useRef<HTMLInputElement>(null);
 
-  // Voice conversation: listen → transcribe (Whisper) → send → speak the reply as it streams → listen again.
-  const [voice, setVoice] = useState<"idle" | "listening" | "transcribing" | "thinking" | "speaking">("idle");
-  const [level, setLevel] = useState(0);
-  const [voiceErr, setVoiceErr] = useState<string>();
-  const voiceOn = useRef(false);
-  const recorder = useRef<Recorder | undefined>(undefined);
+  // Voice mode (full screen, VoiceMode.tsx): an always-open mic with barge-in. The session starts
+  // inside the tap on the mic button, which mobile browsers require for audio.
+  const [voiceSession, setVoiceSession] = useState<{ live: LiveVoice; started: Promise<void> }>();
+  // "Read aloud" on a single answer.
   const speakerRef = useRef<Speaker | undefined>(undefined);
-  const speaker = () => {
-    if (!speakerRef.current) {
-      const sp = new Speaker();
-      sp.onState = (on) => voiceOn.current && on && setVoice("speaking");
-      sp.onError = (e) => setVoiceErr(e.message);
-      speakerRef.current = sp;
-    }
-    return speakerRef.current;
-  };
-  const sendRef = useRef<(spoken?: string, speak?: boolean) => Promise<void>>(async () => {});
+  const speaker = () => (speakerRef.current ??= new Speaker());
+  const sendRef = useRef<(spoken?: string, speak?: boolean, voice?: VoiceTurn) => Promise<void>>(async () => {});
+  // The latest conversation and busy flag, for voice turns that follow each other faster than React re-renders.
+  const convRef = useRef(conv);
+  convRef.current = conv;
+  const busyRef = useRef(false);
+  const inflight = useRef<Promise<void>>(Promise.resolve());
   usePopover(plus, useCallback(() => setPlus(false), []), ".c-plus-wrap");
   usePopover(picker, useCallback(() => setPicker(false), []), ".c-picker-wrap");
 
@@ -282,9 +281,10 @@ export function Chat({ id, onSaved, config, name }: { id?: string; onSaved: () =
     box.current?.focus();
   };
 
-  const send = async (spoken?: string, speak = false) => {
+  const send = async (spoken?: string, speak = false, voice?: VoiceTurn) => {
     const text = (spoken ?? input).trim();
-    if ((!text && !files.length) || busy) return;
+    if ((!text && !files.length) || busyRef.current) return;
+    busyRef.current = true;
     const attached = files;
     if (spoken === undefined) setInput("");
     setFiles([]);
@@ -292,7 +292,8 @@ export function Chat({ id, onSaved, config, name }: { id?: string; onSaved: () =
     const content = [text, ...attached.map((f) => `<file name="${f.name}">\n${f.text}\n</file>`)].filter(Boolean).join("\n\n");
     const now = Date.now();
     const title = (text || attached[0]?.name || "New chat").slice(0, 60);
-    const base: Conversation = conv ?? { id: crypto.randomUUID(), title, createdAt: now, updatedAt: now, model, mode, messages: [] };
+    const existing = convRef.current;
+    const base: Conversation = existing ?? { id: crypto.randomUUID(), title, createdAt: now, updatedAt: now, model, mode, messages: [] };
     let current: Conversation = {
       ...base,
       model,
@@ -301,32 +302,46 @@ export function Chat({ id, onSaved, config, name }: { id?: string; onSaved: () =
       messages: [...base.messages, { role: "user", content, files: attached.length ? attached.map((f) => f.name) : undefined }, { role: "assistant", content: "" }],
     };
     setConv(current);
-    if (!conv) history.replaceState(null, "", `#/chat/${current.id}`);
+    convRef.current = current;
+    if (!existing) history.replaceState(null, "", `#/chat/${current.id}`);
     setBusy(true);
     const ac = new AbortController();
     abort.current = ac;
     try {
       const meta = await streamChat({
-        messages: current.messages.slice(0, -1).map((m) => ({ role: m.role, content: m.content })),
+        messages: [...(voice ? [{ role: "system" as const, content: voice.system }] : []), ...current.messages.slice(0, -1).map((m) => ({ role: m.role, content: m.content }))],
         model,
         // A specific model means exactly that model; "Smart Routing" lets the router choose by the selected mode.
         mode: model === "auto" ? mode : "passthrough",
         session: current.id,
         affinity: current.affinity,
         signal: ac.signal,
-        onDelta: (d) => {
+        onDelta: (raw) => {
+          // Voice replies open with an emotion tag, which is for the voice, not the transcript.
+          const d = voice ? voice.filter(raw) : raw;
+          if (!d) return;
+          voice?.onVisible(d);
           sentences?.push(d).forEach((t) => speaker().say(t));
           current = { ...current, messages: current.messages.map((m, i) => (i === current.messages.length - 1 ? { ...m, content: m.content + d } : m)) };
           setConv(current);
+          convRef.current = current;
         },
       });
       sentences?.flush().forEach((t) => speaker().say(t));
       current = { ...current, affinity: meta.affinity ?? current.affinity, messages: current.messages.map((m, i) => (i === current.messages.length - 1 ? { ...m, meta } : m)) };
     } catch (e) {
-      const msg = (e as Error).name === "AbortError" ? "Stopped." : (e as Error).message;
-      current = { ...current, messages: current.messages.map((m, i) => (i === current.messages.length - 1 ? { ...m, error: msg } : m)) };
+      const aborted = (e as Error).name === "AbortError";
+      // A voice reply cut off by the user talking over it is kept as said so far, marked with "…".
+      if (aborted && voice) current = { ...current, messages: current.messages.map((m, i) => (i === current.messages.length - 1 ? { ...m, content: m.content ? `${m.content} …` : "…" } : m)) };
+      else {
+        const msg = aborted ? "Stopped." : (e as Error).message;
+        current = { ...current, messages: current.messages.map((m, i) => (i === current.messages.length - 1 ? { ...m, error: msg } : m)) };
+        if (voice && !aborted) throw e;
+      }
     } finally {
       setConv(current);
+      convRef.current = current;
+      busyRef.current = false;
       setBusy(false);
       await saveConversation(current);
       onSaved();
@@ -341,62 +356,23 @@ export function Chat({ id, onSaved, config, name }: { id?: string; onSaved: () =
 
   sendRef.current = send;
 
-  const endVoice = useCallback(() => {
-    voiceOn.current = false;
-    recorder.current?.cancel();
-    recorder.current = undefined;
-    speakerRef.current?.stop();
-    setVoice("idle");
-    setLevel(0);
+  // One spoken turn from voice mode: stop any reply still streaming, then send through the chat.
+  const voiceAsk: VoiceAsk = useCallback(async (text, o) => {
+    abort.current?.abort();
+    await inflight.current;
+    const p = sendRef.current(text, false, o);
+    inflight.current = p.catch(() => {});
+    await p;
   }, []);
-
-  const listen = async (): Promise<void> => {
-    setVoiceErr(undefined);
-    const rec = new Recorder();
-    recorder.current = rec;
-    setVoice("listening");
-    let r;
-    try {
-      r = await rec.start({ onLevel: setLevel });
-    } catch (e) {
-      endVoice();
-      setVoiceErr((e as Error).name === "NotAllowedError" ? "Microphone access was blocked. Allow it in your browser's site settings to talk." : `Microphone unavailable: ${(e as Error).message}`);
-      return;
-    }
-    recorder.current = undefined;
-    setLevel(0);
-    if (!voiceOn.current) return;
-    // Silence ends the conversation; say something to continue.
-    if (!r.heardSpeech || r.blob.size < 800) return endVoice();
-    setVoice("transcribing");
-    let text = "";
-    try {
-      text = await transcribe(r.blob);
-    } catch (e) {
-      endVoice();
-      setVoiceErr((e as Error).message);
-      return;
-    }
-    if (!voiceOn.current) return;
-    if (!text) {
-      endVoice();
-      setVoiceErr("Didn't catch that. Tap the mic and try again.");
-      return;
-    }
-    setVoice("thinking");
-    await sendRef.current(text, true);
-    if (!voiceOn.current) return;
-    await speaker().whenIdle();
-    if (voiceOn.current) return listen();
-  };
-
-  const micClick = () => {
-    if (voice === "listening") return recorder.current?.stop(); // send now
-    if (voice === "speaking") return speakerRef.current?.stop(); // interrupt; the loop listens again
-    if (voiceOn.current) return endVoice();
-    speaker().unlock();
-    voiceOn.current = true;
-    void listen();
+  const voiceStop = useCallback(() => abort.current?.abort(), []);
+  const closeVoice = useCallback(() => setVoiceSession(undefined), []);
+  const openVoice = () => {
+    speakerRef.current?.stop();
+    const live = new LiveVoice();
+    // Both must start inside this tap on mobile.
+    const started = live.start();
+    unlockDeviceVoice();
+    setVoiceSession({ live, started });
   };
 
   const readAloud = (text: string) => {
@@ -407,14 +383,8 @@ export function Chat({ id, onSaved, config, name }: { id?: string; onSaved: () =
     [...split.push(text), ...split.flush()].forEach((t) => sp.say(t));
   };
 
-  // Leaving the chat or switching conversations ends a voice conversation.
-  useEffect(() => endVoice, [id, endVoice]);
-  useEffect(() => {
-    if (voice === "idle") return;
-    const key = (e: KeyboardEvent) => e.key === "Escape" && endVoice();
-    addEventListener("keydown", key);
-    return () => removeEventListener("keydown", key);
-  }, [voice, endVoice]);
+  // Switching conversations ends a voice conversation.
+  useEffect(() => () => setVoiceSession(undefined), [id]);
 
   const remove = async () => {
     if (!conv) return;
@@ -546,11 +516,10 @@ export function Chat({ id, onSaved, config, name }: { id?: string; onSaved: () =
         {voiceSupported() && (
           <button
             type="button"
-            className={`c-tool c-mic ${voice !== "idle" ? `on ${voice}` : ""}`}
-            style={{ "--lvl": level } as React.CSSProperties}
-            aria-label={voice === "idle" ? "Talk" : voice === "listening" ? "Send what I said" : voice === "speaking" ? "Interrupt" : "End voice conversation"}
-            title={voice === "idle" ? "Talk: ask by voice and hear the answer" : undefined}
-            onClick={micClick}
+            className={`c-tool c-mic ${voiceSession ? "on" : ""}`}
+            aria-label="Talk"
+            title="Talk: a live voice conversation"
+            onClick={openVoice}
           >
             <IconMic />
           </button>
@@ -565,25 +534,27 @@ export function Chat({ id, onSaved, config, name }: { id?: string; onSaved: () =
           </button>
         )}
       </div>
-      {(voice !== "idle" || voiceErr) && (
-        <div className={`c-voice ${voiceErr && voice === "idle" ? "err" : ""}`} role="status" aria-live="polite">
-          {voice === "idle" ? (
-            <span>{voiceErr}</span>
-          ) : (
-            <>
-              <span className="c-voice-dot" />
-              <span>
-                {voice === "listening" ? "Listening… pause when you're done" : voice === "transcribing" ? "Transcribing…" : voice === "thinking" ? "Thinking…" : "Speaking… tap the mic to interrupt"}
-              </span>
-              <button type="button" onClick={endVoice}>
-                End voice
-              </button>
-            </>
-          )}
-          {voice !== "idle" && <small>Whisper and speech run on Cloudflare Workers AI; recordings aren't stored.</small>}
-        </div>
-      )}
     </form>
+  );
+
+  const voiceScreen = voiceSession && (
+    <VoiceMode
+      live={voiceSession.live}
+      started={voiceSession.started}
+      ask={voiceAsk}
+      stop={voiceStop}
+      onClose={closeVoice}
+      onType={() => requestAnimationFrame(() => box.current?.focus())}
+    />
+  );
+
+  // The voice screen sits first in both layouts (empty chat and conversation), so switching layout
+  // after the first spoken question does not remount it and cut the microphone.
+  const withVoice = (view: ReactNode) => (
+    <>
+      {voiceScreen}
+      {view}
+    </>
   );
 
   const notice =
@@ -604,7 +575,7 @@ export function Chat({ id, onSaved, config, name }: { id?: string; onSaved: () =
     ) : null;
 
   if (empty)
-    return (
+    return withVoice(
       <div className="c-chat c-home">
         <div className="c-center">
           <h1 className="c-greet">
@@ -640,7 +611,7 @@ export function Chat({ id, onSaved, config, name }: { id?: string; onSaved: () =
       </div>
     );
 
-  return (
+  return withVoice(
     <div className="c-chat">
       <header className="c-top">
         <h2 title={conv!.title}>{conv!.title}</h2>

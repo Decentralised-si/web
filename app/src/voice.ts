@@ -152,6 +152,12 @@ const SILENCE = (() => {
  * reasoning blocks are never read.
  */
 export class SentenceSplitter {
+  /**
+   * @param eager hand over the first clause early (at a comma once it is long enough), so speech
+   * starts sooner in a live conversation.
+   */
+  constructor(private eager = false) {}
+  private emitted = 0;
   private buf = "";
   private inCode = false;
   private inThink = false;
@@ -171,8 +177,9 @@ export class SentenceSplitter {
     const out: string[] = [];
     const emit = (s: string) => {
       const t = `${this.carry} ${s}`.trim();
-      if (/\p{L}{2,}/u.test(t)) {
+      if (/\p{L}{2,}/u.test(t) || (/\p{L}/u.test(t) && /[\u3000-\u9fff\uac00-\ud7af]/u.test(t))) {
         out.push(t);
+        this.emitted++;
         this.carry = "";
       } else this.carry = t;
     };
@@ -202,6 +209,9 @@ export class SentenceSplitter {
         const ch = prose[i];
         let end = -1;
         if (ch === "\n") end = i + 1;
+        // Chinese, Japanese, Arabic and Hindi end sentences without a following space.
+        else if ("。！？؟।".includes(ch)) end = i + 1;
+        else if (this.eager && !this.emitted && ",，、".includes(ch) && i - used > 25) end = i + 1;
         else if (".!?".includes(ch)) {
           let j = i + 1;
           while (j < prose.length && ".!?\"')]".includes(prose[j])) j++;

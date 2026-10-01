@@ -96,7 +96,14 @@ export class LiveTranscriber {
       };
       ws.onerror = () => this.lost(ws);
       ws.onclose = () => this.lost(ws);
-    } catch {
+    } catch (e) {
+      // 503: live transcription is switched off on the router (cheap voice profile). Don't retry.
+      if ((e as { status?: number }).status === 503) {
+        disabledUntil = Date.now() + 6 * 3_600_000;
+        this.closed = true;
+        clearInterval(this.timer);
+        return;
+      }
       this.lost(undefined);
     }
   }

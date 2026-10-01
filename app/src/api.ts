@@ -1,4 +1,5 @@
 import { classifyDomain } from "./domain";
+import { p2pChat } from "./p2p";
 /** API client for the Decentralised.si router, authenticated with the Privy session. */
 
 const DOMAINS = ["decentralised.si", "decentralise.si", "decentralise.ai", "decentralised.ai"];
@@ -22,8 +23,38 @@ export interface Config {
   platformVendors: string[];
 }
 
-/** Startup config. Mobile networks drop the odd request, so retry a few times before giving up. */
+/**
+ * Router answers that change rarely are kept in this browser, so opening the app does not cost a
+ * router call each time (at a million users that is the difference between free and not).
+ */
+const DAY = 86_400_000;
+function cacheGet<T>(key: string, maxAgeMs: number): T | undefined {
+  try {
+    const c = JSON.parse(localStorage.getItem(key) ?? "null") as { at: number; v: T } | null;
+    return c && Date.now() - c.at < maxAgeMs ? c.v : undefined;
+  } catch {
+    return undefined;
+  }
+}
+function cachePut(key: string, v: unknown) {
+  try {
+    localStorage.setItem(key, JSON.stringify({ at: Date.now(), v }));
+  } catch {
+    /* private mode */
+  }
+}
+
+/** Startup config: from this browser's cache (30 days), else the router. */
 export async function loadConfig(attempts = 4): Promise<Config> {
+  const cached = cacheGet<Config>("dsi_config", 30 * DAY);
+  if (cached?.privyAppId) return cached;
+  const fresh = await fetchConfig(attempts);
+  cachePut("dsi_config", fresh);
+  return fresh;
+}
+
+/** Mobile networks drop the odd request, so retry a few times before giving up. */
+async function fetchConfig(attempts: number): Promise<Config> {
   let last: unknown;
   for (let i = 0; i < attempts; i++) {
     if (i) await new Promise((r) => setTimeout(r, 600 * 2 ** (i - 1)));
@@ -84,9 +115,25 @@ export async function api<T = any>(path: string, init: { method?: string; body?:
 }
 
 export async function listModels(): Promise<string[]> {
+  const cached = cacheGet<string[]>("dsi_models", 30 * DAY);
+  if (cached?.length) return cached;
   const r = await fetch(`${API}/openai/v1/models`, { headers: await headers() });
   if (!r.ok) return [];
-  return ((await r.json()) as { data: Array<{ id: string }> }).data.map((m) => m.id);
+  const ids = ((await r.json()) as { data: Array<{ id: string }> }).data.map((m) => m.id);
+  cachePut("dsi_models", ids);
+  return ids;
+}
+
+/** Account balance and free-chat status: cached for 14 days on open; refreshed after paid turns. */
+export async function orgStatus(fresh = false): Promise<any> {
+  const key = `dsi_org_${accountId ?? "me"}`;
+  if (!fresh) {
+    const cached = cacheGet<any>(key, 14 * DAY);
+    if (cached) return cached;
+  }
+  const o = await api("/org");
+  cachePut(key, o);
+  return o;
 }
 
 export interface ChatMessage {
@@ -120,6 +167,15 @@ export async function streamChat(opts: {
   signal: AbortSignal;
   onDelta: (t: string) => void;
 }): Promise<StreamMeta> {
+  // Free chat goes straight to a community node (DIP-P2P): no router on the way, no cost to anyone
+  // but the peer, who earns PAI for it. The router is the fallback when no peer can answer.
+  if (opts.mode === "free") {
+    const direct = await p2pChat({ messages: opts.messages, domain: domainHint(opts.messages), session: opts.session, signal: opts.signal, onDelta: opts.onDelta }).catch((e: Error) => {
+      if (e.name === "AbortError" || e.name === "P2PCutOff") throw e;
+      return undefined;
+    });
+    if (direct) return direct;
+  }
   const r = await fetch(`${API}/openai/v1/chat/completions`, {
     method: "POST",
     signal: opts.signal,

@@ -176,6 +176,7 @@ Network providers receive a signed request (HMAC-SHA256 over timestamp and body 
 | **Router** | One conversation in transit; envelope metadata; the account's ds_ key; coarse location for this decision | Stored memory; other conversations' content (nothing is logged); prompts in logs or receipts (hashes only) |
 | **Network provider** | One conversation (or one of its turns), signed by the router | Who is asking; the account; IP; other conversations of the same user; any memory beyond what that request carries |
 | **BYOK vendor** | What the customer already sent that vendor before adopting Decentralised.si | Anything from other vendors or other users |
+| **Peer on the direct path** (free chat, §12.1) | The turn it answers; the client's IP address; a random ticket id | The account; other users; anything on other peers |
 | **PAI ledger** | Work units per node per epoch; payouts; stakes | Any request content or requester identity |
 
 **Implemented today:**
@@ -707,6 +708,24 @@ The API is `POST /api/learning/submit`, `GET /api/learning/me`, `GET /api/learni
 - **Cheap control plane.** Work is metered per node per epoch, not per request. Settlement is one transaction per epoch.
 - **Open protocols throughout.** Vendor-compatible APIs, MCP, OpenAI-compatible nodes and an ERC-20 token.
 
+### 12.1 The direct path: zero cost per user
+
+Routing every turn through the edge costs money per turn: at a million people talking four hours a day, hosted transcription, speech and answers would come to about $136M a month. The direct path (DIP-P2P, `docs/p2p.md`) takes the router off the per-turn path, the way Spotify started songs from its servers and then streamed the rest from other listeners:
+
+- **The device listens and speaks.** Whisper runs in the browser, and replies are spoken by Kokoro or a good system voice. The models download once.
+- **Peers answer.** The browser calls community nodes directly over their own tunnels. Peers also do transcription and speech for devices that cannot do it themselves.
+- **The router is only the control plane.**
+  - Once a month it issues a ticket bound to a key held on the device (ECDSA P-256, non-extractable). The ticket names no account.
+  - Every 6 hours it gives nodes the keys and a signed peer directory, which nodes pass on to clients.
+  - Once a day it settles one receipt batch per node in PAI. A 2% sample of tickets is reconciled across nodes.
+- **Every request is protected.** It carries a proof signed with the device key, so a copied ticket is useless and a captured request cannot be replayed. Nodes check both offline and enforce the ticket's daily quota.
+
+None of this scales with talking time. At a million users the whole control plane is about 9M Workers requests and 7M D1 row writes a month, inside what the $5 Workers Paid plan includes. The cost per user is zero whether people talk ten minutes a day or all day. The work is done by peers, who are paid in PAI and earn free chat for what they serve.
+
+Capacity: about 460 gaming GPUs or 3,000 laptops (0.05–0.3% of users) carry a million people talking four hours a day.
+
+The trade-off is that a peer sees the client's IP address, though never the account. The routed path still hides it for users who prefer that, and a relay through a second peer is on the roadmap.
+
 ---
 
 ## 13. Governance
@@ -738,6 +757,8 @@ Emission constants, the hard cap and the investors-and-founders unlock milestone
 | Learning Fabric (`packages/learning`): on-device extraction and privacy gate (`dsi learn`), Proof of Novelty, claim validation with a deterministic checker, staked-validator attestation, model gap test, delta packages, canary control, attribution, PoUL records, R_verify / R_improve / R_usage on the off-chain ledger, bounties and the capability gap map | **Implemented** in this release |
 | Reference delta trainer (LoRA / QLoRA, PEFT) | **Implemented** in this release; runs outside the router |
 | Serving delta adapters on network nodes; automatic canary routing and usage metering for them | Roadmap: canary and usage results are reported by the reference operator until then |
+| Direct path (DIP-P2P): tickets bound to device keys, per-request proofs, signed peer directory, node-side metering and quotas, daily receipts with sampled reconciliation, direct chat and peer voice from the browser | **Implemented** in this release; free chat uses it |
+| On-device voice: Whisper and Kokoro in the browser, Cloudflare only while models download | **Implemented** in this release |
 | PAI Solidity contract with tests | **Reference, unaudited, not deployed** |
 | Verifier and relay markets | Phase 2 |
 | Anonymous credit, OHTTP relays, TEE nodes | Roadmap |

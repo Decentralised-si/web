@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { marked } from "marked";
 import DOMPurify from "dompurify";
-import { api, listModels, streamChat, type Config } from "./api";
+import { api, listModels, orgStatus, streamChat, type Config } from "./api";
 import { deleteConversation, listConversations, saveConversation, type Conversation } from "./localdb";
 import { SentenceSplitter, Speaker, voiceSupported } from "./voice";
 import { LiveVoice, unlockDeviceVoice } from "./live";
@@ -234,7 +234,7 @@ export function Chat({ id, onSaved, config, name }: { id?: string; onSaved: () =
       }
     })();
     listModels().then(setModels).catch(() => {});
-    api("/org")
+    orgStatus()
       .then((o) => {
         setCredit(o.creditUsd);
         setFreeChat(o.freeChat);
@@ -345,12 +345,14 @@ export function Chat({ id, onSaved, config, name }: { id?: string; onSaved: () =
       setBusy(false);
       await saveConversation(current);
       onSaved();
-      api("/org")
-        .then((o) => {
-          setCredit(o.creditUsd);
-          setFreeChat(o.freeChat);
-        })
-        .catch(() => {});
+      // A turn a peer answered directly never touched the router; don't add a router call for it.
+      if (current.messages[current.messages.length - 1]?.meta?.market !== "p2p")
+        orgStatus(true)
+          .then((o) => {
+            setCredit(o.creditUsd);
+            setFreeChat(o.freeChat);
+          })
+          .catch(() => {});
     }
   };
 

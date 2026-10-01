@@ -225,6 +225,12 @@ var BUILTIN_CATALOG = [
   gemini("gemini-2.5-flash", 0.87, 0.3, 2.5, { ttftMs: 600, tokensPerSec: 180 }),
   gemini("gemini-2.5-flash-lite", 0.8, 0.1, 0.4, { ttftMs: 400, tokensPerSec: 250 }),
   workersAi("@cf/meta/llama-3.3-70b-instruct-fp8-fast", 0.82, 0.29, 2.25),
+  // Long-context open models with reliable tool calling, for agents (DSI Agent Terminal, Hermes,
+  // Claude Code-style loops). Prices are Cloudflare's list prices; quality is our estimate.
+  workersAi("@cf/openai/gpt-oss-120b", 0.88, 0.35, 0.75, { contextWindow: 128e3, maxOutput: 16384, ttftMs: 500, tokensPerSec: 90 }),
+  workersAi("@cf/zai-org/glm-5.3-flash", 0.87, 0.15, 0.5, { contextWindow: 262144, maxOutput: 16384, ttftMs: 500, tokensPerSec: 90 }),
+  workersAi("@cf/deepseek-ai/deepseek-v4-flash-0731", 0.9, 0.44, 1.32, { contextWindow: 262144, maxOutput: 16384, ttftMs: 700, tokensPerSec: 70 }),
+  workersAi("@cf/moonshotai/kimi-k2.7-code", 0.92, 0.95, 4, { specialties: ["coding"], contextWindow: 262144, maxOutput: 16384, ttftMs: 900, tokensPerSec: 60 }),
   workersAi("@cf/meta/llama-3.1-8b-instruct-fast", 0.7, 0.045, 0.384, { ttftMs: 200, tokensPerSec: 150, features: ["system", "streaming", "stop_sequences", "sampling"] }),
   workersAi("@cf/qwen/qwen2.5-coder-32b-instruct", 0.8, 0.66, 1, {
     specialties: ["coding"],
@@ -271,6 +277,10 @@ var CapabilityCompatibilityEngine = class {
 
 // ../pai/src/index.ts
 var GENESIS_MS = Date.UTC(2026, 8, 26);
+function currentEpoch(nowMs = Date.now()) {
+  return Math.max(0, Math.floor((nowMs - GENESIS_MS) / (EPOCH_SECONDS * 1e3)));
+}
+var EPOCH_SECONDS = 86400;
 var ALLOCATION = {
   /** Minted per epoch for verified work only. */
   networkRewards: 5e8,
@@ -295,6 +305,9 @@ var td = new TextDecoder();
 
 // ../core/src/network.ts
 var HEARTBEAT_TTL_MS = 3 * 6e4;
+function utcDay(now = Date.now()) {
+  return new Date(now).toISOString().slice(0, 10);
+}
 var enc = new TextEncoder();
 async function hmacHex(secret, data) {
   const key = await crypto.subtle.importKey("raw", enc.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
@@ -313,6 +326,235 @@ async function verifyNodeRequest(secret, body, headers, now = Date.now(), maxSke
   let diff = 0;
   for (let i = 0; i < expected.length; i++) diff |= expected.charCodeAt(i) ^ headers.signature.charCodeAt(i);
   return diff === 0;
+}
+
+// ../core/src/p2p.ts
+var enc2 = new TextEncoder();
+var dec = new TextDecoder();
+function b64url(bytes) {
+  const u = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+  let s = "";
+  for (let i = 0; i < u.length; i += 32768) s += String.fromCharCode(...u.subarray(i, i + 32768));
+  return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+function fromB64url(s) {
+  const b = atob(s.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((s.length + 3) % 4));
+  const out = new Uint8Array(new ArrayBuffer(b.length));
+  for (let i = 0; i < b.length; i++) out[i] = b.charCodeAt(i);
+  return out;
+}
+var ALG = { name: "ECDSA", namedCurve: "P-256" };
+var SIGN = { name: "ECDSA", hash: "SHA-256" };
+var keyCache = /* @__PURE__ */ new Map();
+function importPublic(pub) {
+  const k = `${pub.x}.${pub.y}`;
+  let p = keyCache.get(k);
+  if (!p) {
+    p = crypto.subtle.importKey("jwk", { kty: "EC", crv: "P-256", x: pub.x, y: pub.y, ext: true }, ALG, false, ["verify"]);
+    if (keyCache.size > 1e4) keyCache.clear();
+    keyCache.set(k, p);
+  }
+  return p;
+}
+async function verify(pub, data, sig) {
+  try {
+    return await crypto.subtle.verify(SIGN, await importPublic(pub), fromB64url(sig), enc2.encode(data));
+  } catch {
+    return false;
+  }
+}
+async function sha256B64url(data) {
+  return b64url(await crypto.subtle.digest("SHA-256", typeof data === "string" ? enc2.encode(data) : new Uint8Array(data)));
+}
+var TICKET_DAYS = 30;
+function decodeTicket(token) {
+  const [ver, body] = token.split(".");
+  if (ver !== "t1" || !body) return void 0;
+  try {
+    return JSON.parse(dec.decode(fromB64url(body)));
+  } catch {
+    return void 0;
+  }
+}
+async function verifyTicket(token, keys, now = Date.now()) {
+  const parts = token.split(".");
+  if (parts.length !== 3 || parts[0] !== "t1") return { ok: false, reason: "malformed ticket" };
+  const t = decodeTicket(token);
+  if (!t || t.v !== 1 || !t.tid || !t.cnf?.x) return { ok: false, reason: "malformed ticket" };
+  const key = keys[t.kid];
+  if (!key) return { ok: false, reason: "unknown signing key" };
+  if (!await verify(key, `t1.${parts[1]}`, parts[2])) return { ok: false, reason: "bad ticket signature" };
+  if (now / 1e3 > t.exp) return { ok: false, reason: "ticket expired" };
+  if (now / 1e3 + 300 < t.iat) return { ok: false, reason: "ticket not yet valid" };
+  return { ok: true, ticket: t };
+}
+var PROOF_SKEW_MS = 12e4;
+function proofInput(ts, nonce, method, path, bodyHash) {
+  return `p1.${ts}.${nonce}.${method.toUpperCase()} ${path}.${bodyHash}`;
+}
+async function verifyProof(proof, cnf, method, path, body, now = Date.now()) {
+  const [tsS, nonce, sig] = proof.split(".");
+  const ts = Number(tsS);
+  if (!nonce || !sig || !Number.isFinite(ts)) return { ok: false, reason: "malformed proof" };
+  if (Math.abs(now - ts) > PROOF_SKEW_MS) return { ok: false, reason: "proof too old (check the device clock)" };
+  const bodyHash = await sha256B64url(body);
+  if (!await verify(cnf, proofInput(ts, nonce, method, path, bodyHash), sig)) return { ok: false, reason: "bad request proof" };
+  return { ok: true, nonce, bodyHash, ts };
+}
+var NonceGuard = class {
+  seen = /* @__PURE__ */ new Map();
+  check(nonce, now = Date.now()) {
+    if (this.seen.size > 5e4) {
+      for (const [k, t] of this.seen) if (now - t > PROOF_SKEW_MS * 2) this.seen.delete(k);
+    }
+    if (this.seen.has(nonce)) return false;
+    this.seen.set(nonce, now);
+    return true;
+  }
+};
+var TicketMeter = class {
+  days = /* @__PURE__ */ new Map();
+  epochs = /* @__PURE__ */ new Map();
+  entry(tid, day) {
+    let d = this.days.get(tid);
+    if (!d || d.day !== day) this.days.set(tid, d = { day, u: empty(tid) });
+    return d.u;
+  }
+  /** Whether the ticket still has room today for this kind of work. */
+  allows(t, kind, day) {
+    const u = this.entry(t.tid, day);
+    if (kind === "tokens") return u.inputTokens + u.outputTokens < t.q.tokens;
+    if (kind === "stt") return u.sttSeconds < t.q.sttSeconds;
+    return u.ttsChars < t.q.ttsChars;
+  }
+  record(tid, day, epoch, add, sample) {
+    const targets = [this.entry(tid, day)];
+    let ep = this.epochs.get(epoch);
+    if (!ep) this.epochs.set(epoch, ep = /* @__PURE__ */ new Map());
+    let e = ep.get(tid);
+    if (!e) ep.set(tid, e = empty(tid));
+    targets.push(e);
+    for (const u of targets) {
+      u.requests += add.requests ?? 1;
+      u.inputTokens += add.inputTokens ?? 0;
+      u.outputTokens += add.outputTokens ?? 0;
+      u.sttSeconds += add.sttSeconds ?? 0;
+      u.ttsChars += add.ttsChars ?? 0;
+    }
+    if (sample && e.samples.length < 3) e.samples.push(sample);
+  }
+  /** Epochs that have ended and are ready to report (and are removed from the meter). */
+  drain(beforeEpoch) {
+    const out = [];
+    for (const [ep, m] of [...this.epochs]) {
+      if (ep >= beforeEpoch) continue;
+      out.push({ epoch: ep, usage: [...m.values()] });
+      this.epochs.delete(ep);
+    }
+    return out;
+  }
+  /** Put back a batch that could not be delivered. */
+  restore(epoch, usage) {
+    const m = this.epochs.get(epoch) ?? /* @__PURE__ */ new Map();
+    for (const u of usage) m.set(u.tid, u);
+    this.epochs.set(epoch, m);
+  }
+};
+function empty(tid) {
+  return { tid, requests: 0, inputTokens: 0, outputTokens: 0, sttSeconds: 0, ttsChars: 0, samples: [] };
+}
+var P2P_CADENCE = {
+  ticketDays: TICKET_DAYS,
+  /** Clients renew a ticket when fewer than this many days are left. */
+  renewDays: 3,
+  /** Node heartbeat in P2P mode; it also brings the keys and signed directory (clients check liveness themselves). */
+  heartbeatMs: 6 * 36e5,
+  /** Clients refresh the signed directory from a peer this often. */
+  directoryMs: 6 * 36e5,
+  /** Receipts: once per epoch per node. */
+  receiptEpochs: 1
+};
+var P2P_QUOTA = {
+  base: { tokens: 2e4, sttSeconds: 1800, ttsChars: 3e4 },
+  /** Accounts that run an active node get ten times as much, plus what their node has earned. */
+  contributor: { tokens: 2e5, sttSeconds: 14400, ttsChars: 3e5 },
+  maxEarnedTokens: 2e6,
+  ticketsPerDay: 3,
+  /** A node that heartbeats on the P2P cadence counts as live for this long (two missed beats). */
+  liveMs: 12 * 36e5
+};
+
+// src/direct.ts
+function directKind(method, path) {
+  if (method === "POST" && path === "/chat/completions") return "tokens";
+  if (method === "POST" && path === "/audio/transcriptions") return "stt";
+  if (method === "POST" && path === "/audio/speech") return "tts";
+  return void 0;
+}
+var DIRECT_CORS = {
+  "access-control-allow-origin": "*",
+  "access-control-allow-methods": "GET, POST, OPTIONS",
+  "access-control-allow-headers": "authorization, content-type, x-dsi-proof",
+  "access-control-max-age": "86400"
+};
+function isDirect(req) {
+  return /^DSI-Ticket\s/i.test(String(req.headers.authorization ?? ""));
+}
+var DirectPath = class {
+  keys = {};
+  directory;
+  meter = new TicketMeter();
+  nonces = new NonceGuard();
+  stats = { served: 0, refused: 0 };
+  /** Check a direct request. On success returns the ticket and a proof sample for the receipt. */
+  async authorize(req, fullPath, kind, body, now = Date.now()) {
+    const token = String(req.headers.authorization ?? "").replace(/^DSI-Ticket\s+/i, "");
+    const proof = String(req.headers["x-dsi-proof"] ?? "");
+    if (!Object.keys(this.keys).length) return this.refuse(503, "this node has not loaded the network's keys yet");
+    const t = await verifyTicket(token, this.keys, now);
+    if (!t.ok) return this.refuse(401, t.reason);
+    const p = await verifyProof(proof, t.ticket.cnf, req.method ?? "POST", fullPath, body, now);
+    if (!p.ok) return this.refuse(401, p.reason);
+    if (!this.nonces.check(`${t.ticket.tid}.${p.nonce}`, now)) return this.refuse(401, "replayed request");
+    if (!this.meter.allows(t.ticket, kind, utcDay(now))) return this.refuse(429, "this ticket's daily quota is used up on this node");
+    return { ok: true, ticket: t.ticket, sample: `${proof}|${p.bodyHash}` };
+  }
+  refuse(status, reason) {
+    this.stats.refused++;
+    return { ok: false, status, reason };
+  }
+  record(ticket, add, sample, now = Date.now()) {
+    this.stats.served++;
+    this.meter.record(ticket.tid, utcDay(now), currentEpoch(now), add, sample);
+  }
+  /** Report finished epochs; anything that fails to send is kept for the next try. */
+  async flush(send, now = Date.now()) {
+    for (const b of this.meter.drain(currentEpoch(now))) {
+      if (!b.usage.length) continue;
+      try {
+        await send(b);
+      } catch (e) {
+        if (!/already reported/i.test(e instanceof Error ? e.message : String(e))) this.meter.restore(b.epoch, b.usage);
+      }
+    }
+  }
+};
+function usageFrom(text, requestBody) {
+  const m = [...text.matchAll(/"usage"\s*:\s*\{[^{}]*"prompt_tokens"\s*:\s*(\d+)[^{}]*"completion_tokens"\s*:\s*(\d+)/g)].pop() ?? [...text.matchAll(/"usage"\s*:\s*\{[^{}]*"completion_tokens"\s*:\s*(\d+)[^{}]*"prompt_tokens"\s*:\s*(\d+)/g)].map((x) => [x[0], x[2], x[1]]).pop();
+  if (m) return { inputTokens: Number(m[1]), outputTokens: Number(m[2]) };
+  const out = [...text.matchAll(/"content"\s*:\s*"((?:[^"\\]|\\.)*)"/g)].reduce((a, x) => a + x[1].length, 0);
+  return { inputTokens: Math.ceil(requestBody.length / 4), outputTokens: Math.ceil(out / 4) };
+}
+function audioSeconds(body) {
+  const buf = Buffer.from(body.buffer, body.byteOffset, body.byteLength);
+  const riff = buf.indexOf("RIFF");
+  if (riff >= 0 && buf.toString("ascii", riff + 8, riff + 12) === "WAVE") {
+    const rate = buf.readUInt32LE(riff + 24);
+    const bytesPerSec = buf.readUInt32LE(riff + 28);
+    const data = buf.indexOf("data", riff + 12);
+    if (rate && bytesPerSec && data > 0) return buf.readUInt32LE(data + 4) / bytesPerSec;
+  }
+  return body.byteLength / 4e3;
 }
 
 // src/index.ts
@@ -338,7 +580,7 @@ function detectGpu() {
 async function readBody(req) {
   const chunks = [];
   for await (const c of req) chunks.push(c);
-  return Buffer.concat(chunks).toString("utf8");
+  return Buffer.concat(chunks);
 }
 var ProviderNode = class {
   constructor(cfg) {
@@ -351,6 +593,9 @@ var ProviderNode = class {
   heartbeat;
   state;
   stats = { served: 0, rejected: 0, errors: 0 };
+  /** DIP-P2P: tickets, metering and the peer directory for clients that call this node directly. */
+  direct = new DirectPath();
+  flushTimer;
   get f() {
     return this.cfg.fetch ?? fetch;
   }
@@ -372,14 +617,39 @@ var ProviderNode = class {
   async handle(req, res) {
     const url = new URL(req.url ?? "/", "http://node");
     const path = url.pathname.replace(/^\/v1/, "");
-    if (req.method === "GET" && url.pathname === "/healthz") return json(res, 200, { ok: true, inflight: this.inflight, registered: !!this.state });
-    const body = req.method === "POST" ? await readBody(req) : "";
-    const registrationProbe = this.pendingSecretCheck && req.method === "GET" && path === "/models";
-    if (!registrationProbe && !await this.verified(req, body)) {
-      this.stats.rejected++;
-      return json(res, 401, { error: { message: "requests must be signed by the Decentralised.si router" } });
+    if (req.method === "GET" && url.pathname === "/healthz") {
+      for (const [k, v] of Object.entries(DIRECT_CORS)) res.setHeader(k, v);
+      return json(res, 200, { ok: true, inflight: this.inflight, registered: !!this.state, direct: this.cfg.mode !== "routed", voice: this.voice() });
+    }
+    if (req.method === "OPTIONS") {
+      res.writeHead(204, DIRECT_CORS);
+      return res.end();
+    }
+    if (req.method === "GET" && url.pathname === "/dsi/directory") {
+      for (const [k, v] of Object.entries(DIRECT_CORS)) res.setHeader(k, v);
+      if (!this.direct.directory) return json(res, 503, { error: { message: "no directory yet" } });
+      res.writeHead(200, { "content-type": "application/json", "cache-control": "public, max-age=600" });
+      return res.end(JSON.stringify({ directory: this.direct.directory }));
+    }
+    const raw = req.method === "POST" ? await readBody(req) : Buffer.alloc(0);
+    const body = raw.toString("utf8");
+    let direct;
+    if (isDirect(req)) {
+      for (const [k, v] of Object.entries(DIRECT_CORS)) res.setHeader(k, v);
+      const kind = directKind(req.method ?? "", path);
+      if (!kind || this.cfg.mode === "routed") return json(res, 404, { error: { message: "not served on the direct path" } });
+      const a = await this.direct.authorize(req, url.pathname, kind, raw);
+      if (!a.ok) return json(res, a.status, { error: { message: a.reason } });
+      direct = a;
+    } else {
+      const registrationProbe = this.pendingSecretCheck && req.method === "GET" && path === "/models";
+      if (!registrationProbe && !await this.verified(req, body)) {
+        this.stats.rejected++;
+        return json(res, 401, { error: { message: "requests must be signed by the Decentralised.si router" } });
+      }
     }
     if (req.method === "GET" && path === "/models") return json(res, 200, { object: "list", data: (await this.localModels()).map((id) => ({ id, object: "model", owned_by: this.cfg.name })) });
+    if (req.method === "POST" && path.startsWith("/audio/")) return this.audio(req, res, path, raw, direct);
     if (req.method !== "POST" || !["/chat/completions", "/embeddings"].includes(path)) return json(res, 404, { error: { message: "not found" } });
     if (this.paused) return json(res, 503, { error: { message: `node paused (${this.pausedReason})` } });
     let payload;
@@ -390,6 +660,7 @@ var ProviderNode = class {
     }
     delete payload.user;
     delete payload.metadata;
+    if (direct && payload.stream) payload.stream_options = { ...payload.stream_options, include_usage: true };
     const consulted = path === "/chat/completions" ? this.addExpertContext(payload) : [];
     if (path === "/chat/completions" && this.cfg.minMaxTokens) {
       for (const k of ["max_tokens", "max_completion_tokens"]) if (typeof payload[k] === "number" && payload[k] < this.cfg.minMaxTokens) payload[k] = this.cfg.minMaxTokens;
@@ -418,6 +689,7 @@ var ProviderNode = class {
         clearInterval(keepalive);
         const text = await upstream.text();
         res.end(upstream.ok ? text : JSON.stringify({ error: { message: `local LLM returned ${upstream.status}: ${text.slice(0, 300)}` } }));
+        if (upstream.ok && direct) this.direct.record(direct.ticket, usageFrom(text, body), direct.sample);
         if (upstream.ok) this.stats.served++;
         else this.stats.errors++;
         return;
@@ -430,15 +702,23 @@ var ProviderNode = class {
 
 `);
       }
+      let tail = "";
       if (trace && !payload.stream) {
         const j = await upstream.json();
         const m = j.choices?.[0]?.message;
         if (m) m.content = trace + (m.content ?? "");
-        res.end(JSON.stringify(j));
+        tail = JSON.stringify(j);
+        res.end(tail);
       } else {
-        if (upstream.body) for await (const chunk of upstream.body) res.write(chunk);
+        const dec2 = new TextDecoder();
+        if (upstream.body)
+          for await (const chunk of upstream.body) {
+            res.write(chunk);
+            if (direct) tail = (tail + dec2.decode(chunk, { stream: true })).slice(-16384);
+          }
         res.end();
       }
+      if (upstream.ok && direct) this.direct.record(direct.ticket, usageFrom(tail, body), direct.sample);
       if (upstream.ok) this.stats.served++;
       else this.stats.errors++;
     } catch (e) {
@@ -452,6 +732,40 @@ var ProviderNode = class {
       if (next) next();
       else this.inflight--;
       this.queueMs = Math.round(0.8 * this.queueMs + 0.2 * (Date.now() - started) * (this.inflight / Math.max(1, this.cfg.maxConcurrency)));
+    }
+  }
+  voice() {
+    if (!this.cfg.voiceBaseUrl) return void 0;
+    return { stt: this.cfg.voiceStt !== false, tts: this.cfg.voiceTts ?? ["en"] };
+  }
+  /** Voice for devices that cannot run it themselves: proxied to the local speech server. */
+  async audio(req, res, path, raw, direct) {
+    if (!this.cfg.voiceBaseUrl || !["/audio/transcriptions", "/audio/speech"].includes(path)) return json(res, 404, { error: { message: "this node does not serve voice" } });
+    if (this.paused) return json(res, 503, { error: { message: `node paused (${this.pausedReason})` } });
+    try {
+      const upstream = await this.f(`${this.cfg.voiceBaseUrl.replace(/\/$/, "")}${path}`, { method: "POST", headers: { "content-type": String(req.headers["content-type"] ?? "application/octet-stream") }, body: new Uint8Array(raw) });
+      res.writeHead(upstream.status, { "content-type": upstream.headers.get("content-type") ?? "application/octet-stream", "cache-control": "no-store" });
+      if (upstream.body) for await (const chunk of upstream.body) res.write(chunk);
+      res.end();
+      if (upstream.ok && direct) {
+        if (path === "/audio/transcriptions") this.direct.record(direct.ticket, { sttSeconds: audioSeconds(raw) }, direct.sample);
+        else {
+          const input = (() => {
+            try {
+              return String(JSON.parse(Buffer.from(raw).toString("utf8")).input ?? "");
+            } catch {
+              return "";
+            }
+          })();
+          this.direct.record(direct.ticket, { ttsChars: input.length }, direct.sample);
+        }
+      }
+      if (upstream.ok) this.stats.served++;
+      else this.stats.errors++;
+    } catch (e) {
+      this.stats.errors++;
+      if (!res.headersSent) json(res, 502, { error: { message: `speech server error: ${e instanceof Error ? e.message : String(e)}` } });
+      else res.end();
     }
   }
   pendingSecretCheck = false;
@@ -592,9 +906,28 @@ ${existing}` : system }, ...messages.filter((m) => m.role !== "system")];
   }
   async sendHeartbeat() {
     if (!this.state) return;
-    return this.router(`/api/nodes/${this.state.nodeId}/heartbeat`, { body: { load: this.inflight / Math.max(1, this.cfg.maxConcurrency), queue_ms: this.queueMs, ...this.paused ? { paused: true } : {} } });
+    const p2p = this.cfg.mode !== "routed";
+    const r = await this.router(`/api/nodes/${this.state.nodeId}/heartbeat`, {
+      body: { load: this.inflight / Math.max(1, this.cfg.maxConcurrency), queue_ms: this.queueMs, ...this.paused ? { paused: true } : {}, ...p2p ? { p2p: true } : {}, ...this.voice() ? { voice: this.voice() } : {} }
+    });
+    if (r?.p2p?.keys) this.direct.keys = r.p2p.keys;
+    if (r?.p2p?.directory) this.direct.directory = r.p2p.directory;
+    return r;
   }
-  startHeartbeat(intervalMs = 3e4) {
+  /** Start the direct path: report each finished epoch's metered work once (checked hourly). */
+  startDirect(checkMs = 36e5) {
+    if (this.cfg.mode === "routed") return;
+    const send = async (b) => {
+      const r = await this.router("/api/p2p/receipts", { body: { node: this.state?.nodeId, epoch: b.epoch, usage: b.usage } });
+      this.log(`reported epoch ${b.epoch}: ${r.tickets} tickets, ${r.work_units} work units`);
+    };
+    this.flushTimer = setInterval(() => void this.direct.flush(send), checkMs);
+  }
+  /** Default heartbeat: every 30 s with routed traffic; every 3 h on the direct path only. */
+  get heartbeatMs() {
+    return this.cfg.mode === "p2p" ? P2P_CADENCE.heartbeatMs : 3e4;
+  }
+  startHeartbeat(intervalMs = this.heartbeatMs) {
     this.heartbeat = setInterval(() => this.sendHeartbeat().catch((e) => this.log(`heartbeat failed: ${e.message}`)), intervalMs);
   }
   async earnings() {
@@ -603,6 +936,7 @@ ${existing}` : system }, ...messages.filter((m) => m.role !== "system")];
   async close() {
     if (this.heartbeat) clearInterval(this.heartbeat);
     if (this.powerTimer) clearInterval(this.powerTimer);
+    if (this.flushTimer) clearInterval(this.flushTimer);
     await new Promise((r) => this.server ? this.server.close(() => r()) : r());
   }
 };
@@ -704,7 +1038,11 @@ async function node(publicUrl) {
     minMaxTokens: env.DSI_MIN_MAX_TOKENS ? Number(env.DSI_MIN_MAX_TOKENS) : void 0,
     ttftMs: env.DSI_TTFT_MS ? Number(env.DSI_TTFT_MS) : void 0,
     maxQueueMs: env.DSI_MAX_QUEUE_MS ? Number(env.DSI_MAX_QUEUE_MS) : void 0,
-    pauseOnBattery: env.DSI_PAUSE_ON_BATTERY === "1"
+    pauseOnBattery: env.DSI_PAUSE_ON_BATTERY === "1",
+    mode: env.DSI_MODE === "p2p" || env.DSI_MODE === "routed" ? env.DSI_MODE : "both",
+    voiceBaseUrl: env.VOICE_BASE_URL || void 0,
+    voiceStt: env.VOICE_STT !== "0",
+    voiceTts: env.VOICE_TTS_LANGS?.split(",").map((s) => s.trim()).filter(Boolean)
   });
 }
 async function main() {
@@ -745,6 +1083,8 @@ async function main() {
   }
   await n.sendHeartbeat();
   n.startHeartbeat();
+  await n.sendHeartbeat().catch((e) => console.error(`[dsi-node] heartbeat failed: ${e.message}`));
+  n.startDirect();
   if (env.DSI_PAUSE_ON_BATTERY === "1") n.watchPower();
   console.log(`[dsi-node] live at ${state.endpoint} as ${state.nodeId}. Earnings: dsi-node earnings`);
   const stop = async () => {

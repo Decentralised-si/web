@@ -14,7 +14,8 @@
  *   by the device's own voices (speechSynthesis).
  */
 import { API, authHeaders } from "./api";
-import { deviceVoice, speakOnDevice as edgeSpeak, transcribeOnDevice } from "./edge-voice";
+import { deviceVoice, speakOnDevice as edgeSpeak, transcribeOnDevice, voicePref } from "./edge-voice";
+import { p2pSpeak, p2pTranscribe } from "./p2p";
 
 export type Emotion = "neutral" | "warm" | "cheerful" | "excited" | "calm" | "empathetic" | "serious" | "curious";
 export const EMOTIONS: Emotion[] = ["neutral", "warm", "cheerful", "excited", "calm", "empathetic", "serious", "curious"];
@@ -392,6 +393,11 @@ export async function transcribeWav(wavBlob: Blob, language?: string, signal?: A
   // Free path first: Whisper on this device once its model is ready (see edge-voice.ts).
   const local = await transcribeOnDevice(wavBlob, language).catch(() => undefined);
   if (local) return local;
+  // Next: a community node that transcribes (DIP-P2P), for devices that cannot do it themselves.
+  if (voicePref() !== "hd") {
+    const peer = await p2pTranscribe(wavBlob, language).catch(() => undefined);
+    if (peer) return peer;
+  }
   const h = await authHeaders();
   // engine=fast: Nova-3 where it is reliable (0.5-1 s), Whisper for other languages.
   const q = `?engine=fast${language ? `&language=${encodeURIComponent(language)}` : ""}`;
@@ -506,6 +512,11 @@ export class LivePlayer {
         const buf = this.live.ctx.createBuffer(1, edge.samples.length, edge.rate);
         buf.getChannelData(0).set(edge.samples);
         return { kind: "audio", buf };
+      }
+      // Next: a community node that speaks this language (DIP-P2P).
+      if (voicePref() !== "hd" && this.live.ctx) {
+        const peer = await p2pSpeak(text, lang).catch(() => undefined);
+        if (peer) return { kind: "audio", buf: await this.live.ctx.decodeAudioData(peer) };
       }
       const r = await fetch(`${API}/api/voice/speak`, { method: "POST", headers: await authHeaders(), body: JSON.stringify({ text, lang, format: "pcm" }), signal });
       if (r.status === 204) return r.headers.get("x-decentralise-voice") === "device" ? { kind: "device", text, lang } : { kind: "none" };

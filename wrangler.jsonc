@@ -7,8 +7,10 @@
     "binding": "ASSETS",
     "html_handling": "drop-trailing-slash",
     "not_found_handling": "404-page",
-    // Alias domains must hit the Worker so it can redirect them to decentralised.si.
-    "run_worker_first": true
+    // Only these paths need code; everything else (the app bundle, images, downloads) is served as
+    // a static asset, which Cloudflare does not bill as a Worker request. With CANONICAL_LIVE on,
+    // alias domains are redirected on these entry points (where visitors arrive).
+    "run_worker_first": ["/", "/home", "/gw/*", "/install/oifd.sh", "/install/oifd.ps1"]
   },
   "routes": [
     { "pattern": "decentralised.si", "custom_domain": true },

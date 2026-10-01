@@ -712,9 +712,25 @@ export function unlockDeviceVoice() {
  * Pulls the leading emotion tag (<emotion:warm>) off a streaming reply. Everything after it
  * passes through; a reply without a tag passes through unchanged.
  */
+/** How each emotion shows on screen while DSI speaks (neutral shows nothing). */
+export const EMOTION_EMOJI: Record<Emotion, string> = {
+  neutral: "",
+  warm: "🤗",
+  cheerful: "😊",
+  excited: "🤩",
+  calm: "😌",
+  empathetic: "🫶",
+  serious: "🧐",
+  curious: "🤔",
+};
+
+const TAG_ANYWHERE = /[<[]\s*emotion\s*[:=]\s*([a-z]+)\s*[>\]]\s*/gi;
+
 export class EmotionTag {
   private head = "";
   private done = false;
+  /** Text held back because it may be the start of a tag split across chunks. */
+  private carry = "";
   emotion: Emotion = "neutral";
 
   private started = false;
@@ -727,9 +743,33 @@ export class EmotionTag {
     return t;
   }
 
+  /** After the opening: drop any further emotion tags (a mid-reply tag updates the emotion). */
+  private later(d: string): string {
+    let s = this.carry + d;
+    this.carry = "";
+    const open = s.lastIndexOf("<");
+    if (open >= 0 && s.indexOf(">", open) < 0 && s.length - open < 24 && /^<\s*(e(m(o(t(i(o(n\s*[:=]?\s*[a-z]*)?)?)?)?)?)?)?$/i.test(s.slice(open))) {
+      this.carry = s.slice(open);
+      s = s.slice(0, open);
+    }
+    return s.replace(TAG_ANYWHERE, (_m, e: string) => {
+      const em = e.toLowerCase() as Emotion;
+      if (EMOTIONS.includes(em)) this.emotion = em;
+      return "";
+    });
+  }
+
   private visible(d: string): string {
-    if (this.done) return d;
+    if (this.done) return this.later(d);
     this.head += d;
+    // Models with thinking switched off may still open with an (empty) <think></think> block.
+    let lead = this.head.trimStart();
+    while (/^<think>/i.test(lead)) {
+      const end = lead.search(/<\/think>/i);
+      if (end < 0) return "";
+      lead = lead.slice(end + 8).trimStart();
+    }
+    if (lead.length !== this.head.trimStart().length) this.head = lead;
     const t = this.head.trimStart();
     // Models write it as <emotion:warm>, <warm> or [warm].
     const m = t.match(/^[<[]\s*(?:emotion\s*[:=]\s*)?([a-z]+)\s*[>\]]\s*/i);
@@ -742,7 +782,7 @@ export class EmotionTag {
     // Still possibly a tag: wait for more (tags are short).
     if (t.length < 24 && /^[<[]\s*(emotion\s*[:=]?\s*)?[a-z]*$/i.test(t)) return "";
     this.done = true;
-    return this.head;
+    return this.later(this.head);
   }
 }
 

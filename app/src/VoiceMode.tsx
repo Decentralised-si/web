@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { LiveTranscriber, liveSttAvailable } from "./flux";
 import { costLabel, onEdgeStatus, setVoicePref, startConversation, voicePref, type VoicePref } from "./edge-voice";
-import { checkedArithmetic, EmotionTag, isPhantom, LearnTag, LivePlayer, LiveVoice, teach, transcribeWav, voiceSystemPrompt, type Emotion, type TeachResult, type Tone } from "./live";
+import { checkedArithmetic, EMOTION_EMOJI, EmotionTag, isPhantom, LearnTag, LivePlayer, LiveVoice, teach, transcribeWav, voiceSystemPrompt, type Emotion, type TeachResult, type Tone } from "./live";
 import { SentenceSplitter } from "./voice";
 import { areasText, earnOptedIn, loadGuide, profileAreas, setEarnOptIn, teachPrompt, type Area, type GuideSection } from "./earn";
 
@@ -535,6 +535,11 @@ export function VoiceMode({ live, started, ask, stop, onClose, onType }: { live:
           )}
           {dsi && (
             <p key={dsi} className="vm-dsi" lang={lang ?? undefined} dir="auto">
+              {EMOTION_EMOJI[emotion] && (
+                <span key={emotion} className="vm-emoji" role="img" aria-label={emotion}>
+                  {EMOTION_EMOJI[emotion]}
+                </span>
+              )}
               {dsi}
             </p>
           )}

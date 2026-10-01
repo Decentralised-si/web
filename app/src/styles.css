@@ -2121,6 +2121,22 @@ button.vm-chip {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+.vm-emoji {
+  display: inline-block;
+  margin-inline-end: 0.35em;
+  animation: vm-emoji 0.45s cubic-bezier(0.2, 1.4, 0.4, 1);
+}
+@keyframes vm-emoji {
+  from {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .vm-emoji {
+    animation: none;
+  }
+}
 .vm-dsi {
   font-size: clamp(19px, 5vw, 23px);
   line-height: 1.4;

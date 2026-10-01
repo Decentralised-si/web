@@ -173,7 +173,8 @@ function Assistant({ content, streaming }: { content: string; streaming: boolean
   const { thinks, answer } = splitThinking(content);
   return (
     <>
-      {thinks.map((t, i) => {
+      {/* Models with thinking switched off still emit an empty <think></think>: nothing to show. */}
+      {thinks.filter((t) => t.text.trim()).map((t, i) => {
         const knowledge = t.text.startsWith("Knowledge consulted by this node:");
         return (
           <details key={i} className="think" open={t.open}>

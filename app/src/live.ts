@@ -781,7 +781,8 @@ export interface TeachResult {
 
 /** Offer what the user taught to the Learning Fabric (only this statement is sent, never the conversation). */
 export async function teach(statement: string, question: string): Promise<TeachResult> {
-  const r = await fetch(`${API}/api/learning/teach`, { method: "POST", headers: await authHeaders(), body: JSON.stringify({ statement, question }) });
+  // Only sent with Earn PAI on: the consent records that the person opted in (earn.ts).
+  const r = await fetch(`${API}/api/learning/teach`, { method: "POST", headers: await authHeaders(), body: JSON.stringify({ statement, question, consent: "earn-pai-v1" }) });
   const j = await r.json().catch(() => ({}));
   if (!r.ok) throw new Error(j?.error?.message ?? `Teaching failed (HTTP ${r.status})`);
   return j as TeachResult;
@@ -816,7 +817,7 @@ export function checkedArithmetic(text: string): string[] {
   return out;
 }
 
-export function voiceSystemPrompt(o: { language: string | null; tone: Tone; checked?: string[] }): string {
+export function voiceSystemPrompt(o: { language: string | null; tone: Tone; checked?: string[]; earn?: { areas: string[] } }): string {
   const lang = o.language ? (new Intl.DisplayNames(["en"], { type: "language" }).of(o.language) ?? o.language) : null;
   return [
     "You are DSI, talking with the user in a live voice conversation. Your words are spoken aloud.",
@@ -826,7 +827,12 @@ export function voiceSystemPrompt(o: { language: string | null; tone: Tone; chec
     `Start every reply with exactly one emotion tag for how your reply should sound, chosen from: ${EMOTIONS.join(", ")}. Write it as <emotion:NAME> and then your words, e.g. "<emotion:warm> That sounds lovely."`,
     "If the user interrupts you, simply respond to what they just said.",
     o.checked?.length ? `Checked with a calculator (trust this over your own arithmetic): ${o.checked.join("; ")}.` : "",
-    "When the user teaches you something (a fact, a correction or how to do something), take it seriously: they may know more than you. Unless you are certain it is wrong, thank them briefly and say what you learned; if you are certain, say so gently and why. Then end your reply with <learn>what the user taught, stated faithfully as they meant it (not your own version, even if you doubt it: independent validators check it), as one self-contained sentence in their language, with no personal details; write numbers as digits and calculations as an equation, e.g. 7219 × 43 = 310417</learn>. The note is not spoken. Never add it for questions, opinions, small talk or personal information.",
+    o.earn
+      ? `Earn PAI is on: the user has chosen to teach you and is paid in PAI for knowledge that is new, true and useful. ${o.earn.areas.length ? `Their strongest areas: ${o.earn.areas.join(", ")}.` : ""} When they have nothing to ask, help them teach: ask one focused question about something in their areas that AI models often get wrong or that changes over time. Be honest that repeats, guesses and things you already know earn nothing.`
+      : "",
+    o.earn &&
+      "When the user teaches you something (a fact, a correction or how to do something), take it seriously: they may know more than you. Unless you are certain it is wrong, thank them briefly and say what you learned; if you are certain, say so gently and why. Then end your reply with <learn>what the user taught, stated faithfully as they meant it (not your own version, even if you doubt it: independent validators check it), as one self-contained sentence in their language, with no personal details; write numbers as digits and calculations as an equation, e.g. 7219 × 43 = 310417</learn>. The note is not spoken. Never add it for questions, opinions, small talk or personal information.",
+    o.earn ? "" : "Earn PAI is off: do not add any <learn> note.",
   ]
     .filter(Boolean)
     .join(" ");

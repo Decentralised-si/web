@@ -1926,8 +1926,108 @@ button.vm-chip {
   stroke-width: 1.8;
 }
 .vm-tone {
-  color: color-mix(in srgb, var(--vm) 70%, #fff);
-  border-color: color-mix(in srgb, var(--vm) 40%, transparent);
+  margin: 4px 0 0;
+  font-size: 12.5px;
+  color: color-mix(in srgb, var(--vm) 60%, #fff);
+  opacity: 0.8;
+}
+.vm-earn {
+  border-color: rgba(255, 209, 102, 0.45);
+  color: #ffe2a0;
+}
+.vm-earn.on {
+  background: linear-gradient(120deg, rgba(255, 181, 71, 0.35), rgba(138, 63, 252, 0.3));
+  border-color: #ffd166;
+  color: #fff;
+  box-shadow: 0 0 22px -6px rgba(255, 209, 102, 0.8);
+}
+.vm-earn-coin {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff6c9, #ffcf4d 45%, #d99a1b);
+}
+.vm-sheet {
+  position: absolute;
+  left: 50%;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 12px);
+  transform: translateX(-50%);
+  width: min(94vw, 520px);
+  max-height: 74vh;
+  display: flex;
+  flex-direction: column;
+  background: rgba(12, 15, 28, 0.97);
+  border: 1px solid rgba(255, 209, 102, 0.35);
+  border-radius: 22px;
+  box-shadow: 0 30px 90px -20px rgba(0, 0, 0, 0.9);
+  z-index: 3;
+  animation: vm-pop 0.35s ease;
+}
+.vm-sheet-body {
+  overflow: auto;
+  padding: 18px 20px 6px;
+  text-align: left;
+}
+.vm-sheet h3 {
+  margin: 14px 0 6px;
+  font-size: 15px;
+  color: #ffd166;
+}
+.vm-sheet section:first-child h3 {
+  margin-top: 0;
+  font-size: 19px;
+}
+.vm-sheet p,
+.vm-sheet li {
+  margin: 0 0 8px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: rgba(223, 230, 255, 0.72);
+  transition: color 0.3s;
+}
+.vm-sheet p.now {
+  color: #fff;
+}
+.vm-sheet ul {
+  margin: 0;
+  padding-left: 18px;
+}
+.vm-sheet li b {
+  color: #fff;
+}
+.vm-sheet li small {
+  display: block;
+  font-size: 13px;
+}
+.vm-gap {
+  margin-left: 8px;
+  font-size: 11px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(255, 209, 102, 0.18);
+  color: #ffd166;
+}
+.vm-sheet-actions {
+  display: flex;
+  gap: 10px;
+  padding: 12px 16px 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+.vm-optin {
+  flex: 1;
+  font-weight: 700;
+  padding: 13px;
+  border-radius: 14px;
+  border: none;
+  color: #1a1206;
+  background: linear-gradient(120deg, #ffd166, #ffb547);
+}
+.vm-later {
+  padding: 13px 16px;
+  border-radius: 14px;
+  color: #e8ecff;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
 }
 .vm-langs {
   position: absolute;

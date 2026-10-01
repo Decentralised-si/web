@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { costLabel, onEdgeStatus, setVoicePref, startConversation, voicePref, type VoicePref } from "./edge-voice";
 import { checkedArithmetic, EmotionTag, isPhantom, LearnTag, LivePlayer, LiveVoice, teach, transcribeWav, voiceSystemPrompt, type Emotion, type TeachResult, type Tone } from "./live";
 import { SentenceSplitter } from "./voice";
+import { areasText, earnOptedIn, loadGuide, profileAreas, setEarnOptIn, teachPrompt, type Area, type GuideSection } from "./earn";
 
 /** Sends one spoken turn through the chat (so it is saved with the conversation) and streams the reply. */
 export type VoiceAsk = (text: string, o: { system: string; filter: (d: string) => string; onVisible: (d: string) => void }) => Promise<void>;
@@ -180,6 +181,12 @@ export function VoiceMode({ live, started, ask, stop, onClose, onType }: { live:
   /** What teaching earned: shown as a toast, with the PAI balance. */
   const [taught, setTaught] = useState<{ r: TeachResult; at: number }>();
   const [wallet, setWallet] = useState<number>();
+  // Earn PAI: teaching mode, opt-in (earn.ts). Off at the start of every conversation.
+  const [earnOn, setEarnOn] = useState(false);
+  const [earned, setEarned] = useState(0);
+  const [onboard, setOnboard] = useState<{ guide: GuideSection[]; areas: Area[]; reading: boolean }>();
+  const [spoken, setSpoken] = useState("");
+  const earnRef = useRef<{ on: boolean; areas: Area[] }>({ on: false, areas: [] });
   /** Which engines carry the conversation: free on-device, or Cloudflare (see edge-voice.ts). */
   const [pref, setPref] = useState<VoicePref>(voicePref);
   const [, setEdgeTick] = useState(0);
@@ -260,7 +267,7 @@ export function VoiceMode({ live, started, ask, stop, onClose, onType }: { live:
       const speakLang = language ?? "en";
       try {
         await ask(h.text, {
-          system: voiceSystemPrompt({ language, tone: h.tone, checked: checkedArithmetic(h.text) }),
+          system: voiceSystemPrompt({ language, tone: h.tone, checked: checkedArithmetic(h.text), earn: earnRef.current.on ? { areas: earnRef.current.areas.map((a) => a.label) } : undefined }),
           filter: (d) => learn.push(tag.push(d)),
           onVisible: (d) => {
             if (my !== turn.current) return;
@@ -276,10 +283,11 @@ export function VoiceMode({ live, started, ask, stop, onClose, onType }: { live:
       if (tail) split.push(tail).forEach((s) => p.say(s, speakLang, tag.emotion));
       split.flush().forEach((s) => p.say(s, speakLang, tag.emotion));
       // The user taught something: offer it to the Learning Fabric while DSI is talking.
-      if (learn.learned)
+      if (learn.learned && earnRef.current.on)
         teach(learn.learned, h.text)
           .then((t) => {
             if (t.balance !== undefined) setWallet(t.balance);
+            if (t.outcome === "rewarded" && t.reward) setEarned((x) => x + t.reward!.pai);
             if (t.outcome === "private") return;
             setTaught({ r: t, at: Date.now() });
             if (t.outcome === "rewarded") live.chime("reward");
@@ -330,7 +338,9 @@ export function VoiceMode({ live, started, ask, stop, onClose, onType }: { live:
       await respond(h, my);
     };
     p.onStart = () => setPhase("speaking");
-    p.onSentence = (t) => setDsi(t);
+    // Speech that is not a reply (the Earn PAI guide) also returns to listening when it ends.
+    p.onIdle = () => setPhase((ph) => (ph === "speaking" ? "listening" : ph));
+    p.onSentence = (t) => (setDsi(t), setSpoken(t));
     p.onError = (e) => setErr(e.message);
 
     started
@@ -360,6 +370,47 @@ export function VoiceMode({ live, started, ask, stop, onClose, onType }: { live:
     live.muted = muted;
   }, [live, muted]);
 
+  /** The Earn PAI button: first time, the guide (read aloud) and the opt-in; afterwards, on/off. */
+  const earnClick = async () => {
+    if (earnOn) {
+      earnRef.current.on = false;
+      setEarnOn(false);
+      return;
+    }
+    const areas = await profileAreas().catch(() => [] as Area[]);
+    earnRef.current.areas = areas;
+    if (earnOptedIn()) return startEarning(areas, false);
+    const guide = await loadGuide().catch(() => [] as GuideSection[]);
+    setOnboard({ guide, areas, reading: true });
+    // Read the guide aloud, sentence by sentence, then the person's own areas.
+    const p = player.current;
+    p.stop();
+    turn.current++;
+    const say = (text: string) => {
+      const split = new SentenceSplitter();
+      [...split.push(text), ...split.flush()].forEach((x) => p.say(x, "en", "warm"));
+    };
+    for (const sec of guide) {
+      say(`${sec.title}.`);
+      sec.paragraphs.forEach(say);
+    }
+    say(`Your best areas. ${areasText(areas)}`);
+    say("When you're ready, tap Turn on Earn PAI.");
+    await p.whenIdle();
+    setOnboard((o) => o && { ...o, reading: false });
+  };
+  const startEarning = (areas: Area[], first: boolean) => {
+    setEarnOptIn(true);
+    earnRef.current = { on: true, areas };
+    setEarnOn(true);
+    setOnboard(undefined);
+    const p = player.current;
+    p.stop();
+    const a = areas[0];
+    const line = a ? `Earn PAI is on. Tell me ${teachPrompt(a.domain)}, about ${a.label}.` : "Earn PAI is on. Tell me something from your own experience that AI tends to get wrong.";
+    p.say(first ? `Thank you. ${line}` : line, langRef.current ?? "en", "warm");
+  };
+
   const color = phase === "speaking" ? COLORS[emotion] : phase === "hearing" ? COLORS.hearing : phase === "thinking" || phase === "transcribing" ? COLORS.thinking : COLORS.listening;
   const status = muted
     ? "Microphone off"
@@ -375,11 +426,10 @@ export function VoiceMode({ live, started, ask, stop, onClose, onType }: { live:
           </svg>
           <span>{pinned ? langName(pinned) : lang ? `Auto · ${langName(lang)}` : "Any language"}</span>
         </button>
-        {TONE_LABEL[tone] && (
-          <span className="vm-chip vm-tone" title="Read from your tone of voice on this device">
-            You sound {TONE_LABEL[tone]}
-          </span>
-        )}
+        <button type="button" className={`vm-chip vm-earn ${earnOn ? "on" : ""}`} onClick={earnClick} aria-pressed={earnOn} title={earnOn ? "Teaching mode is on: tap to turn off" : "Teach DSI what it doesn't know and earn PAI"}>
+          <span className="vm-earn-coin" aria-hidden="true" />
+          <span>{earnOn ? (earned ? `Earning · +${earned.toFixed(3)} PAI` : "Earning PAI") : "Earn PAI"}</span>
+        </button>
       </div>
 
       {picker && (
@@ -401,6 +451,11 @@ export function VoiceMode({ live, started, ask, stop, onClose, onType }: { live:
         <p key={needTap ? "tap" : status} className="vm-status" aria-live="polite">
           {needTap ? "Tap to start" : status}
         </p>
+        {TONE_LABEL[tone] && (
+          <p className="vm-tone" title="Read from your tone of voice on this device">
+            you sound {TONE_LABEL[tone]}
+          </p>
+        )}
         {taught && <TaughtToast key={taught.at} r={taught.r} wallet={wallet} onDone={() => setTaught(undefined)} />}
         <div className="vm-captions">
           {you && (
@@ -416,6 +471,48 @@ export function VoiceMode({ live, started, ask, stop, onClose, onType }: { live:
           {err && <p className="vm-err">{err}</p>}
         </div>
       </div>
+
+      {onboard && (
+        <div className="vm-sheet" role="dialog" aria-label="Earn PAI">
+          <div className="vm-sheet-body">
+            {onboard.guide.map((sec) => (
+              <section key={sec.title}>
+                <h3>{sec.title}</h3>
+                {sec.paragraphs.map((x) => (
+                  <p key={x} className={spoken && x.includes(spoken.slice(0, 40)) ? "now" : undefined}>
+                    {x}
+                  </p>
+                ))}
+              </section>
+            ))}
+            <section>
+              <h3>Your best areas</h3>
+              {onboard.areas.length ? (
+                <ul>
+                  {onboard.areas.map((a) => (
+                    <li key={a.domain}>
+                      <b>{a.label}</b>
+                      {a.gap && <span className="vm-gap">network gap</span>}
+                      <small>Try {teachPrompt(a.domain)}.</small>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p>We'll learn your areas as we talk.</p>
+              )}
+              <p className="vm-fine">Worked out on this device from your own chats; they never leave it for this.</p>
+            </section>
+          </div>
+          <div className="vm-sheet-actions">
+            <button type="button" className="vm-optin" onClick={() => startEarning(onboard.areas, true)}>
+              Turn on Earn PAI
+            </button>
+            <button type="button" className="vm-later" onClick={() => (player.current.stop(), setOnboard(undefined))}>
+              {onboard.reading ? "Stop and close" : "Not now"}
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="vm-bar">
         <button type="button" className={`vm-btn ${muted ? "off" : ""}`} onClick={() => setMuted((m) => !m)} aria-pressed={muted} aria-label={muted ? "Turn microphone on" : "Mute microphone"}>

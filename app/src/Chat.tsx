@@ -321,7 +321,13 @@ export function Chat({ id, onSaved, config, name }: { id?: string; onSaved: () =
     const content = [text, ...attached.map((f) => `<file name="${f.name}">\n${f.text}\n</file>`)].filter(Boolean).join("\n\n");
     const now = Date.now();
     const title = (text || attached[0]?.name || "New chat").slice(0, 60);
-    const existing = convRef.current;
+    let existing = convRef.current;
+    // Voice: the user carried on before the last reply was heard; that unheard turn is replaced by this one.
+    if (voice?.replaces && existing) {
+      const m = existing.messages;
+      const last = m[m.length - 1];
+      if (m.length >= 2 && last.role === "assistant" && m[m.length - 2].role === "user" && (!last.content.trim() || last.error)) existing = { ...existing, messages: m.slice(0, -2) };
+    }
     const base: Conversation = existing ?? { id: crypto.randomUUID(), title, createdAt: now, updatedAt: now, model, mode, messages: [] };
     let current: Conversation = {
       ...base,

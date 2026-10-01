@@ -223,7 +223,15 @@ const fit = (n: DirectoryNode, domain?: string) => {
 export async function p2pChat(o: { messages: Array<{ role: string; content: string }>; domain?: string; session?: string; signal: AbortSignal; onDelta: (t: string) => void }): Promise<{ provider: string; model: string; market: "p2p" } | undefined> {
   if (!p2pSupported()) return undefined;
   const all = (await peers()).filter((n) => n.models.length);
-  let list = await ranked(all, (n) => fit(n, o.domain) + n.reputation * 0.3).catch(() => [] as DirectoryNode[]);
+  if (!all.length) return undefined;
+  // Never make a turn wait for peer discovery: until peers have been measured, this turn goes to
+  // the router and the probing happens in the background for the next one.
+  const score = (n: DirectoryNode) => fit(n, o.domain) + n.reputation * 0.3;
+  if (!all.some((n) => (rtt.get(n.id)?.at ?? 0) > Date.now() - 300_000)) {
+    void ranked(all, score).catch(() => {});
+    return undefined;
+  }
+  let list = await ranked(all, score).catch(() => [] as DirectoryNode[]);
   // A conversation stays on the node that answered it, so the node's prompt cache stays warm and
   // only the new turn is processed.
   const pinned = o.session ? all.find((n) => n.id === affinity.get(o.session!)) : undefined;
@@ -281,10 +289,24 @@ export async function p2pChat(o: { messages: Array<{ role: string; content: stri
 
 // ---------------------------------------------------------------- voice for devices that cannot run it
 
-/** Transcribe on a peer that offers it; undefined if none can. */
+/**
+ * Voice peers, ranked once in the background when a conversation starts. The hot path below only
+ * uses peers already known to be up, so it never waits for a ticket, a directory or a probe.
+ */
+let voicePeers: { stt: DirectoryNode[]; tts: DirectoryNode[] } = { stt: [], tts: [] };
+export async function prepareVoicePeers(): Promise<void> {
+  if (!p2pSupported()) return;
+  const all = await peers().catch(() => [] as DirectoryNode[]);
+  // Measure chat peers too, so the first spoken turn can go straight to one.
+  void ranked(all.filter((n) => n.models.length), (n) => n.reputation).catch(() => {});
+  const [stt, tts] = await Promise.all([ranked(all.filter((n) => n.voice?.stt), (n) => n.reputation), ranked(all.filter((n) => n.voice?.tts?.length), (n) => n.reputation)]).catch(() => [[], []] as DirectoryNode[][]);
+  voicePeers = { stt, tts };
+}
+
+/** Transcribe on a peer that offers it; undefined if none is ready. */
 export async function p2pTranscribe(wav: Blob, language?: string): Promise<{ text: string; language: string | null; confidence: null } | undefined> {
-  if (!p2pSupported()) return undefined;
-  const list = await ranked((await peers()).filter((n) => n.voice?.stt), (n) => n.reputation).catch(() => [] as DirectoryNode[]);
+  const list = voicePeers.stt;
+  if (!list.length) return undefined;
   for (const n of list.slice(0, 2)) {
     const form = new FormData();
     form.append("file", wav, "speech.wav");
@@ -309,9 +331,9 @@ export async function p2pTranscribe(wav: Blob, language?: string): Promise<{ tex
 
 /** Speech from a peer that speaks this language; undefined if none can. */
 export async function p2pSpeak(text: string, lang: string): Promise<ArrayBuffer | undefined> {
-  if (!p2pSupported()) return undefined;
   const l = lang.slice(0, 2).toLowerCase();
-  const list = await ranked((await peers()).filter((n) => n.voice?.tts?.includes(l)), (n) => n.reputation).catch(() => [] as DirectoryNode[]);
+  const list = voicePeers.tts.filter((n) => n.voice?.tts?.includes(l));
+  if (!list.length) return undefined;
   for (const n of list.slice(0, 2)) {
     try {
       const r = await direct(n, "/audio/speech", JSON.stringify({ model: "tts-1", input: text, voice: l === "en" ? "af_heart" : l, response_format: "wav" }), "application/json");

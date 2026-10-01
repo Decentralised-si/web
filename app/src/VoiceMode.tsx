@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { LiveTranscriber, liveSttAvailable } from "./flux";
 import { costLabel, onEdgeStatus, setVoicePref, startConversation, voicePref, type VoicePref } from "./edge-voice";
 import { checkedArithmetic, EmotionTag, isPhantom, LearnTag, LivePlayer, LiveVoice, teach, transcribeWav, voiceSystemPrompt, type Emotion, type TeachResult, type Tone } from "./live";
 import { SentenceSplitter } from "./voice";
 import { areasText, earnOptedIn, loadGuide, profileAreas, setEarnOptIn, teachPrompt, type Area, type GuideSection } from "./earn";
 
 /** Sends one spoken turn through the chat (so it is saved with the conversation) and streams the reply. */
-export type VoiceAsk = (text: string, o: { system: string; filter: (d: string) => string; onVisible: (d: string) => void }) => Promise<void>;
+export type VoiceAsk = (text: string, o: { system: string; filter: (d: string) => string; onVisible: (d: string) => void; replaces?: boolean }) => Promise<void>;
 
 type Phase = "starting" | "listening" | "hearing" | "transcribing" | "thinking" | "speaking";
 
@@ -195,6 +196,8 @@ export function VoiceMode({ live, started, ask, stop, onClose, onType }: { live:
 
   const phaseRef = useRef(phase);
   phaseRef.current = phase;
+  const toneRef = useRef<Tone>("neutral");
+  toneRef.current = tone;
   const pinnedRef = useRef(pinned);
   pinnedRef.current = pinned;
   const langRef = useRef(lang);
@@ -234,6 +237,8 @@ export function VoiceMode({ live, started, ask, stop, onClose, onType }: { live:
     // Transcription starts at the first pause; if the user carries on, that early result is dropped.
     let early: { id: number; p: Promise<{ text: string; language: string | null; confidence: number | null }>; ac: AbortController } | undefined;
     live.onTentative = (u) => {
+      // The live transcript is already arriving: no upload needed.
+      if (liveOn()) return;
       early?.ac.abort();
       const ac = new AbortController();
       early = { id: u.id, p: transcribeWav(u.wav, pinnedRef.current ?? undefined, ac.signal), ac };
@@ -243,11 +248,48 @@ export function VoiceMode({ live, started, ask, stop, onClose, onType }: { live:
       early?.ac.abort();
       early = undefined;
     };
+    // Live transcription (Flux, English): the transcript arrives while the user speaks, and the reply
+    // starts the moment the turn ends, with no upload and no separate transcription.
+    // English only (Flux). Before the conversation's language is known, go by the browser's language.
+    const liveOk = () => liveSttAvailable() && (pinnedRef.current ?? langRef.current ?? (navigator.language || "en").slice(0, 2).toLowerCase()) === "en";
+    // One stream for the whole conversation, opened now: no connection set-up inside a turn.
+    const stt: LiveTranscriber | undefined = liveOk() ? new LiveTranscriber() : undefined;
+    const liveOn = () => !!stt && stt.ready && liveOk();
+    let uttNo = 0;
+    let answered = 0;
+    const finished = (text: string, eot: number) => /[.?!]["')]?$/.test(text.trim()) && eot >= 0.45;
+    const answerLive = (text: string, seconds: number, tone: Tone) => {
+      answered = uttNo;
+      void afterTranscript({ text, language: "en", confidence: null }, seconds, tone, ++turn.current);
+    };
+    live.onFrames = (f) => {
+      if (!stt || !liveOk()) return;
+      stt.push(f);
+      // A complete sentence and a short pause: answer now, before any end-of-turn timer.
+      if (liveOn() && stt.transcript && answered !== uttNo && live.quietMs >= 350 && finished(stt.transcript, stt.eot)) answerLive(stt.transcript, 1, toneRef.current);
+    };
+    if (stt) {
+      stt.onEvent = (e) => {
+        if (!liveOk()) return;
+        if (e.transcript && (e.event === "Update" || e.event === "StartOfTurn") && answered !== uttNo) setYou(e.transcript);
+        if (e.event === "EndOfTurn" && e.transcript && answered !== uttNo) answerLive(e.transcript, 1, toneRef.current);
+      };
+      stt.start({ eot: 0.65, eager: 0.4 });
+    }
     live.onSpeechStart = () => {
+      // The user carried on before DSI's reply was heard: drop that reply and treat both parts as one turn.
+      if (unheard && phaseRef.current === "thinking" && Date.now() - unheard.at < 4000) merge = unheard.text;
+      unheard = undefined;
       if (["speaking", "thinking", "transcribing"].includes(phaseRef.current)) interrupt();
       setPhase("hearing");
+      uttNo++;
+      // Flux starts its own turn a moment later; until then, don't reuse the previous transcript.
+      if (stt) stt.transcript = "";
     };
-    type Heard = { text: string; language: string | null; tone: Tone };
+    type Heard = { text: string; language: string | null; tone: Tone; replaces?: boolean };
+    /** A reply on its way but not yet audible, and the text to merge into the next turn if the user carries on. */
+    let unheard: { text: string; at: number } | undefined;
+    let merge: string | undefined;
     type Held = Heard & { at: number; timer?: ReturnType<typeof setTimeout> };
     const hold: { v?: Held } = {};
 
@@ -265,8 +307,10 @@ export function VoiceMode({ live, started, ask, stop, onClose, onType }: { live:
       const learn = new LearnTag();
       const split = new SentenceSplitter(true);
       const speakLang = language ?? "en";
+      unheard = { text: h.text, at: Date.now() };
       try {
         await ask(h.text, {
+          replaces: h.replaces,
           system: voiceSystemPrompt({ language, tone: h.tone, checked: checkedArithmetic(h.text), earn: earnRef.current.on ? { areas: earnRef.current.areas.map((a) => a.label) } : undefined }),
           filter: (d) => learn.push(tag.push(d)),
           onVisible: (d) => {
@@ -299,6 +343,18 @@ export function VoiceMode({ live, started, ask, stop, onClose, onType }: { live:
     };
 
     live.onUtterance = async (u) => {
+      const mine = uttNo;
+      if (stt && liveOn()) {
+        if (answered === mine) return;
+        // The local end of speech: if the live transcript is clearly a finished sentence, answer now;
+        // otherwise give the transcriber a moment to call the end of the turn.
+        const done = () => answered === mine || !liveOn() || uttNo !== mine;
+        if (!(stt.transcript && finished(stt.transcript, stt.eot))) {
+          for (let w = 0; w < 14 && !done(); w++) await new Promise((r) => setTimeout(r, 50));
+        }
+        if (answered === mine || uttNo !== mine) return;
+        if (liveOn() && stt.transcript) return answerLive(stt.transcript, u.seconds, u.tone);
+      }
       const my = ++turn.current;
       setPhase("transcribing");
       setErr(undefined);
@@ -312,9 +368,18 @@ export function VoiceMode({ live, started, ask, stop, onClose, onType }: { live:
         return;
       }
       if (my !== turn.current) return;
+      await afterTranscript(r, u.seconds, u.tone, my);
+    };
+
+    /** A transcript for one turn: drop noise, join a thought the user paused in, then answer. */
+    const afterTranscript = async (r: { text: string; language: string | null; confidence: number | null }, seconds: number, tone: Tone, my: number) => {
       // Background noise the recogniser doubts is ignored, not answered.
-      if (!r.text || isPhantom(r.text, u.seconds, r.confidence)) return setPhase("listening");
-      let h: Heard = { text: r.text, language: r.language, tone: u.tone };
+      if (!r.text || isPhantom(r.text, seconds, r.confidence)) return setPhase("listening");
+      let h: Heard = { text: r.text, language: r.language, tone };
+      if (merge) {
+        h = { ...h, text: `${merge} ${h.text}`, replaces: true };
+        merge = undefined;
+      }
       // Join the unfinished start of this thought, if the user just paused mid-sentence.
       const prev = hold.v;
       if (prev && Date.now() - prev.at < 4000) {
@@ -337,7 +402,10 @@ export function VoiceMode({ live, started, ask, stop, onClose, onType }: { live:
       }
       await respond(h, my);
     };
-    p.onStart = () => setPhase("speaking");
+    p.onStart = () => {
+      unheard = undefined;
+      setPhase("speaking");
+    };
     // Speech that is not a reply (the Earn PAI guide) also returns to listening when it ends.
     p.onIdle = () => setPhase((ph) => (ph === "speaking" ? "listening" : ph));
     p.onSentence = (t) => (setDsi(t), setSpoken(t));
@@ -362,6 +430,8 @@ export function VoiceMode({ live, started, ask, stop, onClose, onType }: { live:
       // Leaving the chat (or the page) ends the conversation too.
       turn.current++;
       p.stop();
+      stt?.close();
+      live.onFrames = undefined;
       live.stop();
     };
   }, [live, started, ask, stop, close]);

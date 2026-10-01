@@ -163,6 +163,15 @@ export class LiveVoice {
   /** The user carried on after a tentative turn: discard it. */
   onResume?: () => void;
   onUtterance?: (u: Utterance) => void;
+  /**
+   * 16 kHz audio for live transcription: the pre-roll when speech starts, every block while the
+   * user speaks, and a short tail after (so the transcriber can judge the end of the turn itself).
+   * Nothing is emitted between turns.
+   */
+  onFrames?: (samples16k: Float32Array) => void;
+  private tailLeft = 0;
+  /** How long the current quiet has lasted (ms), for callers deciding whether a turn is over. */
+  quietMs = 0;
 
   /** Call from a tap: mobile browsers only allow audio and the mic after a user gesture. */
   async start() {
@@ -292,6 +301,10 @@ export class LiveVoice {
     const pitch = loud || this.inSpeech ? pitchOf(resample([raw], this.rate)) : 0;
     const voiced = pitch > 0;
 
+    if (!this.inSpeech && this.tailLeft > 0) {
+      this.tailLeft -= BLOCK_MS;
+      this.onFrames?.(resample([raw], this.rate));
+    }
     if (!this.inSpeech) {
       this.preroll.push(raw);
       if (this.preroll.length > PREROLL_MS / BLOCK_MS) this.preroll.shift();
@@ -311,12 +324,16 @@ export class LiveVoice {
         this.uttMs = this.preroll.length * BLOCK_MS;
         this.preroll = [];
         this.stats = { energy: [], pitch: [] };
+        this.tailLeft = 0;
+        this.quietMs = 0;
         this.onSpeechStart?.();
+        this.onFrames?.(resample(this.utt, this.rate));
       }
       return;
     }
 
     this.utt.push(raw);
+    this.onFrames?.(resample([raw], this.rate));
     this.uttMs += BLOCK_MS;
     this.peak = Math.max(this.peak * 0.997, lvl);
     // Quiet relative to this utterance, not just to the room: in noise the voice is still far above it.
@@ -336,6 +353,7 @@ export class LiveVoice {
     } else this.below += BLOCK_MS;
 
     const quiet = Math.max(this.below, this.sinceVoiced - 400);
+    this.quietMs = quiet;
     if (!this.tentativeSent && quiet >= this.tentativeMs && this.voicedTotal >= 200) {
       this.tentativeSent = true;
       this.onTentative?.(this.snapshot(false));
@@ -353,6 +371,7 @@ export class LiveVoice {
 
   private finish() {
     this.inSpeech = false;
+    this.tailLeft = 1200;
     this.above = 0;
     this.voicedRun = 0;
     const enough = this.voicedTotal >= 200; // a cough, a click or a clatter is not a turn
@@ -618,7 +637,7 @@ export class LivePlayer {
     const out = this.live.out;
     if (!ctx || !out) return;
     const rate = 1 + (DELIVERY[emotion].rate - 1) * 0.6;
-    while (!st.done && st.seconds < 0.15 && !token.aborted) await st.next();
+    while (!st.done && st.seconds < 0.1 && !token.aborted) await st.next();
     let t = ctx.currentTime + 0.02;
     let i = 0;
     for (;;) {

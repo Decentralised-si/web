@@ -162,6 +162,9 @@ async function wavSamples(wav: Blob): Promise<{ samples: Float32Array; rate: num
  * Transcribe on the device when the local model is ready and fits the language; otherwise
  * undefined (the caller uses Cloudflare) and the local model keeps loading in the background.
  */
+/** How long the last on-device transcriptions took; a slow device is not used where speed matters. */
+let localMs = 0;
+
 export async function transcribeOnDevice(wav: Blob, language?: string): Promise<{ text: string; language: string | null; confidence: null } | undefined> {
   const pref = voicePref();
   if (pref === "hd") return undefined;
@@ -169,12 +172,23 @@ export async function transcribeOnDevice(wav: Blob, language?: string): Promise<
     void warmListening();
     return undefined;
   }
+  // Slower than the cloud round trip (≈ 0.6 s): use the cloud, unless the user chose free-only.
+  if (pref !== "free" && localMs > 900) return undefined;
+  const t0 = performance.now();
+  try {
+    return await localTranscribe(wav, language, pref);
+  } finally {
+    localMs = localMs ? 0.7 * localMs + 0.3 * (performance.now() - t0) : performance.now() - t0;
+  }
+}
+
+async function localTranscribe(wav: Blob, language: string | undefined, pref: VoicePref): Promise<{ text: string; language: string | null; confidence: null } | undefined> {
   const lang = language?.slice(0, 2).toLowerCase();
   // An unpinned conversation may be in any language: local Whisper only when it is one it knows well.
   if (lang && !LOCAL_LANGS.has(lang) && pref !== "free") return undefined;
   const pcm = await wavSamples(wav);
   if (!pcm || pcm.rate !== 16_000) return undefined;
-  const out = await asr(pcm.samples, { ...(lang ? { language: lang } : {}), task: "transcribe" });
+  const out = await asr!(pcm.samples, { ...(lang ? { language: lang } : {}), task: "transcribe" });
   const text = ((Array.isArray(out) ? out[0] : out).text ?? "").trim();
   if (lang) return { text, language: lang, confidence: null };
   // The pipeline does not report Whisper's language, so read it from the words. Anything outside
@@ -243,19 +257,32 @@ export function warmSpeaking(): Promise<void> {
 const chosen = new Map<string, "kokoro" | "device" | "cloud">();
 
 /** Chrome fills the voice list asynchronously; wait briefly the first time. */
-async function voicesReady(): Promise<void> {
+async function voicesReady(maxMs = 150): Promise<void> {
   if (typeof speechSynthesis === "undefined" || speechSynthesis.getVoices().length) return;
   await new Promise<void>((r) => {
-    const t = setTimeout(r, 400);
+    const t = setTimeout(r, maxMs);
     speechSynthesis.addEventListener("voiceschanged", () => (clearTimeout(t), r()), { once: true });
   });
+}
+
+/** Warm Cloudflare's speech model and the connection, so the first reply is not a cold start. */
+async function prewarmCloudVoice() {
+  try {
+    const { API, authHeaders } = await import("./api");
+    const r = await fetch(`${API}/api/voice/speak`, { method: "POST", headers: await authHeaders(), body: JSON.stringify({ text: "Hi.", lang: "en", format: "pcm" }) });
+    await r.arrayBuffer();
+  } catch {
+    /* only a warm-up */
+  }
 }
 
 /** Call when a voice conversation starts: fetch what is missing, and switch to what is ready. */
 export function startConversation() {
   kokoroLive = !!kokoro;
   chosen.clear();
-  void voicesReady();
+  void voicesReady(1000);
+  void prewarmCloudVoice();
+  void import("./p2p").then((m) => m.prepareVoicePeers()).catch(() => {});
   if (voicePref() !== "hd") {
     void warmListening();
     void warmSpeaking();
@@ -287,7 +314,9 @@ export async function speakOnDevice(text: string, lang: string): Promise<EdgeCli
   let engine = chosen.get(l);
   if (!engine) {
     await voicesReady();
-    engine = l === "en" && kokoro && kokoroLive ? "kokoro" : deviceVoice(l, pref !== "free") ? "device" : "cloud";
+    // Kokoro only where it runs faster than real time (WebGPU); on WASM a sentence can take seconds.
+    const kokoroFast = hasWebGpu() || pref === "free";
+    engine = l === "en" && kokoro && kokoroLive && kokoroFast ? "kokoro" : deviceVoice(l, pref !== "free") ? "device" : "cloud";
     chosen.set(l, engine);
   }
   if (engine === "kokoro") {

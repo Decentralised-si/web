@@ -2154,3 +2154,13 @@ button.vm-chip {
     transform: rotateY(720deg) scale(1);
   }
 }
+.vm-engine {
+  margin-left: 6px;
+  padding: 1px 8px;
+  font: inherit;
+  color: rgba(223, 230, 255, 0.75);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  cursor: pointer;
+}

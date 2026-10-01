@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { costLabel, onEdgeStatus, setVoicePref, startConversation, voicePref, type VoicePref } from "./edge-voice";
 import { checkedArithmetic, EmotionTag, isPhantom, LearnTag, LivePlayer, LiveVoice, teach, transcribeWav, voiceSystemPrompt, type Emotion, type TeachResult, type Tone } from "./live";
 import { SentenceSplitter } from "./voice";
 
@@ -179,6 +180,11 @@ export function VoiceMode({ live, started, ask, stop, onClose, onType }: { live:
   /** What teaching earned: shown as a toast, with the PAI balance. */
   const [taught, setTaught] = useState<{ r: TeachResult; at: number }>();
   const [wallet, setWallet] = useState<number>();
+  /** Which engines carry the conversation: free on-device, or Cloudflare (see edge-voice.ts). */
+  const [pref, setPref] = useState<VoicePref>(voicePref);
+  const [, setEdgeTick] = useState(0);
+  useEffect(() => onEdgeStatus(() => setEdgeTick((n) => n + 1)), []);
+  useEffect(() => startConversation(), []);
 
   const phaseRef = useRef(phase);
   phaseRef.current = phase;
@@ -431,7 +437,21 @@ export function VoiceMode({ live, started, ask, stop, onClose, onType }: { live:
           </svg>
         </button>
       </div>
-      <p className="vm-fine">Interrupt anytime just by talking · speech runs on Cloudflare, audio is never stored</p>
+      <p className="vm-fine">
+        Interrupt anytime just by talking · {costLabel()} · audio is never stored{" "}
+        <button
+          type="button"
+          className="vm-engine"
+          title="Auto: free on this device once ready, Cloudflare meanwhile. Free: device only. HD: always Cloudflare."
+          onClick={() => {
+            const next: VoicePref = pref === "auto" ? "free" : pref === "free" ? "hd" : "auto";
+            setVoicePref(next);
+            setPref(next);
+          }}
+        >
+          Voice: {pref === "auto" ? "Auto" : pref === "free" ? "Free" : "HD"}
+        </button>
+      </p>
     </div>
   );
 }

@@ -14,6 +14,7 @@
  *   by the device's own voices (speechSynthesis).
  */
 import { API, authHeaders } from "./api";
+import { deviceVoice, speakOnDevice as edgeSpeak, transcribeOnDevice } from "./edge-voice";
 
 export type Emotion = "neutral" | "warm" | "cheerful" | "excited" | "calm" | "empathetic" | "serious" | "curious";
 export const EMOTIONS: Emotion[] = ["neutral", "warm", "cheerful", "excited", "calm", "empathetic", "serious", "curious"];
@@ -388,6 +389,9 @@ export class LiveVoice {
 // ------------------------------------------------------------------ server calls
 
 export async function transcribeWav(wavBlob: Blob, language?: string, signal?: AbortSignal): Promise<{ text: string; language: string | null; confidence: number | null }> {
+  // Free path first: Whisper on this device once its model is ready (see edge-voice.ts).
+  const local = await transcribeOnDevice(wavBlob, language).catch(() => undefined);
+  if (local) return local;
   const h = await authHeaders();
   // engine=fast: Nova-3 where it is reliable (0.5-1 s), Whisper for other languages.
   const q = `?engine=fast${language ? `&language=${encodeURIComponent(language)}` : ""}`;
@@ -495,6 +499,14 @@ export class LivePlayer {
 
   private async fetchClip(text: string, lang: string, signal: AbortSignal): Promise<Clip> {
     try {
+      // Free path first: Kokoro or a good system voice on this device (see edge-voice.ts).
+      const edge = await edgeSpeak(text, lang).catch(() => undefined);
+      if (edge?.kind === "device") return { kind: "device", text, lang };
+      if (edge?.kind === "pcm" && this.live.ctx) {
+        const buf = this.live.ctx.createBuffer(1, edge.samples.length, edge.rate);
+        buf.getChannelData(0).set(edge.samples);
+        return { kind: "audio", buf };
+      }
       const r = await fetch(`${API}/api/voice/speak`, { method: "POST", headers: await authHeaders(), body: JSON.stringify({ text, lang, format: "pcm" }), signal });
       if (r.status === 204) return r.headers.get("x-decentralise-voice") === "device" ? { kind: "device", text, lang } : { kind: "none" };
       if (!r.ok) {
@@ -645,7 +657,7 @@ export class LivePlayer {
     return new Promise((resolve) => {
       const u = new SpeechSynthesisUtterance(text);
       u.lang = lang;
-      const voice = speechSynthesis.getVoices().find((v) => v.lang.toLowerCase().startsWith(lang.toLowerCase()));
+      const voice = deviceVoice(lang, false);
       if (voice) u.voice = voice;
       u.rate = DELIVERY[emotion].rate;
       u.pitch = DELIVERY[emotion].pitch;

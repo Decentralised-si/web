@@ -4,6 +4,7 @@
  * never stored.
  */
 import { API, authHeaders } from "./api";
+import { deviceVoice, speakOnDevice } from "./edge-voice";
 
 // ---------------------------------------------------------------- recording
 
@@ -249,13 +250,56 @@ export class SentenceSplitter {
   }
 }
 
+interface DeviceLine {
+  text: string;
+}
+
+/** Free first: Kokoro or a good system voice on this device (edge-voice.ts), Cloudflare otherwise. */
+async function freeFirst(text: string, signal: AbortSignal): Promise<Blob | DeviceLine | undefined> {
+  const edge = await speakOnDevice(text, navigator.language || "en").catch(() => undefined);
+  if (edge?.kind === "device") return { text };
+  if (edge?.kind === "pcm") return wavBlob(edge.samples, edge.rate);
+  return synthesize(text, signal);
+}
+
+function speakLine(text: string): Promise<void> {
+  return new Promise((resolve) => {
+    const u = new SpeechSynthesisUtterance(text);
+    const v = deviceVoice((navigator.language || "en").slice(0, 2), false);
+    if (v) (u.voice = v), (u.lang = v.lang);
+    u.onend = () => resolve();
+    u.onerror = () => resolve();
+    speechSynthesis.speak(u);
+  });
+}
+
+function wavBlob(samples: Float32Array, rate: number): Blob {
+  const b = new ArrayBuffer(44 + samples.length * 2);
+  const v = new DataView(b);
+  const str = (o: number, t: string) => [...t].forEach((c, i) => v.setUint8(o + i, c.charCodeAt(0)));
+  str(0, "RIFF");
+  v.setUint32(4, 36 + samples.length * 2, true);
+  str(8, "WAVEfmt ");
+  v.setUint32(16, 16, true);
+  v.setUint16(20, 1, true);
+  v.setUint16(22, 1, true);
+  v.setUint32(24, rate, true);
+  v.setUint32(28, rate * 2, true);
+  v.setUint16(32, 2, true);
+  v.setUint16(34, 16, true);
+  str(36, "data");
+  v.setUint32(40, samples.length * 2, true);
+  for (let i = 0; i < samples.length; i++) v.setInt16(44 + i * 2, Math.max(-1, Math.min(1, samples[i])) * 0x7fff, true);
+  return new Blob([b], { type: "audio/wav" });
+}
+
 /**
  * Speaks sentences in order while fetching the next ones ahead, so audio starts after the first
  * sentence arrives instead of after the whole reply.
  */
 export class Speaker {
   private audio: HTMLAudioElement;
-  private queue: Array<Promise<Blob | undefined>> = [];
+  private queue: Array<Promise<Blob | DeviceLine | undefined>> = [];
   private playing = false;
   private ac = new AbortController();
   private idle?: () => void;
@@ -280,7 +324,7 @@ export class Speaker {
   say(text: string) {
     const t = text.trim();
     if (!t) return;
-    this.queue.push(synthesize(t, this.ac.signal).catch((e) => (e.name !== "AbortError" && this.onError?.(e), undefined)));
+    this.queue.push(freeFirst(t, this.ac.signal).catch((e) => (e.name !== "AbortError" && this.onError?.(e), undefined)));
     if (!this.playing) void this.play();
   }
 
@@ -295,6 +339,7 @@ export class Speaker {
     this.queue = [];
     this.audio.pause();
     this.audio.removeAttribute("src");
+    if (typeof speechSynthesis !== "undefined") speechSynthesis.cancel();
     this.setPlaying(false);
   }
 
@@ -314,6 +359,10 @@ export class Speaker {
       const blob = await this.queue[0];
       this.queue.shift();
       if (!blob || !this.playing) continue;
+      if (!(blob instanceof Blob)) {
+        await speakLine(blob.text);
+        continue;
+      }
       const url = URL.createObjectURL(blob);
       try {
         this.audio.src = url;

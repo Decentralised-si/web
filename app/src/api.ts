@@ -220,3 +220,115 @@ export async function streamChat(opts: {
   }
   return meta;
 }
+
+// ---------------------------------------------------------------- connectors (MCP servers)
+
+export interface ConnectorInfo {
+  id: string;
+  name: string;
+  url: string;
+  auth: "none" | "bearer" | "oauth";
+  created_at: string;
+}
+export interface McpTool {
+  name: string;
+  description?: string;
+  inputSchema?: Record<string, unknown>;
+}
+
+export const connectors = {
+  list: () => api<{ connectors: ConnectorInfo[] }>("/connectors").then((r) => r.connectors),
+  add: (b: { name?: string; url: string; api_key?: string }) => api<{ connector: ConnectorInfo; tools: McpTool[] }>("/connectors", { body: b }),
+  oauthStart: (b: { name?: string; url: string; redirect_uri: string }) => api<{ authorize_url: string; state: string }>("/connectors/oauth/start", { body: b }),
+  oauthFinish: (b: { state: string; code: string }) => api<{ connector: ConnectorInfo; tools: McpTool[] }>("/connectors/oauth/finish", { body: b }),
+  tools: (id: string) => api<{ server: string; instructions?: string; tools: McpTool[] }>(`/connectors/${id}/tools`),
+  call: (id: string, name: string, args: Record<string, unknown>) => api<{ result: { content?: Array<{ type: string; text?: string }>; structuredContent?: unknown; isError?: boolean } }>(`/connectors/${id}/call`, { body: { name, arguments: args } }),
+  remove: (id: string) => api(`/connectors/${id}`, { method: "DELETE" }),
+};
+
+/** Where OAuth sign-ins come back to (the app's root; App.tsx finishes the sign-in). */
+export const OAUTH_RETURN = `${location.origin}/app`;
+
+type ToolMsg =
+  | { role: "system" | "user"; content: string }
+  | { role: "assistant"; content: string | null; tool_calls?: Array<{ id: string; type: "function"; function: { name: string; arguments: string } }> }
+  | { role: "tool"; tool_call_id: string; content: string };
+
+/** Text of an MCP tool result, trimmed so one big result can't flood the model's context. */
+function toolText(r: { content?: Array<{ type: string; text?: string }>; structuredContent?: unknown; isError?: boolean }): string {
+  const text = (r.content ?? []).map((c) => (c.type === "text" ? c.text ?? "" : `[${c.type}]`)).join("\n") || (r.structuredContent ? JSON.stringify(r.structuredContent) : "");
+  return (r.isError ? "Tool error: " : "") + (text.length > 12_000 ? `${text.slice(0, 12_000)}\n… (truncated)` : text);
+}
+
+/**
+ * Answers with tools from the user's connectors: the model may call MCP tools (run by DSI Axon on
+ * the user's behalf) over a few rounds, then answers in words. Returns the final text and the tools used.
+ */
+export async function chatWithTools(opts: {
+  messages: ChatMessage[];
+  model: string;
+  mode: string;
+  session: string;
+  signal: AbortSignal;
+  servers: Array<{ connector: ConnectorInfo; tools: McpTool[] }>;
+  onTool?: (label: string) => void;
+}): Promise<{ text: string; meta: StreamMeta; used: string[] }> {
+  // Tool names must be [a-zA-Z0-9_-]{1,64}: prefix each server's tools with its position.
+  const table = new Map<string, { id: string; tool: string; label: string }>();
+  const tools = opts.servers.flatMap((s, i) =>
+    s.tools.map((t) => {
+      const name = `c${i + 1}__${t.name}`.replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 64);
+      table.set(name, { id: s.connector.id, tool: t.name, label: `${s.connector.name} · ${t.name}` });
+      return { type: "function" as const, function: { name, description: `[${s.connector.name}] ${t.description ?? t.name}`.slice(0, 1000), parameters: t.inputSchema ?? { type: "object", properties: {} } } };
+    }),
+  );
+  // The tools note goes after any leading system messages (voice mode's prompt must stay first).
+  const given = opts.messages as ToolMsg[];
+  const lead = given.findIndex((m) => m.role !== "system");
+  const at = lead < 0 ? given.length : lead;
+  const msgs: ToolMsg[] = [
+    ...given.slice(0, at),
+    { role: "system", content: `You can use tools from the user's connected services (${opts.servers.map((s) => s.connector.name).join(", ")}). Call them when they help answer; use what they return, and say which service the facts came from.` },
+    ...given.slice(at),
+  ];
+  const used: string[] = [];
+  let meta: StreamMeta = {};
+  for (let round = 0; round < 6; round++) {
+    const r = await fetch(`${API}/openai/v1/chat/completions`, {
+      method: "POST",
+      signal: opts.signal,
+      headers: await headers({ "x-decentralise-mode": opts.mode, "x-decentralise-session": opts.session }),
+      body: JSON.stringify({ model: opts.model, messages: msgs, tools, tool_choice: "auto", stream: false }),
+    });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(j?.error?.message ?? `HTTP ${r.status}`);
+    meta = {
+      provider: r.headers.get("x-decentralise-actual-provider") ?? undefined,
+      model: r.headers.get("x-decentralise-actual-model") ?? undefined,
+      market: r.headers.get("x-decentralise-market") ?? undefined,
+      receipt: r.headers.get("x-decentralise-receipt") ?? undefined,
+      ...(r.headers.get("x-decentralise-welcome-remaining") !== null ? { welcomeRemaining: Number(r.headers.get("x-decentralise-welcome-remaining")) } : {}),
+    };
+    const m = j.choices?.[0]?.message ?? {};
+    const calls = (m.tool_calls ?? []) as Array<{ id: string; function: { name: string; arguments: string } }>;
+    if (!calls.length) return { text: String(m.content ?? ""), meta, used };
+    msgs.push({ role: "assistant", content: m.content ?? null, tool_calls: calls.map((c) => ({ id: c.id, type: "function", function: c.function })) });
+    for (const c of calls) {
+      const target = table.get(c.function.name);
+      let out: string;
+      if (!target) out = `Unknown tool ${c.function.name}`;
+      else {
+        opts.onTool?.(target.label);
+        used.push(target.label);
+        try {
+          const args = c.function.arguments ? JSON.parse(c.function.arguments) : {};
+          out = toolText((await connectors.call(target.id, target.tool, args)).result);
+        } catch (e) {
+          out = `Tool failed: ${(e as Error).message}`;
+        }
+      }
+      msgs.push({ role: "tool", tool_call_id: c.id, content: out });
+    }
+  }
+  throw new Error("The tools didn't lead to an answer after several steps. Try asking more specifically.");
+}

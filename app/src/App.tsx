@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { usePrivy, useIdentityToken, useLoginWithOAuth } from "@privy-io/react-auth";
-import { api, setAccount, setTokenSource, type Config } from "./api";
+import { api, connectors, setAccount, setTokenSource, type Config } from "./api";
+import { ConnectorsPage } from "./Connectors";
 import { listConversations, setNamespace, type Conversation } from "./localdb";
 import { Chat } from "./Chat";
 import { ConsoleShell } from "./console/Shell";
-import { IconCheck, IconChevron, IconConsole, IconDownload, IconGauge, IconGear, IconHelp, IconInfo, IconLogout, IconMenu, IconNode, IconPanel, IconPlus, IconRight, IconUsers, IconWallet } from "./icons";
+import { IconCheck, IconChevron, IconConsole, IconDownload, IconGauge, IconGear, IconHelp, IconInfo, IconLogout, IconMenu, IconNode, IconPanel, IconPlug, IconPlus, IconRight, IconUsers, IconWallet } from "./icons";
 
 export interface Session {
   user: { id: string; email?: string; wallets: Array<{ address: string; chain: string; type: string }> };
@@ -12,7 +13,7 @@ export interface Session {
   defaultOrganization: string;
 }
 
-type Route = { view: "chat"; id?: string } | { view: "console"; page: string; arg?: string };
+type Route = { view: "chat"; id?: string } | { view: "console"; page: string; arg?: string } | { view: "connectors" };
 
 function parseRoute(): Route {
   const [view, page, arg] = location.hash.replace(/^#\/?/, "").split("/");
@@ -20,6 +21,7 @@ function parseRoute(): Route {
   // Older links: the wallet and agent pages now live inside the console.
   if (view === "wallet" || view === "billing") return { view: "console", page: "credits" };
   if (view === "agent") return { view: "console", page: "terminal" };
+  if (view === "connectors") return { view: "connectors" };
   return { view: "chat", id: page || undefined };
 }
 
@@ -108,6 +110,22 @@ export function App({ config }: { config: Config }) {
     setTokenSource(() => tokenRef.current());
     loadSession().catch((e) => setError(String((e as Error).message)));
   }, [ready, authenticated, loadSession]);
+
+  // Back from a connector's OAuth sign-in (/app?code=…&state=…): finish it, then show Connectors.
+  const [connNotice, setConnNotice] = useState<string>();
+  useEffect(() => {
+    if (!session) return;
+    const q = new URLSearchParams(location.search);
+    const code = q.get("code"), state = q.get("state");
+    if (!code || !state) return;
+    history.replaceState(null, "", `${location.pathname}#/connectors`);
+    setRoute({ view: "connectors" });
+    connectors
+      .oauthFinish({ state, code })
+      .then((r) => setConnNotice(`Connected ${r.connector.name}: ${r.tools.length} tools ready. Turn it on for a chat from the + menu.`))
+      .catch((e) => setConnNotice(`Sign-in didn't finish: ${(e as Error).message}`));
+  }, [session]);
+
 
   const refreshConversations = useCallback(async () => setConversations(await listConversations()), []);
 
@@ -224,6 +242,10 @@ export function App({ config }: { config: Config }) {
             <IconWallet />
             <span>Credits &amp; wallet</span>
           </a>
+          <a className={`c-row ${route.view === "connectors" ? "on" : ""}`} href="#/connectors" onClick={() => setMenu(false)}>
+            <IconPlug />
+            <span>Connectors</span>
+          </a>
           <a className="c-row" href="/node#laptop">
             <IconNode />
             <span>Run a node</span>
@@ -316,7 +338,11 @@ export function App({ config }: { config: Config }) {
             <IconPanel />
           </button>
         )}
-        <Chat key={`${org}:${route.id ?? `new-${newChat}`}`} id={route.id} onSaved={refreshConversations} config={config} name={firstName(session.user.email)} />
+        {route.view === "connectors" ? (
+          <ConnectorsPage notice={connNotice} />
+        ) : (
+          <Chat key={`${org}:${route.view === "chat" ? route.id ?? `new-${newChat}` : "x"}`} id={route.view === "chat" ? route.id : undefined} onSaved={refreshConversations} config={config} name={firstName(session.user.email)} />
+        )}
       </main>
     </div>
   );

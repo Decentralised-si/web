@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { marked } from "marked";
 import DOMPurify from "dompurify";
-import { api, listModels, orgStatus, streamChat, type Config } from "./api";
+import { api, chatWithTools, connectors, listModels, orgStatus, streamChat, type Config, type ConnectorInfo, type McpTool, type StreamMeta } from "./api";
 import { deleteConversation, listConversations, saveConversation, type Conversation } from "./localdb";
 import { SentenceSplitter, Speaker, voiceSupported } from "./voice";
 import { LiveVoice, unlockDeviceVoice } from "./live";
 import { VoiceMode, type VoiceAsk } from "./VoiceMode";
-import { IconMic, IconSpeaker, IconArrowUp, IconBook, IconBulb, IconChart, IconCheck, IconChevron, IconClip, IconCode, IconLeaf, IconLock, IconPen, IconPlus, IconRoute, IconStop, IconTrash, IconX } from "./icons";
+import { IconMic, IconSpeaker, IconArrowUp, IconBook, IconBulb, IconChart, IconCheck, IconChevron, IconClip, IconCode, IconLeaf, IconLock, IconPen, IconPlug, IconPlus, IconRoute, IconStop, IconTrash, IconX } from "./icons";
 
 const MODES = [
   { id: "optimise", label: "Best value", hint: "The router balances quality, speed and cost" },
@@ -198,8 +198,37 @@ export function Chat({ id, onSaved, config, name }: { id?: string; onSaved: () =
   const [model, setModel] = useState("auto");
   const [mode, setMode] = useState("optimise");
   const [credit, setCredit] = useState<number>();
+  const creditRef = useRef<number | undefined>(undefined);
+  creditRef.current = credit;
   const [freeChat, setFreeChat] = useState<FreeChat>();
   const [plus, setPlus] = useState(false);
+  // Connectors (MCP servers) the user turned on for chats; their tools are offered to the model.
+  const [connList, setConnList] = useState<ConnectorInfo[]>([]);
+  const [connOn, setConnOn] = useState<string[]>(() => {
+    try {
+      return JSON.parse(localStorage.getItem("dsi_conn_on") ?? "[]");
+    } catch {
+      return [];
+    }
+  });
+  const toolCache = useRef(new Map<string, McpTool[]>());
+  const [toolStatus, setToolStatus] = useState<string>();
+  useEffect(() => {
+    connectors.list().then(setConnList).catch(() => {});
+  }, []);
+  const toggleConn = (cid: string) =>
+    setConnOn((on) => {
+      const next = on.includes(cid) ? on.filter((x) => x !== cid) : [...on, cid];
+      try {
+        localStorage.setItem("dsi_conn_on", JSON.stringify(next));
+      } catch {
+        /* private mode */
+      }
+      return next;
+    });
+  const activeConns = connList.filter((c) => connOn.includes(c.id));
+  const activeConnsRef = useRef(activeConns);
+  activeConnsRef.current = activeConns;
   const [picker, setPicker] = useState(false);
   const [fileErr, setFileErr] = useState<string>();
   const abort = useRef<AbortController | undefined>(undefined);
@@ -308,25 +337,47 @@ export function Chat({ id, onSaved, config, name }: { id?: string; onSaved: () =
     const ac = new AbortController();
     abort.current = ac;
     try {
-      const meta = await streamChat({
-        messages: [...(voice ? [{ role: "system" as const, content: voice.system }] : []), ...current.messages.slice(0, -1).map((m) => ({ role: m.role, content: m.content }))],
-        model,
-        // A specific model means exactly that model; "Smart Routing" lets the router choose by the selected mode.
-        mode: model === "auto" ? mode : "passthrough",
-        session: current.id,
-        affinity: current.affinity,
-        signal: ac.signal,
-        onDelta: (raw) => {
-          // Voice replies open with an emotion tag, which is for the voice, not the transcript.
-          const d = voice ? voice.filter(raw) : raw;
-          if (!d) return;
-          voice?.onVisible(d);
-          sentences?.push(d).forEach((t) => speaker().say(t));
-          current = { ...current, messages: current.messages.map((m, i) => (i === current.messages.length - 1 ? { ...m, content: m.content + d } : m)) };
-          setConv(current);
-          convRef.current = current;
-        },
-      });
+      const messages = [...(voice ? [{ role: "system" as const, content: voice.system }] : []), ...current.messages.slice(0, -1).map((m) => ({ role: m.role, content: m.content }))];
+      const onDelta = (raw: string) => {
+        // Voice replies open with an emotion tag, which is for the voice, not the transcript.
+        const d = voice ? voice.filter(raw) : raw;
+        if (!d) return;
+        voice?.onVisible(d);
+        sentences?.push(d).forEach((t) => speaker().say(t));
+        current = { ...current, messages: current.messages.map((m, i) => (i === current.messages.length - 1 ? { ...m, content: m.content + d } : m)) };
+        setConv(current);
+        convRef.current = current;
+      };
+      let meta: StreamMeta & { tools?: string[] };
+      const conns = activeConnsRef.current;
+      if (conns.length) {
+        // Connectors on: the model may call their tools (run by DSI Axon) before answering; the
+        // answer then goes through the same path as a streamed reply, so voice reads it aloud.
+        setToolStatus(`Checking ${conns.map((c) => c.name).join(", ")}…`);
+        const servers = await Promise.all(
+          conns.map(async (c) => ({ connector: c, tools: toolCache.current.get(c.id) ?? (await connectors.tools(c.id).then((r) => (toolCache.current.set(c.id, r.tools), r.tools))) ?? [] })),
+        );
+        // Tool use needs a model that calls tools reliably: GLM 5.3 Flash when "Smart Routing" is on and there is credit.
+        const toolModel = model === "auto" && (creditRef.current ?? 0) > 0 ? "@cf/zai-org/glm-5.3-flash" : model;
+        try {
+          const r = await chatWithTools({ messages, model: toolModel, mode: toolModel === "auto" ? mode : "passthrough", session: current.id, signal: ac.signal, servers, onTool: (label) => setToolStatus(`Using ${label}…`) });
+          onDelta(r.text);
+          meta = { ...r.meta, ...(r.used.length ? { tools: r.used } : {}) };
+        } finally {
+          setToolStatus(undefined);
+        }
+      } else {
+        meta = await streamChat({
+          messages,
+          model,
+          // A specific model means exactly that model; "Smart Routing" lets the router choose by the selected mode.
+          mode: model === "auto" ? mode : "passthrough",
+          session: current.id,
+          affinity: current.affinity,
+          signal: ac.signal,
+          onDelta,
+        });
+      }
       sentences?.flush().forEach((t) => speaker().say(t));
       current = { ...current, affinity: meta.affinity ?? current.affinity, messages: current.messages.map((m, i) => (i === current.messages.length - 1 ? { ...m, meta } : m)) };
     } catch (e) {
@@ -483,6 +534,19 @@ export function Chat({ id, onSaved, config, name }: { id?: string; onSaved: () =
                 <span>Private (strict)</span>
                 {mode === "private" && <IconCheck />}
               </button>
+              <hr />
+              <div className="c-pop-label">Connectors</div>
+              {connList.map((c) => (
+                <button key={c.id} type="button" role="menuitemcheckbox" aria-checked={connOn.includes(c.id)} onClick={() => toggleConn(c.id)} title={c.url}>
+                  <IconPlug />
+                  <span>{c.name}</span>
+                  {connOn.includes(c.id) && <IconCheck />}
+                </button>
+              ))}
+              <a role="menuitem" href="#/connectors">
+                <IconPlus />
+                <span>{connList.length ? "Manage connectors…" : "Add a connector (MCP)…"}</span>
+              </a>
             </div>
           )}
         </div>
@@ -492,6 +556,12 @@ export function Chat({ id, onSaved, config, name }: { id?: string; onSaved: () =
             <span>{modeLabel(mode)}</span>
             <IconX />
           </button>
+        )}
+        {activeConns.length > 0 && (
+          <a className="c-chip" href="#/connectors" title="Connectors on for this chat">
+            <IconPlug />
+            <span>{activeConns.length === 1 ? activeConns[0].name : `${activeConns.length} connectors`}</span>
+          </a>
         )}
         <span className="c-grow" />
         {balance}
@@ -654,6 +724,8 @@ export function Chat({ id, onSaved, config, name }: { id?: string; onSaved: () =
                       To keep chatting, {payOpen ? <a href="#/console/credits">add credit</a> : <a href={NODE_GUIDE}>run a node for free chat</a>} or add your own provider key in <a href="#/console/providers">Providers</a>. Then send your message again.
                     </p>
                   )}
+                  {busy && i === conv!.messages.length - 1 && toolStatus && <p className="cn-status">{toolStatus}</p>}
+                  {(m.meta as { tools?: string[] } | undefined)?.tools?.length ? <p className="cn-used">Used {[...new Set((m.meta as { tools: string[] }).tools)].join(", ")}</p> : null}
                   {m.meta?.model && (
                     <p className="c-meta">
                       {servedBy(m.meta)}

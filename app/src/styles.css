@@ -2268,3 +2268,147 @@ button.vm-chip {
   border-radius: 999px;
   cursor: pointer;
 }
+
+/* connectors (MCP servers): page, and tool activity under answers */
+.cn-page {
+  overflow-y: auto;
+  height: 100%;
+  padding: calc(56px + env(safe-area-inset-top, 0px)) 20px 60px;
+  max-width: 760px;
+  margin: 0 auto;
+  width: 100%;
+}
+.cn-page h1 {
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: 32px;
+  margin: 0 0 6px;
+}
+.cn-page h2 {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin: 28px 0 10px;
+}
+.cn-lead,
+.cn-muted {
+  color: var(--muted);
+  font-size: 14px;
+}
+.cn-ok {
+  border-left: 3px solid var(--ok);
+  padding: 8px 12px;
+  background: color-mix(in srgb, var(--ok) 10%, transparent);
+  border-radius: 0 8px 8px 0;
+  font-size: 14px;
+}
+.cn-err {
+  color: var(--bad);
+  font-size: 14px;
+}
+.cn-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.cn-list > li {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: var(--panel);
+}
+.cn-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.cn-id {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.cn-id span {
+  font-size: 12.5px;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cn-row button {
+  font-weight: 500;
+  font-size: 13px;
+}
+.cn-danger {
+  color: var(--bad);
+}
+.cn-link {
+  border: none;
+  background: none;
+  color: var(--accent);
+  padding: 0;
+}
+.cn-tools ul {
+  margin: 10px 0 2px;
+  padding-left: 18px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.cn-tools span {
+  color: var(--muted);
+}
+.cn-suggest {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.cn-suggest button {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  text-align: left;
+  padding: 12px;
+  border-radius: 12px;
+  font-weight: 400;
+}
+.cn-suggest button span {
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.cn-form {
+  display: grid;
+  gap: 10px;
+}
+.cn-form input {
+  width: 100%;
+}
+.cn-form button {
+  justify-self: start;
+}
+.cn-signin {
+  margin-top: 14px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--accent) 6%, var(--panel));
+}
+.cn-signin p {
+  margin: 0 0 10px;
+}
+.cn-status,
+.cn-used {
+  font-size: 12.5px;
+  color: var(--muted);
+  margin: 6px 0 0;
+}
+.cn-status {
+  color: var(--accent);
+}
+.c-pop > a {
+  font-weight: 400;
+}

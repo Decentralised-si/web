@@ -176,3 +176,8 @@ export const IconSpeaker = () => (
     <path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11" />
   </Svg>
 );
+export const IconPlug = () => (
+  <Svg>
+    <path d="M9 3v4M15 3v4M7 7h10v4a5 5 0 0 1-10 0V7ZM12 16v5" />
+  </Svg>
+);

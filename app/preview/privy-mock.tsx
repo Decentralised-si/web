@@ -10,3 +10,5 @@ export const useWallets = () => ({ wallets: [{ address: "0x7a3b9c2d1e0f4a5b6c7d8
 export const useSendTransaction = () => ({ sendTransaction: async () => ({ hash: "0x" }) });
 export const useAddFunds = () => ({ addFunds: async () => ({ method: "crypto", status: "completed" }) });
 export const useSignAndSendTransaction = () => ({ signAndSendTransaction: async () => ({ signature: new Uint8Array(64) }) });
+export const useLoginWithOAuth = (_opts?: unknown) => ({ initOAuth: async () => {}, state: { status: "initial" as const } });
+export const useSolanaWallets = () => ({ wallets: [] });

@@ -2428,3 +2428,63 @@ button.vm-chip {
 .c-pop > a {
   font-weight: 400;
 }
+
+/* Browser wallet (voice mode): PAI from teaching, live */
+.vm-wallet {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 10px auto 0;
+  padding: 9px 14px;
+  max-width: 340px;
+  border-radius: 14px;
+  text-align: center;
+  text-decoration: none;
+  color: #e8ecff;
+  background: rgba(255, 209, 102, 0.08);
+  border: 1px solid rgba(255, 209, 102, 0.28);
+  font-size: 13px;
+}
+.vm-wallet-label {
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 209, 102, 0.85);
+}
+.vm-wallet b {
+  color: #ffd166;
+  font-variant-numeric: tabular-nums;
+}
+.vm-wallet small {
+  color: rgba(232, 236, 255, 0.6);
+}
+.vm-farewell {
+  margin: 14px auto 0;
+  padding: 16px;
+  max-width: 360px;
+  border-radius: 18px;
+  text-align: center;
+  color: #e8ecff;
+  background: rgba(20, 24, 44, 0.92);
+  border: 1px solid rgba(255, 209, 102, 0.35);
+  animation: vm-line 0.35s ease;
+}
+.vm-farewell > b {
+  display: block;
+  font-size: 20px;
+  color: #ffd166;
+}
+.vm-farewell p {
+  margin: 8px 0 14px;
+  font-size: 14px;
+  line-height: 1.45;
+  color: rgba(232, 236, 255, 0.85);
+}
+.vm-farewell-actions {
+  display: flex;
+  gap: 10px;
+}
+.vm-farewell-actions .vm-optin {
+  text-decoration: none;
+  text-align: center;
+}

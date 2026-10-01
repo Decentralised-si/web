@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { LiveTranscriber, liveSttAvailable } from "./flux";
+import { onWallet, recordTaught, refreshWallet, type WalletTotals } from "./browser-wallet";
 import { costLabel, onEdgeStatus, setVoicePref, startConversation, voicePref, type VoicePref } from "./edge-voice";
 import { checkedArithmetic, EMOTION_EMOJI, EmotionTag, isPhantom, LearnTag, LivePlayer, LiveVoice, teach, transcribeWav, voiceSystemPrompt, type Emotion, type TeachResult, type Tone } from "./live";
 import { SentenceSplitter } from "./voice";
@@ -135,6 +136,28 @@ function Orb({ phase, color, level }: { phase: Phase; color: string; level: () =
 
 // ------------------------------------------------------------------ teaching rewards
 
+/** An amount as it should be spoken ("0.64", "12.5"). */
+const spokenPai = (n: number) => (n >= 10 ? n.toFixed(0) : n >= 1 ? n.toFixed(1) : n.toFixed(2));
+
+/** The browser wallet, live: PAI pending approval, approved and paid, and this conversation's share. */
+function BrowserWalletCard({ t, session }: { t: WalletTotals; session: number }) {
+  return (
+    <a className="vm-wallet" href="#/console/credits" aria-live="polite" title="Your browser wallet: PAI earned by teaching DSI, before it reaches your on-network wallet">
+      <span className="vm-wallet-label">Browser wallet</span>
+      <span className="vm-wallet-row">
+        <b>{pai(t.pending)}</b> PAI pending approval
+        {t.approved + t.paid > 0 && (
+          <>
+            {" · "}
+            <b>{pai(t.approved + t.paid)}</b> approved
+          </>
+        )}
+      </span>
+      {session > 0 && <small>+{pai(session)} PAI this conversation</small>}
+    </a>
+  );
+}
+
 const pai = (n: number) => (n >= 100 ? n.toLocaleString("en", { maximumFractionDigits: 0 }) : n.toLocaleString("en", { maximumFractionDigits: n < 1 ? 3 : 2 }));
 
 /** What teaching DSI earned, per the Learning Fabric: paid at once only when verified. */
@@ -147,7 +170,7 @@ function TaughtToast({ r, wallet, onDone }: { r: TeachResult; wallet?: number; o
     r.outcome === "rewarded" && r.reward
       ? { big: `+${pai(r.reward.pai)} PAI`, small: r.reward.status === "deferred" ? "New knowledge verified · part paid next epoch" : "New knowledge verified and rewarded" }
       : r.outcome === "pending" || r.outcome === "verified"
-        ? { big: "New knowledge saved", small: `Earns up to ${pai(r.potential_pai ?? 0)} PAI once validators confirm it` }
+        ? { big: `+${pai(r.estimate?.pai ?? r.potential_pai ?? 0)} PAI pending approval`, small: "New knowledge saved · paid when independent validators confirm it" }
         : r.outcome === "known"
           ? { big: "DSI already knew that", small: "Only new knowledge earns PAI" }
           : r.outcome === "limit"
@@ -185,6 +208,14 @@ export function VoiceMode({ live, started, ask, stop, onClose, onType }: { live:
   // Earn PAI: teaching mode, opt-in (earn.ts). Off at the start of every conversation.
   const [earnOn, setEarnOn] = useState(false);
   const [earned, setEarned] = useState(0);
+  /** Browser wallet, live (browser-wallet.ts), and what this conversation added to it. */
+  const [wt, setWt] = useState<WalletTotals>();
+  const [sessionPai, setSessionPai] = useState(0);
+  useEffect(() => {
+    const off = onWallet(setWt);
+    void refreshWallet().catch(() => {});
+    return off;
+  }, []);
   const [onboard, setOnboard] = useState<{ guide: GuideSection[]; areas: Area[]; reading: boolean }>();
   const [spoken, setSpoken] = useState("");
   const earnRef = useRef<{ on: boolean; areas: Area[] }>({ on: false, areas: [] });
@@ -209,7 +240,32 @@ export function VoiceMode({ live, started, ask, stop, onClose, onType }: { live:
 
   const level = useCallback(() => (phaseRef.current === "speaking" ? live.outputLevel() : inLevel.current), [live]);
 
+  /** What teaching earned in this conversation (for the closing message). */
+  const session = useRef({ count: 0, pai: 0 });
+  const [farewell, setFarewell] = useState<{ count: number; pai: number }>();
+  const farewellSaid = useRef(false);
+
   const close = useCallback(() => {
+    // A conversation that earned PAI ends with DSI saying where to find it.
+    if (session.current.count && !farewellSaid.current) {
+      farewellSaid.current = true;
+      const { count, pai: amount } = session.current;
+      turn.current++;
+      stop();
+      live.muted = true;
+      const p = player.current;
+      p.stop();
+      setFarewell({ count, pai: amount });
+      setPhase("speaking");
+      const things = count === 1 ? "one new thing" : `${count} new things`;
+      p.say(
+        `Thanks for teaching me ${things} today. That's ${spokenPai(amount)} PAI, pending approval in your browser wallet. To see your PAI tokens, create your wallet in Decentralised.si and log in.`,
+        "en",
+        "warm",
+      );
+      void p.whenIdle().then(() => setPhase("listening"));
+      return;
+    }
     turn.current++;
     player.current.stop();
     stop();
@@ -331,6 +387,12 @@ export function VoiceMode({ live, started, ask, stop, onClose, onType }: { live:
         teach(learn.learned, h.text)
           .then((t) => {
             if (t.balance !== undefined) setWallet(t.balance);
+            // The browser wallet shows every taught item and its exact PAI, live.
+            if (t.id && t.estimate && ["rewarded", "pending", "verified"].includes(t.outcome)) {
+              recordTaught({ id: t.id, statement: learn.learned!, pai: t.estimate.pai, status: t.estimate.status });
+              session.current = { count: session.current.count + 1, pai: session.current.pai + t.estimate.pai };
+              setSessionPai(session.current.pai);
+            }
             if (t.outcome === "rewarded" && t.reward) setEarned((x) => x + t.reward!.pai);
             if (t.outcome === "private") return;
             setTaught({ r: t, at: Date.now() });
@@ -526,7 +588,26 @@ export function VoiceMode({ live, started, ask, stop, onClose, onType }: { live:
             you sound {TONE_LABEL[tone]}
           </p>
         )}
+        {wt && (earnOn || wt.items.length > 0) && <BrowserWalletCard t={wt} session={sessionPai} />}
         {taught && <TaughtToast key={taught.at} r={taught.r} wallet={wallet} onDone={() => setTaught(undefined)} />}
+        {farewell && (
+          <div className="vm-farewell" role="dialog" aria-label="Your PAI">
+            <b>
+              {pai(farewell.pai)} PAI pending approval
+            </b>
+            <p>
+              You taught DSI {farewell.count === 1 ? "one new thing" : `${farewell.count} new things`}. To see your PAI tokens, create your wallet in Decentralised.si and log in.
+            </p>
+            <div className="vm-farewell-actions">
+              <a className="vm-optin" href="#/console/credits" onClick={() => close()}>
+                Create wallet &amp; log in
+              </a>
+              <button type="button" className="vm-later" onClick={close}>
+                Done
+              </button>
+            </div>
+          </div>
+        )}
         <div className="vm-captions">
           {you && (
             <p className="vm-you" dir="auto">

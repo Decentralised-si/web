@@ -843,7 +843,10 @@ export class LearnTag {
 
 export interface TeachResult {
   outcome: "rewarded" | "verified" | "pending" | "known" | "rejected" | "private" | "limit";
+  id?: string;
   reward?: { pai: number; status: string } | null;
+  /** Exact verification reward (same formula and inputs as the payment); pending = guaranteed on approval. */
+  estimate?: { status: "pending" | "approved" | "paid" | "deferred" | "rejected"; pai: number; factors: { base: number; truth: number; novelty: number; modelGap: number; provenance: number } };
   potential_pai?: number;
   balance?: number;
   message?: string;

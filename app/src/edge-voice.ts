@@ -76,10 +76,21 @@ function progressTracker(set: (p: number) => void) {
   };
 }
 
-/** Big model downloads only where they make sense: enough memory, no data saver. */
+/** iPhone and iPad (every browser there is WebKit; iPadOS also reports a Mac user agent). */
+const isIOS = () => /iPhone|iPad|iPod/.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
+const isMobile = () => isIOS() || /Android|Mobi/i.test(navigator.userAgent);
+
+/**
+ * Big model downloads only where they make sense: enough memory, no data saver. Never on iOS:
+ * WebKit gives a page a few hundred MB, and Whisper + Kokoro (several hundred MB in memory)
+ * crash it ("A problem repeatedly occurred"). Safari does not report deviceMemory, so this cannot
+ * be measured there. Phones elsewhere need to report at least 6 GB.
+ */
 function deviceCanHost(): boolean {
   const nav = navigator as Navigator & { deviceMemory?: number; connection?: { saveData?: boolean } };
   if (nav.connection?.saveData) return false;
+  if (isIOS()) return false;
+  if (isMobile() && !(nav.deviceMemory !== undefined && nav.deviceMemory >= 6)) return false;
   if (nav.deviceMemory !== undefined && nav.deviceMemory < 4) return false;
   return typeof WebAssembly === "object";
 }

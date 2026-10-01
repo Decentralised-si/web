@@ -1956,7 +1956,8 @@ button.vm-chip {
   max-height: 74vh;
   display: flex;
   flex-direction: column;
-  background: rgba(12, 15, 28, 0.97);
+  background: #0c0f1c;
+  isolation: isolate;
   border: 1px solid rgba(255, 209, 102, 0.35);
   border-radius: 22px;
   box-shadow: 0 30px 90px -20px rgba(0, 0, 0, 0.9);
@@ -1987,6 +1988,9 @@ button.vm-chip {
 }
 .vm-sheet p.now {
   color: #fff;
+  border-left: 3px solid #ffd166;
+  padding-left: 10px;
+  margin-left: -13px;
 }
 .vm-sheet ul {
   margin: 0;

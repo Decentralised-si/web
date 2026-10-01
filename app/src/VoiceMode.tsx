@@ -479,7 +479,14 @@ export function VoiceMode({ live, started, ask, stop, onClose, onType }: { live:
               <section key={sec.title}>
                 <h3>{sec.title}</h3>
                 {sec.paragraphs.map((x) => (
-                  <p key={x} className={spoken && x.includes(spoken.slice(0, 40)) ? "now" : undefined}>
+                  <p
+                    key={x}
+                    className={spoken && x.includes(spoken.slice(0, 40)) ? "now" : undefined}
+                    // Follow the reading: keep the paragraph being spoken in view.
+                    ref={(el) => {
+                      if (el?.classList.contains("now")) el.scrollIntoView({ block: "nearest", behavior: "smooth" });
+                    }}
+                  >
                     {x}
                   </p>
                 ))}

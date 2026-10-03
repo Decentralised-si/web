@@ -724,7 +724,8 @@ export const EMOTION_EMOJI: Record<Emotion, string> = {
   curious: "🤔",
 };
 
-const TAG_ANYWHERE = /[<[]\s*emotion\s*[:=]\s*([a-z]+)\s*[>\]]\s*/gi;
+/** <emotion:calm>, </emotion:calm>, </emotion>, [emotion: calm]: opening or closing, anywhere in a reply. */
+const TAG_ANYWHERE = /[<[]\s*\/?\s*emotion\s*(?:[:=]\s*([a-z]+))?\s*[>\]]\s*/gi;
 
 export class EmotionTag {
   private head = "";
@@ -748,11 +749,12 @@ export class EmotionTag {
     let s = this.carry + d;
     this.carry = "";
     const open = s.lastIndexOf("<");
-    if (open >= 0 && s.indexOf(">", open) < 0 && s.length - open < 24 && /^<\s*(e(m(o(t(i(o(n\s*[:=]?\s*[a-z]*)?)?)?)?)?)?)?$/i.test(s.slice(open))) {
+    if (open >= 0 && s.indexOf(">", open) < 0 && s.length - open < 24 && /^<\s*\/?\s*(e(m(o(t(i(o(n\s*[:=]?\s*[a-z]*)?)?)?)?)?)?)?$/i.test(s.slice(open))) {
       this.carry = s.slice(open);
       s = s.slice(0, open);
     }
-    return s.replace(TAG_ANYWHERE, (_m, e: string) => {
+    return s.replace(TAG_ANYWHERE, (_m, e?: string) => {
+      if (!e) return "";
       const em = e.toLowerCase() as Emotion;
       if (EMOTIONS.includes(em)) this.emotion = em;
       return "";
@@ -777,7 +779,7 @@ export class EmotionTag {
       const e = m[1].toLowerCase() as Emotion;
       if (EMOTIONS.includes(e)) this.emotion = e;
       this.done = true;
-      return t.slice(m[0].length);
+      return this.later(t.slice(m[0].length));
     }
     // Still possibly a tag: wait for more (tags are short).
     if (t.length < 24 && /^[<[]\s*(emotion\s*[:=]?\s*)?[a-z]*$/i.test(t)) return "";

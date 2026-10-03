@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { LiveTranscriber, liveSttAvailable } from "./flux";
+import { drawFace, FACES } from "./orb-faces";
 import { onWallet, recordTaught, refreshWallet, type WalletTotals } from "./browser-wallet";
 import { costLabel, onEdgeStatus, setVoicePref, startConversation, voicePref, type VoicePref } from "./edge-voice";
 import { checkedArithmetic, EMOTION_EMOJI, EmotionTag, isPhantom, LearnTag, LivePlayer, LiveVoice, teach, transcribeWav, voiceSystemPrompt, type Emotion, type TeachResult, type Tone } from "./live";
@@ -48,10 +49,10 @@ const langName = (code: string) => {
  * A sphere of connected nodes, like the network. It breathes with the user's voice while listening,
  * swirls while thinking, and pulses with DSI's voice (in the colour of its mood) while speaking.
  */
-function Orb({ phase, color, level }: { phase: Phase; color: string; level: () => number }) {
+function Orb({ phase, color, level, emotion }: { phase: Phase; color: string; level: () => number; emotion: Emotion }) {
   const ref = useRef<HTMLCanvasElement>(null);
-  const st = useRef({ phase, color });
-  st.current = { phase, color };
+  const st = useRef({ phase, color, emotion });
+  st.current = { phase, color, emotion };
 
   useEffect(() => {
     const cv = ref.current!;
@@ -69,6 +70,10 @@ function Orb({ phase, color, level }: { phase: Phase; color: string; level: () =
     let rot = 0;
     let lvl = 0;
     let col = st.current.color;
+    // The face the orb wears (see orb-faces.ts): shown while DSI speaks with feeling, briefly after.
+    let shown: Emotion = "neutral";
+    let faceAlpha = 0;
+    let lastSpoke = 0;
     const mix = (a: string, b: string, t: number) => {
       const p = (h: string) => [1, 3, 5].map((k) => parseInt(h.slice(k, k + 2), 16));
       const [x, y] = [p(a), p(b)];
@@ -80,7 +85,15 @@ function Orb({ phase, color, level }: { phase: Phase; color: string; level: () =
       if (cv.width !== Math.round(w * dpr)) (cv.width = Math.round(w * dpr)), (cv.height = Math.round(w * dpr));
       g.setTransform(dpr, 0, 0, dpr, 0, 0);
       g.clearRect(0, 0, w, w);
-      const { phase: ph, color: target } = st.current;
+      const { phase: ph, color: target, emotion: em } = st.current;
+      const nowS = performance.now();
+      if (ph === "speaking") lastSpoke = nowS;
+      const wantFace = em !== "neutral" && nowS - lastSpoke < 2500 && ph !== "hearing";
+      if (em !== shown) {
+        // Fade the old expression out before the new one comes in.
+        faceAlpha = Math.max(0, faceAlpha - 0.08);
+        if (faceAlpha <= 0.02) shown = em;
+      } else faceAlpha += ((wantFace ? 1 : 0) - faceAlpha) * 0.08;
       col = mix(col, target, 0.06);
       lvl += (level() - lvl) * 0.25;
       const speed = ph === "thinking" || ph === "transcribing" ? 0.02 : ph === "speaking" ? 0.008 : 0.004;
@@ -119,12 +132,14 @@ function Orb({ phase, color, level }: { phase: Phase; color: string; level: () =
       for (const [x, y, z] of proj) {
         const s = 1.2 + (z + 1) * 1.3 + lvl * 1.5;
         g.fillStyle = z > 0 ? "#ffffff" : col;
-        g.globalAlpha = 0.35 + (z + 1) * 0.3;
+        // Front nodes step back a little while the orb wears a face, so the expression reads.
+        g.globalAlpha = (0.35 + (z + 1) * 0.3) * (1 - faceAlpha * (z > 0 ? 0.55 : 0.2));
         g.beginPath();
         g.arc(x, y, s, 0, Math.PI * 2);
         g.fill();
       }
       g.globalAlpha = 1;
+      drawFace(g, FACES[shown], c, R, col, faceAlpha, ph === "speaking" ? Math.min(1, lvl * 1.6) : 0, t0);
       raf = requestAnimationFrame(frame);
     };
     raf = requestAnimationFrame(frame);
@@ -578,7 +593,7 @@ export function VoiceMode({ live, started, ask, stop, onClose, onType }: { live:
       )}
 
       <div className="vm-stage" onClick={() => needTap && live.ctx?.resume().then(() => setNeedTap(false))}>
-        <Orb phase={phase} color={color} level={level} />
+        <Orb phase={phase} color={color} level={level} emotion={emotion} />
         {/* A new element per status: Safari could leave the previous text painted underneath. */}
         <p key={needTap ? "tap" : status} className="vm-status" aria-live="polite">
           {needTap ? "Tap to start" : status}
